@@ -22,7 +22,7 @@
         <a href="index.html#first-flight">Flight Manual</a>
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
-        <a class="nav-cta" href="index.html#download">Get 1.5.0</a>
+        <a class="nav-cta" href="index.html#download">Get 1.6.0</a>
       </nav>
     </div>
   </header>
@@ -122,6 +122,13 @@
     <p>For authentic retro presentation, an OpenGL 3.3 GLSL CRT simulation shader (<kbd>F6</kbd>) faithfully reproduces subtle 200-line scanlines, aperture grille phosphor triads, gentle glass curvature, corner vignette shading, and celestial core glow within a tight 1.0 ms GPU budget.</p>
     <p>In the 3D software rasterizer, we introduced sub-pixel geometry rasterization across <kbd>polymap</kbd> and <kbd>poly3d</kbd>, employing floating-point vertex projection, sub-pixel edge pre-stepping, and scanline endpoint rounding. This completely eliminates vertex crawling and jitter on planetary terrain, mountain meshes, and ship interior geometry, while bilinear point distribution in <kbd>far_pixel_at</kbd> eliminates discrete jumping when panning past distant stars.</p>
     <p>Finally, user display preferences now automatically persist across sessions via <kbd>display_settings.ini</kbd> in platform configuration directories, seamlessly remembering aspect ratios, upscaling filters, CRT emulation, sub-pixel fidelity, fullscreen state, and timewarp multipliers.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.6.0: The Image Archive Update — In-Cockpit Snapshot &amp; Panorama Viewer</h2>
+    <p>Version 1.6.0 brings the explorer's photo album aboard the Stardrifter. Press <kbd>F4</kbd> in the cockpit to open the GOES Image Archive on the newest capture, then browse every snapshot and panorama with <kbd>Left</kbd>/<kbd>Right</kbd>, <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, and <kbd>Home</kbd>/<kbd>End</kbd>. The GOES console learned two new commands: <kbd>GALLERY</kbd> lists the archive newest-first on the output screen, and <kbd>VIEW n</kbd> opens a specific image.</p>
+    <p>Each image is decoded with the palette saved inside its own BMP and shown at the same pixel aspect as the live view, drawn at full window resolution above the retro canvas so the game's palette is never disturbed. Wide surface panoramas can be zoomed to full height with <kbd>Z</kbd> and panned across with a position indicator.</p>
+    <p>Taking a snapshot now confirms itself with a brief high-resolution notice that never enters the indexed framebuffer, so it cannot appear in the next capture or in Moviemaker frames. We also fixed a long-standing quirk inherited from the DOS header template: ordinary snapshots declared stale file sizes that strict image tools rejected, and they now open everywhere.</p>
   </section>
 </article>
 </body>

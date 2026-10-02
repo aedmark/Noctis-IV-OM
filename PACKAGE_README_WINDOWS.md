@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.5.0 Release
+# Noctis IV OM — Windows 1.6.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.5.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.6.0 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -79,9 +79,9 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 1.5.0 Visual Fidelity & Post-Processing Update release featuring deterministic
-Scale2x / EPX upscaling, GLSL CRT monitor emulation, sub-pixel geometry rasterization,
-antialiased celestial point distribution, and persistent user configuration. The Microsoft
+This is the 1.6.0 Image Archive Update release featuring the in-cockpit image archive
+(`F4`, or `GALLERY` / `VIEW` on the GOES console) for browsing past snapshots and panoramas,
+capture confirmation notices, and standards-compliant snapshot BMP headers. The Microsoft
 C/C++ runtime is statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

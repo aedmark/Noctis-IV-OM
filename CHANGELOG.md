@@ -5,7 +5,12 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
-## Unreleased
+## 1.6.0 (2026-10-02) — The Image Archive Update
+
+Noctis IV OM 1.6.0 brings the player's photo album aboard the Stardrifter: an
+in-cockpit image archive for browsing past snapshots and panoramas, GOES console
+commands to list and open them, capture confirmations, and snapshot files that
+strict image tools can now open.
 
 ### Cockpit Image Archive (<kbd>F4</kbd>)
 * **In-Cockpit Viewer:** Browse every snapshot and panorama in the player gallery without leaving the game. Press <kbd>F4</kbd> aboard the Stardrifter to open the newest image; <kbd>Left</kbd>/<kbd>Right</kbd> (or <kbd>Page Up</kbd>/<kbd>Page Down</kbd>) browse, <kbd>Home</kbd>/<kbd>End</kbd> jump to the oldest/newest, and <kbd>Esc</kbd>, <kbd>Enter</kbd>, or <kbd>F4</kbd> closes.
@@ -13,6 +18,9 @@ game, not translations of functions from Assembly to C++.
 * **Panorama Panning:** <kbd>Z</kbd> or <kbd>Space</kbd> zooms an image to the full viewer height; while zoomed, <kbd>Left</kbd>/<kbd>Right</kbd> pan across 916-pixel panoramas with a position indicator.
 * **Capture Confirmation:** Snapshots and panoramas now show a brief `SNAPSHOT 00000042 SAVED` notice (or a failure message). It is drawn only in the high-resolution overlay, so it never appears in the next snapshot or in Moviemaker frames.
 * **Faithful Colors:** Each image is decoded with the palette saved inside its own BMP and shown at the same pixel aspect as the live view, drawn at full window resolution above the retro canvas so the game palette is never disturbed.
+
+### Fixes
+* **Standards-Compliant Snapshot BMPs:** Ordinary 320x200 snapshots previously inherited stale file-size and image-size fields from the archived DOS header template, so strict decoders such as ImageMagick rejected them. Snapshots and panoramas now share one header writer that fills in the correct sizes.
 
 ## 1.5.0 (2026-10-02) — The Visual Fidelity & Post-Processing Update
 
