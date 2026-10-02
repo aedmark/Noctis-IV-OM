@@ -42,6 +42,7 @@ jobs:
           mkdir -p _site/play _site/doc
           cp index.html devlog.html site.css _site/
           cp -r doc/img _site/doc/img
+          cp -r manual _site/manual
           cp build/web-release/nivlr.js build/web-release/nivlr.wasm build/web-release/nivlr.data _site/play/
           cp build/web-release/nivlr.html _site/play/index.html
           touch _site/.nojekyll
