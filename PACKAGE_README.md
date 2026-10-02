@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 1.6.0 Release
+# Noctis IV OM — Linux 1.7.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.6.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.7.0 release is
 verified on 64-bit Ubuntu 24.04+ using the X11 display backend. It can run from a
 Wayland desktop through XWayland; native Wayland support is not included.
 
@@ -78,9 +78,9 @@ building the game from source.
 
 ## Release status
 
-This is the 1.6.0 Image Archive Update release featuring the in-cockpit image archive
-(`F4`, or `GALLERY` / `VIEW` on the GOES console) for browsing past snapshots and panoramas,
-capture confirmation notices, and standards-compliant snapshot BMP headers. Please keep
+This is the 1.7.0 Web Update release. The complete game is now also playable in the
+browser at https://aedmark.github.io/Noctis-IV-OM/play/, and quick key taps shorter than
+one frame are no longer missed. Please keep
 the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

@@ -5,6 +5,26 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.7.0 (2026-10-02) — The Web Update
+
+Noctis IV OM 1.7.0 takes the Stardrifter into the browser. The complete game now
+builds for WebAssembly and is playable on the project website, with saves kept in
+the browser, alongside the native Windows and Linux releases.
+
+### Play in the Browser
+* **Full Game on the Web:** Play at <https://aedmark.github.io/Noctis-IV-OM/play/> with no download or install: the same deterministic software renderer, cockpit, GOESnet, planetary surfaces, image archive, and procedural audio as the desktop builds.
+* **Browser Saves:** Your ship, surface position, catalogs, gallery, and settings persist in the browser's IndexedDB storage. The game autosaves about every 30 seconds and whenever the tab is hidden or closed, so you can simply close the tab.
+* **Browser-Friendly Controls:** <kbd>Esc</kbd> never ends a browser session, because browsers also use it to release the mouse and leave fullscreen; landed on a planet, it saves in place. Browser shortcuts that clash with game keys (F1–F4, F6–F11, arrows, Space) are held back while playing.
+* **Any Window Size:** The canvas follows the browser window, from phones to ultrawide monitors, and the game letterboxes its authentic 4:3 frame. The CRT shader (<kbd>F6</kbd>) runs on WebGL2.
+* **Self-Hosting:** A downloadable `Noctis-IV-OM-web.zip` bundle runs from any static web server.
+
+### Website
+* **Play in Browser:** The site gains Play in Browser links and is now deployed to GitHub Pages automatically from `master`.
+* **Noctis IV Manual:** The site's manual links now open the preserved Noctis IV Plus manual instead of a missing page.
+
+### Fixes
+* **Quick Key Taps:** Keys tapped faster than a single frame (55 ms) were sometimes ignored. Input now also reads every press the frame queued, on all platforms.
+
 ## 1.6.0 (2026-10-02) — The Image Archive Update
 
 Noctis IV OM 1.6.0 brings the player's photo album aboard the Stardrifter: an

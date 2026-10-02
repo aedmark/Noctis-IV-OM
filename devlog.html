@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 1.6.0</a>
+        <a class="nav-cta" href="index.html#download">Get 1.7.0</a>
       </nav>
     </div>
   </header>
@@ -130,6 +130,14 @@
     <p>Version 1.6.0 brings the explorer's photo album aboard the Stardrifter. Press <kbd>F4</kbd> in the cockpit to open the GOES Image Archive on the newest capture, then browse every snapshot and panorama with <kbd>Left</kbd>/<kbd>Right</kbd>, <kbd>Page Up</kbd>/<kbd>Page Down</kbd>, and <kbd>Home</kbd>/<kbd>End</kbd>. The GOES console learned two new commands: <kbd>GALLERY</kbd> lists the archive newest-first on the output screen, and <kbd>VIEW n</kbd> opens a specific image.</p>
     <p>Each image is decoded with the palette saved inside its own BMP and shown at the same pixel aspect as the live view, drawn at full window resolution above the retro canvas so the game's palette is never disturbed. Wide surface panoramas can be zoomed to full height with <kbd>Z</kbd> and panned across with a position indicator.</p>
     <p>Taking a snapshot now confirms itself with a brief high-resolution notice that never enters the indexed framebuffer, so it cannot appear in the next capture or in Moviemaker frames. We also fixed a long-standing quirk inherited from the DOS header template: ordinary snapshots declared stale file sizes that strict image tools rejected, and they now open everywhere.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.7.0: The Web Update — Noctis IV OM in Your Browser</h2>
+    <p>Version 1.7.0 takes the Stardrifter into the browser. The complete game now builds for WebAssembly with Emscripten and runs on the project website: the same deterministic 320x200 software renderer, cockpit, GOESnet console, planetary surfaces, image archive, and procedural audio, with nothing to install.</p>
+    <p>Rather than restructuring the inherited game loops, the browser build uses ASYNCIFY so the space and surface loops hand control back to the browser once per 55 ms tick. Rendering goes through WebGL2, so the CRT shader works in the browser too, and the canvas follows any window size while the game letterboxes its 4:3 frame.</p>
+    <p>Saves live in the browser's IndexedDB storage. The game autosaves about every 30 seconds and whenever the tab is hidden, including your exact position on a planet's surface, so closing the tab is safe. Because browsers reserve <kbd>Esc</kbd> for releasing the mouse and leaving fullscreen, it never ends a web session; on a planet it saves in place.</p>
+    <p>Along the way we fixed quick key taps shorter than one frame being ignored on every platform, and the site's manual links now open the preserved Noctis IV Plus manual. The site itself now deploys automatically to GitHub Pages.</p>
   </section>
 </article>
 </body>
