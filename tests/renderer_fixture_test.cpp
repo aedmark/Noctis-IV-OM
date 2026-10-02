@@ -94,5 +94,42 @@ int main() {
         return 1;
     }
 
+    // Sub-pixel fidelity rasterization test
+    reset_renderer();
+    set_subpixel_fidelity(true);
+    framebuffer.fill(0);
+    poly3d(flat_x.data(), flat_y.data(), flat_z.data(), 4, 42);
+    const auto fidelity_pixels = nonzero_pixels();
+    if (fidelity_pixels == 0) {
+        std::fprintf(stderr, "subpixel fidelity: poly3d rendered 0 pixels\n");
+        return 1;
+    }
+
+    framebuffer.fill(0);
+    polymap(textured_x.data(), textured_y.data(), textured_z.data(), 4, 0);
+    const auto polymap_fidelity_pixels = nonzero_pixels();
+    if (polymap_fidelity_pixels == 0) {
+        std::fprintf(stderr, "subpixel fidelity: polymap rendered 0 pixels\n");
+        return 1;
+    }
+    set_subpixel_fidelity(false);
+
+    // Verify restore to legacy mode yields exact original flat & textured hashes
+    reset_renderer();
+    poly3d(flat_x.data(), flat_y.data(), flat_z.data(), 4, 42);
+    const auto restored_flat_hash = fnv1a(framebuffer.data(), visible_bytes);
+    if (restored_flat_hash != expected_flat_hash) {
+        std::fprintf(stderr, "subpixel fidelity: flat legacy restore mismatch\n");
+        return 1;
+    }
+
+    reset_renderer();
+    polymap(textured_x.data(), textured_y.data(), textured_z.data(), 4, 0);
+    const auto restored_textured_hash = fnv1a(framebuffer.data(), visible_bytes);
+    if (restored_textured_hash != expected_textured_hash) {
+        std::fprintf(stderr, "subpixel fidelity: textured legacy restore mismatch\n");
+        return 1;
+    }
+
     return 0;
 }

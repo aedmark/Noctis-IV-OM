@@ -4,13 +4,20 @@
 #include <raylib.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstring>
+#include <fstream>
+#include <sstream>
 
 namespace noctis {
 
 namespace {
 AspectRatioMode g_current_aspect_mode = AspectRatioMode::crt_4_3;
+bool g_fullscreen_configured = false;
+std::int8_t g_draw_hud = 1;
+std::int8_t g_lens_flare_mode = 0;
+std::int8_t g_seamless_border = 0;
 } // namespace
 
 DisplayViewport calculate_viewport(int window_width, int window_height, AspectRatioMode mode) {
@@ -81,12 +88,31 @@ void set_aspect_ratio_mode(AspectRatioMode mode) {
 }
 
 bool is_fullscreen() {
-    return IsWindowFullscreen();
+    return IsWindowReady() ? IsWindowFullscreen() : g_fullscreen_configured;
 }
 
 void toggle_fullscreen() {
-    ToggleFullscreen();
+    if (IsWindowReady()) {
+        ToggleFullscreen();
+        g_fullscreen_configured = IsWindowFullscreen();
+    } else {
+        g_fullscreen_configured = !g_fullscreen_configured;
+    }
 }
+
+void set_fullscreen(bool enabled) {
+    g_fullscreen_configured = enabled;
+    if (IsWindowReady() && (IsWindowFullscreen() != enabled)) {
+        ToggleFullscreen();
+    }
+}
+
+std::int8_t get_setting_draw_hud() { return g_draw_hud; }
+void set_setting_draw_hud(std::int8_t val) { g_draw_hud = val; }
+std::int8_t get_setting_lens_flare_mode() { return g_lens_flare_mode; }
+void set_setting_lens_flare_mode(std::int8_t val) { g_lens_flare_mode = val; }
+std::int8_t get_setting_seamless_border() { return g_seamless_border; }
+void set_setting_seamless_border(std::int8_t val) { g_seamless_border = val; }
 
 void render_high_dpi_hud(const char *status_text, int delay, int render_width, int render_height,
                          const DisplayViewport &viewport) {
@@ -253,6 +279,283 @@ void render_timewarp_slider(int render_width, int render_height, const DisplayVi
         set_timewarp_multiplier(new_mult);
         touch_timewarp_slider();
     }
+}
+
+namespace {
+bool g_crt_shader_enabled = false;
+Shader g_crt_shader{};
+bool g_shader_loaded      = false;
+int g_loc_resolution      = -1;
+int g_loc_time            = -1;
+
+const char *kCrtFragmentShader = R"(#version 330
+
+in vec2 fragTexCoord;
+in vec4 fragColor;
+
+out vec4 finalColor;
+
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform vec2 resolution;
+uniform float time;
+
+// Gentle barrel distortion: authentic curved glass monitor
+vec2 curve(vec2 uv) {
+    vec2 st = uv * 2.0 - 1.0;
+    vec2 offset = abs(st.yx) / vec2(8.0, 6.0);
+    st = st + st * offset * offset;
+    return st * 0.5 + 0.5;
+}
+
+void main() {
+    vec2 uv = curve(fragTexCoord);
+
+    // Dark border outside curved monitor glass
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+        finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
+
+    vec4 tex = texture(texture0, uv);
+
+    // 1. Scanline modulation (200 vertical scanlines corresponding to authentic 320x200 CRT)
+    float scanline = 0.88 + 0.12 * sin(uv.y * 200.0 * 6.2831853);
+
+    // 2. Aperture grille / shadow mask phosphor triad simulation
+    float px = mod(gl_FragCoord.x, 3.0);
+    vec3 mask = vec3(0.92);
+    if (px < 1.0) {
+        mask.r = 1.08;
+    } else if (px < 2.0) {
+        mask.g = 1.08;
+    } else {
+        mask.b = 1.08;
+    }
+
+    // 3. Phosphor bloom / core glow for intense celestial bodies and stars
+    float lum = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+    vec3 bloom = vec3(0.0);
+    if (lum > 0.65) {
+        bloom = (lum - 0.65) * 0.3 * tex.rgb;
+    }
+
+    // 4. Subtle corner vignette
+    vec2 vignette_coord = uv * (1.0 - uv);
+    float vignette = clamp(vignette_coord.x * vignette_coord.y * 25.0, 0.0, 1.0);
+    vignette = pow(vignette, 0.25);
+
+    vec3 rgb = (tex.rgb + bloom) * scanline * mask * vignette;
+    finalColor = vec4(rgb, tex.a) * colDiffuse * fragColor;
+}
+)";
+} // namespace
+
+void init_display_shaders() {
+    if (g_shader_loaded) return;
+    g_crt_shader = LoadShaderFromMemory(nullptr, kCrtFragmentShader);
+    if (IsShaderValid(g_crt_shader)) {
+        g_shader_loaded  = true;
+        g_loc_resolution = GetShaderLocation(g_crt_shader, "resolution");
+        g_loc_time       = GetShaderLocation(g_crt_shader, "time");
+    }
+}
+
+void cleanup_display_shaders() {
+    if (g_shader_loaded && IsShaderValid(g_crt_shader)) {
+        UnloadShader(g_crt_shader);
+    }
+    g_shader_loaded  = false;
+    g_crt_shader     = {};
+    g_loc_resolution = -1;
+    g_loc_time       = -1;
+}
+
+void begin_crt_shader(int render_width, int render_height) {
+    if (!g_crt_shader_enabled) return;
+    if (!g_shader_loaded) {
+        init_display_shaders();
+    }
+    if (!g_shader_loaded || !IsShaderValid(g_crt_shader)) return;
+
+    if (g_loc_resolution >= 0) {
+        const float res[2] = {static_cast<float>(render_width), static_cast<float>(render_height)};
+        SetShaderValue(g_crt_shader, g_loc_resolution, res, SHADER_UNIFORM_VEC2);
+    }
+    if (g_loc_time >= 0) {
+        const float t = static_cast<float>(GetTime());
+        SetShaderValue(g_crt_shader, g_loc_time, &t, SHADER_UNIFORM_FLOAT);
+    }
+    BeginShaderMode(g_crt_shader);
+}
+
+void end_crt_shader() {
+    if (!g_crt_shader_enabled || !g_shader_loaded || !IsShaderValid(g_crt_shader)) return;
+    EndShaderMode();
+}
+
+bool is_crt_shader_enabled() {
+    return g_crt_shader_enabled;
+}
+
+void set_crt_shader_enabled(bool enabled) {
+    g_crt_shader_enabled = enabled;
+}
+
+bool toggle_crt_shader() {
+    g_crt_shader_enabled = !g_crt_shader_enabled;
+    return g_crt_shader_enabled;
+}
+
+namespace {
+
+inline std::string trim_str(std::string_view s) {
+    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.front()))) s.remove_prefix(1);
+    while (!s.empty() && std::isspace(static_cast<unsigned char>(s.back()))) s.remove_suffix(1);
+    return std::string(s);
+}
+
+inline std::string to_lower_str(std::string_view s) {
+    std::string res;
+    res.reserve(s.size());
+    for (char c : s) res.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+    return res;
+}
+
+} // namespace
+
+DisplaySettings capture_display_settings() {
+    DisplaySettings s;
+    s.aspect_ratio = get_aspect_ratio_mode();
+    s.upscale_mode = get_upscale_mode();
+    s.crt_shader = is_crt_shader_enabled();
+    s.subpixel_fidelity = get_subpixel_fidelity();
+    s.fullscreen = is_fullscreen();
+    s.timewarp_multiplier = get_timewarp_multiplier();
+    s.draw_hud = g_draw_hud;
+    s.lens_flare_mode = g_lens_flare_mode;
+    s.seamless_border = g_seamless_border;
+    return s;
+}
+
+void apply_display_settings(const DisplaySettings &settings) {
+    set_aspect_ratio_mode(settings.aspect_ratio);
+    set_upscale_mode(settings.upscale_mode);
+    set_crt_shader_enabled(settings.crt_shader);
+    set_subpixel_fidelity(settings.subpixel_fidelity);
+    set_fullscreen(settings.fullscreen);
+    set_timewarp_multiplier(settings.timewarp_multiplier);
+    g_draw_hud = settings.draw_hud;
+    g_lens_flare_mode = settings.lens_flare_mode;
+    g_seamless_border = settings.seamless_border;
+}
+
+bool save_display_settings(const std::filesystem::path &config_dir) {
+    std::error_code ec;
+    std::filesystem::create_directories(config_dir, ec);
+    if (ec) return false;
+
+    const auto settings = capture_display_settings();
+    const auto file_path = config_dir / "display_settings.ini";
+    const auto tmp_path = config_dir / "display_settings.ini.tmp";
+
+    std::ofstream out(tmp_path, std::ios::trunc);
+    if (!out.is_open()) return false;
+
+    out << "[Display]\n";
+
+    const char *aspect_str = "crt_4_3";
+    if (settings.aspect_ratio == AspectRatioMode::pixel_16_10) aspect_str = "pixel_16_10";
+    else if (settings.aspect_ratio == AspectRatioMode::stretch_16_9) aspect_str = "stretch_16_9";
+    out << "aspect_ratio = " << aspect_str << "\n";
+
+    const char *upscale_str = "crisp";
+    if (settings.upscale_mode == UpscaleMode::edge_scale2x) upscale_str = "scale2x";
+    else if (settings.upscale_mode == UpscaleMode::smooth_bilinear) upscale_str = "smooth";
+    out << "upscale_mode = " << upscale_str << "\n";
+
+    out << "crt_shader = " << (settings.crt_shader ? 1 : 0) << "\n";
+    out << "subpixel_fidelity = " << (settings.subpixel_fidelity ? 1 : 0) << "\n";
+    out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
+
+    out << "timewarp_multiplier = " << settings.timewarp_multiplier << "\n";
+    out << "draw_hud = " << static_cast<int>(settings.draw_hud) << "\n";
+    out << "lens_flare_mode = " << static_cast<int>(settings.lens_flare_mode) << "\n";
+    out << "seamless_border = " << static_cast<int>(settings.seamless_border) << "\n";
+
+    out.close();
+    if (!out) return false;
+
+    std::filesystem::rename(tmp_path, file_path, ec);
+    if (ec) {
+        std::filesystem::copy_file(tmp_path, file_path, std::filesystem::copy_options::overwrite_existing, ec);
+        std::filesystem::remove(tmp_path, ec);
+    }
+    return !ec;
+}
+
+bool load_display_settings(const std::filesystem::path &config_dir) {
+    const auto file_path = config_dir / "display_settings.ini";
+    std::error_code ec;
+    if (!std::filesystem::exists(file_path, ec)) return false;
+
+    std::ifstream in(file_path);
+    if (!in.is_open()) return false;
+
+    DisplaySettings settings = capture_display_settings();
+    std::string line;
+
+    while (std::getline(in, line)) {
+        const auto comment_pos = line.find_first_of(";#");
+        if (comment_pos != std::string::npos) {
+            line = line.substr(0, comment_pos);
+        }
+        std::string trimmed = trim_str(line);
+        if (trimmed.empty() || trimmed.front() == '[') continue;
+
+        const auto eq_pos = trimmed.find('=');
+        if (eq_pos == std::string::npos) continue;
+
+        std::string key = to_lower_str(trim_str(trimmed.substr(0, eq_pos)));
+        std::string val = to_lower_str(trim_str(trimmed.substr(eq_pos + 1)));
+
+        if (key == "aspect_ratio") {
+            if (val == "crt_4_3" || val == "0" || val == "4:3") settings.aspect_ratio = AspectRatioMode::crt_4_3;
+            else if (val == "pixel_16_10" || val == "1" || val == "16:10") settings.aspect_ratio = AspectRatioMode::pixel_16_10;
+            else if (val == "stretch_16_9" || val == "2" || val == "16:9") settings.aspect_ratio = AspectRatioMode::stretch_16_9;
+        } else if (key == "upscale_mode") {
+            if (val == "crisp" || val == "crisp_pixel" || val == "0") settings.upscale_mode = UpscaleMode::crisp_pixel;
+            else if (val == "scale2x" || val == "edge_scale2x" || val == "1") settings.upscale_mode = UpscaleMode::edge_scale2x;
+            else if (val == "smooth" || val == "smooth_bilinear" || val == "2") settings.upscale_mode = UpscaleMode::smooth_bilinear;
+        } else if (key == "crt_shader") {
+            settings.crt_shader = (val == "1" || val == "true" || val == "on" || val == "yes");
+        } else if (key == "subpixel_fidelity") {
+            settings.subpixel_fidelity = (val == "1" || val == "true" || val == "on" || val == "yes");
+        } else if (key == "fullscreen") {
+            settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
+        } else if (key == "timewarp_multiplier") {
+            try {
+                int mult = std::stoi(val);
+                settings.timewarp_multiplier = std::clamp(mult, 1, 5000);
+            } catch (...) {}
+        } else if (key == "draw_hud") {
+            try {
+                settings.draw_hud = (std::stoi(val) != 0) ? 1 : 0;
+            } catch (...) {}
+        } else if (key == "lens_flare_mode") {
+            try {
+                int mode = std::stoi(val);
+                settings.lens_flare_mode = static_cast<std::int8_t>(std::clamp(mode, -1, 1));
+            } catch (...) {}
+        } else if (key == "seamless_border") {
+            try {
+                settings.seamless_border = (std::stoi(val) != 0) ? 1 : 0;
+            } catch (...) {}
+        }
+    }
+
+    apply_display_settings(settings);
+    return true;
 }
 
 } // namespace noctis

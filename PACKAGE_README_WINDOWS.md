@@ -66,6 +66,10 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 - **Fullscreen:** Press `F11` or `Alt+Enter` to toggle fullscreen mode.
 - **Aspect Ratio:** Press `F8` to cycle aspect ratio (4:3 CRT authentic, 16:10 square pixels, 16:9 stretch).
+- **Upscaling:** Press `F7` to cycle upscaling mode (Crisp Pixel 1x, Scale2x Edge-Directed, Smooth Bilinear).
+- **CRT Shader:** Press `F6` to toggle vintage monitor CRT simulation (scanlines, aperture grille, barrel curve, bloom).
+- **Sub-Pixel Fidelity:** Press `F2` then `G` to toggle sub-pixel geometry rasterization and antialiased stars, eliminating 3D mesh wobble and jitter.
+- **Settings Persistence:** Display aspect ratios, upscale filters, CRT shader, sub-pixel fidelity, fullscreen, and timewarp settings persist across launches in `display_settings.ini`.
 - **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
 - **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.

@@ -1,7 +1,9 @@
 #include "display.h"
+#include "simulation_clock.h"
 
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 
 namespace {
 bool require(bool condition, const char *message) {
@@ -99,6 +101,109 @@ int main() {
     {
         noctis::touch_timewarp_slider();
         ok &= require(true, "touch_timewarp_slider did not crash");
+    }
+
+    // 10. CRT shader state and toggle
+    {
+        ok &= require(!noctis::is_crt_shader_enabled(), "CRT shader disabled by default");
+        noctis::set_crt_shader_enabled(true);
+        ok &= require(noctis::is_crt_shader_enabled(), "CRT shader enabled");
+        const bool toggled = noctis::toggle_crt_shader();
+        ok &= require(!toggled && !noctis::is_crt_shader_enabled(), "CRT shader toggled off");
+        // Safe begin/end calls without initialized window/shader should not crash
+        noctis::begin_crt_shader(640, 480);
+        noctis::end_crt_shader();
+    }
+
+    // 11. Sub-pixel fidelity state and toggle
+    {
+        ok &= require(!noctis::get_subpixel_fidelity(), "subpixel fidelity disabled by default");
+        noctis::set_subpixel_fidelity(true);
+        ok &= require(noctis::get_subpixel_fidelity(), "subpixel fidelity enabled");
+        const bool toggled = noctis::toggle_subpixel_fidelity();
+        ok &= require(!toggled && !noctis::get_subpixel_fidelity(), "subpixel fidelity toggled off");
+    }
+
+    // 12. Display Settings persistence round-trip
+    {
+        const auto test_dir = std::filesystem::temp_directory_path() / "noctis_display_test_cfg";
+        std::error_code ec;
+        std::filesystem::remove_all(test_dir, ec);
+
+        // Configure custom settings
+        noctis::set_aspect_ratio_mode(noctis::AspectRatioMode::pixel_16_10);
+        noctis::set_upscale_mode(noctis::UpscaleMode::edge_scale2x);
+        noctis::set_crt_shader_enabled(true);
+        noctis::set_subpixel_fidelity(true);
+        noctis::set_fullscreen(true);
+        noctis::set_timewarp_multiplier(250);
+        noctis::set_setting_draw_hud(0);
+        noctis::set_setting_lens_flare_mode(-1);
+        noctis::set_setting_seamless_border(1);
+
+        const bool saved = noctis::save_display_settings(test_dir);
+        ok &= require(saved, "save_display_settings should succeed");
+        ok &= require(std::filesystem::exists(test_dir / "display_settings.ini"), "display_settings.ini should exist");
+
+        // Mutate all settings to different values
+        noctis::set_aspect_ratio_mode(noctis::AspectRatioMode::stretch_16_9);
+        noctis::set_upscale_mode(noctis::UpscaleMode::crisp_pixel);
+        noctis::set_crt_shader_enabled(false);
+        noctis::set_subpixel_fidelity(false);
+        noctis::set_fullscreen(false);
+        noctis::set_timewarp_multiplier(1);
+        noctis::set_setting_draw_hud(1);
+        noctis::set_setting_lens_flare_mode(1);
+        noctis::set_setting_seamless_border(0);
+
+        // Load settings back
+        const bool loaded = noctis::load_display_settings(test_dir);
+        ok &= require(loaded, "load_display_settings should succeed");
+
+        ok &= require(noctis::get_aspect_ratio_mode() == noctis::AspectRatioMode::pixel_16_10,
+                      "aspect_ratio restored to 16:10");
+        ok &= require(noctis::get_upscale_mode() == noctis::UpscaleMode::edge_scale2x,
+                      "upscale_mode restored to scale2x");
+        ok &= require(noctis::is_crt_shader_enabled() == true,
+                      "crt_shader restored to true");
+        ok &= require(noctis::get_subpixel_fidelity() == true,
+                      "subpixel_fidelity restored to true");
+        ok &= require(noctis::is_fullscreen() == true,
+                      "fullscreen restored to true");
+        ok &= require(noctis::get_timewarp_multiplier() == 250,
+                      "timewarp_multiplier restored to 250");
+        ok &= require(noctis::get_setting_draw_hud() == 0,
+                      "draw_hud restored to 0");
+        ok &= require(noctis::get_setting_lens_flare_mode() == -1,
+                      "lens_flare_mode restored to -1");
+        ok &= require(noctis::get_setting_seamless_border() == 1,
+                      "seamless_border restored to 1");
+
+        // 13. Missing file handling
+        const auto non_existent = test_dir / "does_not_exist";
+        const bool missing_load = noctis::load_display_settings(non_existent);
+        ok &= require(!missing_load, "load_display_settings on missing path returns false");
+        ok &= require(noctis::get_timewarp_multiplier() == 250, "settings preserved when missing file");
+
+        // 14. Corrupt / partial file handling
+        const auto corrupt_file = test_dir / "display_settings.ini";
+        {
+            std::ofstream out(corrupt_file, std::ios::trunc);
+            out << "# Comment\n"
+                << "invalid line without equal sign\n"
+                << "aspect_ratio = 4:3\n"
+                << "upscale_mode = smooth\n"
+                << "timewarp_multiplier = 99999\n" // Clamped to 5000
+                << "lens_flare_mode = -99\n";      // Clamped to -1
+        }
+        const bool corrupt_load = noctis::load_display_settings(test_dir);
+        ok &= require(corrupt_load, "corrupt load recovers gracefully");
+        ok &= require(noctis::get_aspect_ratio_mode() == noctis::AspectRatioMode::crt_4_3, "aspect_ratio parsed 4:3");
+        ok &= require(noctis::get_upscale_mode() == noctis::UpscaleMode::smooth_bilinear, "upscale_mode parsed smooth");
+        ok &= require(noctis::get_timewarp_multiplier() == 5000, "timewarp_multiplier clamped to 5000");
+        ok &= require(noctis::get_setting_lens_flare_mode() == -1, "lens_flare_mode clamped to -1");
+
+        std::filesystem::remove_all(test_dir, ec);
     }
 
     return ok ? 0 : 1;

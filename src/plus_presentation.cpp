@@ -284,7 +284,11 @@ const std::vector<std::string_view> &plus_help_lines(bool surface) {
 const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        std::int8_t lens_flare_mode,
                                                        bool seamless_border,
-                                                       int timewarp_multiplier) {
+                                                       int timewarp_multiplier,
+                                                       int upscale_mode,
+                                                       bool crt_shader,
+                                                       bool subpixel_fidelity,
+                                                       bool show_advanced_fx) {
     std::vector<std::string> lines = {
         "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
         draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
@@ -292,6 +296,14 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
             : lens_flare_mode == -1 ? "LENS FLARES ALWAYS OFF (F)"
                                     : "VISOR LENS FLARES ONLY (F)",
         seamless_border ? "SEAMLESS BORDER (B)" : "DEFAULT BORDER (B)"};
+    if (show_advanced_fx) {
+        const char *upscale_label = (upscale_mode == 1) ? "SCALE2X EDGE (U)"
+                                  : (upscale_mode == 2) ? "SMOOTH BILINEAR (U)"
+                                                        : "CRISP PIXEL 1X (U)";
+        lines.emplace_back(std::string("UPSCALE: ") + upscale_label);
+        lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
+        lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
+    }
     if (timewarp_multiplier > 0) {
         char buf[48];
         std::snprintf(buf, sizeof(buf), "TIMEWARP %dx ([ / ] ADJUST)", timewarp_multiplier);

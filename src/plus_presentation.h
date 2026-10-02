@@ -21,7 +21,11 @@ const std::vector<std::string_view> &plus_help_lines(bool surface);
 const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        std::int8_t lens_flare_mode,
                                                        bool seamless_border,
-                                                       int timewarp_multiplier = 0);
+                                                       int timewarp_multiplier = 0,
+                                                       int upscale_mode = 0,
+                                                       bool crt_shader = false,
+                                                       bool subpixel_fidelity = false,
+                                                       bool show_advanced_fx = false);
 const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
                                                       std::uint16_t cadence,
                                                       bool black_flash,

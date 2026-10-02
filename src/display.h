@@ -1,6 +1,9 @@
 #pragma once
 
+#include "upscale.h"
+
 #include <cstdint>
+#include <filesystem>
 #include <string>
 
 namespace noctis {
@@ -35,6 +38,15 @@ void set_aspect_ratio_mode(AspectRatioMode mode);
 // Fullscreen controls
 bool is_fullscreen();
 void toggle_fullscreen();
+void set_fullscreen(bool enabled);
+
+// Presentation setting accessors for display config
+std::int8_t get_setting_draw_hud();
+void set_setting_draw_hud(std::int8_t val);
+std::int8_t get_setting_lens_flare_mode();
+void set_setting_lens_flare_mode(std::int8_t val);
+std::int8_t get_setting_seamless_border();
+void set_setting_seamless_border(std::int8_t val);
 
 // High-DPI HUD overlay rendering
 void render_high_dpi_hud(const char *status_text, int delay, int render_width, int render_height,
@@ -44,5 +56,41 @@ void render_high_dpi_hud(const char *status_text, int delay, int render_width, i
 void render_timewarp_slider(int render_width, int render_height, const DisplayViewport &viewport,
                             int status_delay = 0);
 void touch_timewarp_slider();
+
+// CRT Shader Pipeline (M10-W02)
+bool is_crt_shader_enabled();
+void set_crt_shader_enabled(bool enabled);
+bool toggle_crt_shader();
+void init_display_shaders();
+void cleanup_display_shaders();
+void begin_crt_shader(int render_width, int render_height);
+void end_crt_shader();
+
+// Sub-pixel geometry fidelity mode (M10-W03)
+#ifndef NOCTIS_SUBPIXEL_FIDELITY_DEFINED
+#define NOCTIS_SUBPIXEL_FIDELITY_DEFINED
+inline bool g_subpixel_fidelity = false;
+inline bool get_subpixel_fidelity() { return g_subpixel_fidelity; }
+inline void set_subpixel_fidelity(bool enabled) { g_subpixel_fidelity = enabled; }
+inline bool toggle_subpixel_fidelity() { g_subpixel_fidelity = !g_subpixel_fidelity; return g_subpixel_fidelity; }
+#endif
+
+// Display Settings Structure & Persistence (Milestone 10)
+struct DisplaySettings {
+    AspectRatioMode aspect_ratio = AspectRatioMode::crt_4_3;
+    UpscaleMode upscale_mode = UpscaleMode::crisp_pixel;
+    bool crt_shader = false;
+    bool subpixel_fidelity = false;
+    bool fullscreen = false;
+    int timewarp_multiplier = 100;
+    std::int8_t draw_hud = 1;
+    std::int8_t lens_flare_mode = 0;
+    std::int8_t seamless_border = 0;
+};
+
+DisplaySettings capture_display_settings();
+void apply_display_settings(const DisplaySettings &settings);
+bool save_display_settings(const std::filesystem::path &config_dir);
+bool load_display_settings(const std::filesystem::path &config_dir);
 
 } // namespace noctis

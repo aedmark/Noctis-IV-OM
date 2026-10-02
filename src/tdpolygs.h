@@ -184,6 +184,74 @@ glm::vec3 barycentric(glm::ivec2 *pts, glm::ivec2 P) {
     return glm::vec3(1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
 }
 
+#ifndef NOCTIS_SUBPIXEL_FIDELITY_DEFINED
+#define NOCTIS_SUBPIXEL_FIDELITY_DEFINED
+namespace noctis {
+inline bool g_subpixel_fidelity = false;
+inline bool get_subpixel_fidelity() { return g_subpixel_fidelity; }
+inline void set_subpixel_fidelity(bool enabled) { g_subpixel_fidelity = enabled; }
+inline bool toggle_subpixel_fidelity() { g_subpixel_fidelity = !g_subpixel_fidelity; return g_subpixel_fidelity; }
+} // namespace noctis
+#endif
+
+inline bool get_subpixel_fidelity() { return noctis::get_subpixel_fidelity(); }
+inline void set_subpixel_fidelity(bool enabled) { noctis::set_subpixel_fidelity(enabled); }
+inline bool toggle_subpixel_fidelity() { return noctis::toggle_subpixel_fidelity(); }
+
+void draw_triangle_2d_subpixel(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, uint8_t color) {
+    float det = (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
+    if (std::abs(det) < 1e-4f) return;
+
+    if (det < 0.0f) {
+        std::swap(p1, p2);
+        det = -det;
+    }
+
+    const int min_x = std::max(0, static_cast<int>(std::floor(std::min({p0.x, p1.x, p2.x}))));
+    const int max_x = std::min(adapted_width - 1, static_cast<int>(std::ceil(std::max({p0.x, p1.x, p2.x}))));
+    const int min_y = std::max(0, static_cast<int>(std::floor(std::min({p0.y, p1.y, p2.y}))));
+    const int max_y = std::min(adapted_height - 1, static_cast<int>(std::ceil(std::max({p0.y, p1.y, p2.y}))));
+
+    const float dx01 = p0.y - p1.y;
+    const float dy01 = p1.x - p0.x;
+    const float dx12 = p1.y - p2.y;
+    const float dy12 = p2.x - p1.x;
+    const float dx20 = p2.y - p0.y;
+    const float dy20 = p0.x - p2.x;
+
+    for (int y = min_y; y <= max_y; ++y) {
+        const float py = static_cast<float>(y) + 0.5f;
+        for (int x = min_x; x <= max_x; ++x) {
+            const float px = static_cast<float>(x) + 0.5f;
+
+            const float e01 = dx01 * (px - p0.x) + dy01 * (py - p0.y);
+            const float e12 = dx12 * (px - p1.x) + dy12 * (py - p1.y);
+            const float e20 = dx20 * (px - p2.x) + dy20 * (py - p2.y);
+
+            if (e01 >= 0.0f && e12 >= 0.0f && e20 >= 0.0f) {
+                const uint32_t idx = adapted_width * y + x;
+                switch (flares) {
+                case 0:
+                    adapted[idx] = color;
+                    break;
+                case 1:
+                    adapted[idx] = std::min((adapted[idx] & 0x3Fu) + color, 62u);
+                    break;
+                case 2:
+                    adapted[idx] = std::min(0x40u + (max_x - x), 127u);
+                    break;
+                case 4:
+                    adapted[idx] =
+                        (((entity & 0x80u) == 0x80u) ? 0 : (std::min((color & 0x3Fu) + entity, 0x3Fu)) | (color & 0xC0u));
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color) {
     glm::ivec2 pts[3] = {p0, p1, p2};
 
@@ -547,18 +615,34 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_
 
     uint16_t fakedi = 0;
 
-    if (vr2 == 3) {
-        draw_triangle_2d(glm::ivec2(round(video_x0[0]), round(video_y0[0])),
-                         glm::ivec2(round(video_x0[1]), round(video_y0[1])),
-                         glm::ivec2(round(video_x0[2]), round(video_y0[2])), colore);
-    } else {
-        draw_triangle_2d(glm::ivec2(round(video_x0[0]), round(video_y0[0])),
-                         glm::ivec2(round(video_x0[1]), round(video_y0[1])),
-                         glm::ivec2(round(video_x0[2]), round(video_y0[2])), colore);
+    if (noctis::get_subpixel_fidelity()) {
+        if (vr2 == 3) {
+            draw_triangle_2d_subpixel(glm::vec2(video_x0[0], video_y0[0]),
+                                      glm::vec2(video_x0[1], video_y0[1]),
+                                      glm::vec2(video_x0[2], video_y0[2]), colore);
+        } else {
+            draw_triangle_2d_subpixel(glm::vec2(video_x0[0], video_y0[0]),
+                                      glm::vec2(video_x0[1], video_y0[1]),
+                                      glm::vec2(video_x0[2], video_y0[2]), colore);
 
-        draw_triangle_2d(glm::ivec2(round(video_x0[2]), round(video_y0[2])),
-                         glm::ivec2(round(video_x0[3]), round(video_y0[3])),
-                         glm::ivec2(round(video_x0[0]), round(video_y0[0])), colore);
+            draw_triangle_2d_subpixel(glm::vec2(video_x0[2], video_y0[2]),
+                                      glm::vec2(video_x0[3], video_y0[3]),
+                                      glm::vec2(video_x0[0], video_y0[0]), colore);
+        }
+    } else {
+        if (vr2 == 3) {
+            draw_triangle_2d(glm::ivec2(round(video_x0[0]), round(video_y0[0])),
+                             glm::ivec2(round(video_x0[1]), round(video_y0[1])),
+                             glm::ivec2(round(video_x0[2]), round(video_y0[2])), colore);
+        } else {
+            draw_triangle_2d(glm::ivec2(round(video_x0[0]), round(video_y0[0])),
+                             glm::ivec2(round(video_x0[1]), round(video_y0[1])),
+                             glm::ivec2(round(video_x0[2]), round(video_y0[2])), colore);
+
+            draw_triangle_2d(glm::ivec2(round(video_x0[2]), round(video_y0[2])),
+                             glm::ivec2(round(video_x0[3]), round(video_y0[3])),
+                             glm::ivec2(round(video_x0[0]), round(video_y0[0])), colore);
+        }
     }
 }
 
@@ -845,6 +929,9 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     int32_t temp_min_y = ubyl;
     int32_t temp_max_y = lbyl;
 
+    float mp_fx[2 * VERTEXES_PER_POLYGON];
+    float mp_fy[2 * VERTEXES_PER_POLYGON];
+
     for (int16_t i = (vr2 - 1); i >= 0; i--) {
         float base = dpp / ultima_z[i];
 
@@ -854,8 +941,18 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         mp[i * 2]     = round(xtest);
         mp[i * 2 + 1] = round(ytest);
 
-        temp_min_y = (mp[i * 2 + 1] < temp_min_y) ? mp[i * 2 + 1] : temp_min_y;
-        temp_max_y = (mp[i * 2 + 1] > temp_max_y) ? mp[i * 2 + 1] : temp_max_y;
+        mp_fx[i]      = xtest;
+        mp_fy[i]      = ytest;
+
+        if (noctis::get_subpixel_fidelity()) {
+            int32_t iy = static_cast<int32_t>(std::floor(ytest));
+            temp_min_y = (iy < temp_min_y) ? iy : temp_min_y;
+            int32_t cy = static_cast<int32_t>(std::ceil(ytest));
+            temp_max_y = (cy > temp_max_y) ? cy : temp_max_y;
+        } else {
+            temp_min_y = (mp[i * 2 + 1] < temp_min_y) ? mp[i * 2 + 1] : temp_min_y;
+            temp_max_y = (mp[i * 2 + 1] > temp_max_y) ? mp[i * 2 + 1] : temp_max_y;
+        }
     }
 
     min_y = temp_min_y;
@@ -893,47 +990,98 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     mp[vr22]     = mp[0];
     mp[vr22 + 1] = mp[1];
 
-    for (uint32_t i = 0; i < vr22; i += 2) {
-        if (mp[i + 3] < mp[i + 1]) {
-            x1 = mp[i + 2];
-            x2 = mp[i];
+    if (!noctis::get_subpixel_fidelity()) {
+        for (uint32_t i = 0; i < vr22; i += 2) {
+            if (mp[i + 3] < mp[i + 1]) {
+                x1 = mp[i + 2];
+                x2 = mp[i];
 
-            y1 = mp[i + 3];
-            y2 = mp[i + 1];
-        } else {
-            x1 = mp[i];
-            x2 = mp[i + 2];
+                y1 = mp[i + 3];
+                y2 = mp[i + 1];
+            } else {
+                x1 = mp[i];
+                x2 = mp[i + 2];
 
-            y1 = mp[i + 1];
-            y2 = mp[i + 3];
+                y1 = mp[i + 1];
+                y2 = mp[i + 3];
+            }
+
+            if (y1 != y2) {
+                kx = ((float) (x2 - x1)) / ((float) (y2 - y1));
+
+                if (y1 < lbyl) {
+                    ity = lbyl;
+
+                    x1 += round(((float) (lbyl - y1)) * kx);
+                } else {
+                    ity = y1;
+                }
+
+                if (y2 > ubyl) {
+                    jty = ubyl;
+                } else {
+                    jty = y2;
+                }
+
+                if (ity < jty) {
+                    float tinkywinky = x1;
+                    for (h = ity; h <= jty; h++) {
+                        bndx = tinkywinky;
+
+                        if (bndx < i_low_lim)
+                            bndx = i_low_lim;
+                        if (bndx > i_hig_lim)
+                            bndx = i_hig_lim;
+
+                        if (bndx > fpart[h] && bndx < ubxl) {
+                            fpart[h] = bndx;
+                        } else if (bndx >= ubxl) {
+                            fpart[h] = ubxl;
+                        }
+
+                        if (bndx < ipart[h] && bndx > lbxl) {
+                            ipart[h] = bndx;
+                        } else if (bndx <= lbxl) {
+                            ipart[h] = lbxl;
+                        }
+
+                        tinkywinky += kx;
+                    }
+                }
+            }
         }
+    } else {
+        mp_fx[vr2] = mp_fx[0];
+        mp_fy[vr2] = mp_fy[0];
 
-        if (y1 != y2) {
-            kx = ((float) (x2 - x1)) / ((float) (y2 - y1));
+        for (int16_t v = 0; v < vr2; ++v) {
+            float fx1 = mp_fx[v];
+            float fy1 = mp_fy[v];
+            float fx2 = mp_fx[v + 1];
+            float fy2 = mp_fy[v + 1];
 
-            if (y1 < lbyl) {
-                ity = lbyl;
-
-                x1 += round(((float) (lbyl - y1)) * kx);
-            } else {
-                ity = y1;
+            if (fy2 < fy1) {
+                std::swap(fx1, fx2);
+                std::swap(fy1, fy2);
             }
 
-            if (y2 > ubyl) {
-                jty = ubyl;
-            } else {
-                jty = y2;
+            if (std::abs(fy2 - fy1) < 1e-4f) {
+                continue;
             }
 
-            if (ity < jty) {
-                float tinkywinky = x1;
-                for (h = ity; h <= jty; h++) {
-                    bndx = tinkywinky;
+            float edge_kx = (fx2 - fx1) / (fy2 - fy1);
 
-                    if (bndx < i_low_lim)
-                        bndx = i_low_lim;
-                    if (bndx > i_hig_lim)
-                        bndx = i_hig_lim;
+            int32_t edge_ity = (fy1 < static_cast<float>(lbyl)) ? lbyl : static_cast<int32_t>(std::ceil(fy1));
+            int32_t edge_jty = (fy2 > static_cast<float>(ubyl)) ? ubyl : static_cast<int32_t>(std::floor(fy2));
+
+            if (edge_ity <= edge_jty) {
+                float start_x = fx1 + (static_cast<float>(edge_ity) - fy1) * edge_kx;
+                float cur_x = start_x;
+                for (int32_t h = edge_ity; h <= edge_jty; ++h) {
+                    int32_t bndx = static_cast<int32_t>(std::round(cur_x));
+
+                    if (bndx < i_low_lim) bndx = i_low_lim;
+                    if (bndx > i_hig_lim) bndx = i_hig_lim;
 
                     if (bndx > fpart[h] && bndx < ubxl) {
                         fpart[h] = bndx;
@@ -947,7 +1095,27 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
                         ipart[h] = lbxl;
                     }
 
-                    tinkywinky += kx;
+                    cur_x += edge_kx;
+                }
+            } else {
+                int32_t h = static_cast<int32_t>(std::round((fy1 + fy2) * 0.5f));
+                if (h >= lbyl && h <= ubyl) {
+                    float mid_x = (fx1 + fx2) * 0.5f;
+                    int32_t bndx = static_cast<int32_t>(std::round(mid_x));
+                    if (bndx < i_low_lim) bndx = i_low_lim;
+                    if (bndx > i_hig_lim) bndx = i_hig_lim;
+
+                    if (bndx > fpart[h] && bndx < ubxl) {
+                        fpart[h] = bndx;
+                    } else if (bndx >= ubxl) {
+                        fpart[h] = ubxl;
+                    }
+
+                    if (bndx < ipart[h] && bndx > lbxl) {
+                        ipart[h] = bndx;
+                    } else if (bndx <= lbxl) {
+                        ipart[h] = lbxl;
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 #include "audio.h"
 #include "brtl.h"
 #include "display.h"
+#include "upscale.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
 #include "native_save.h"
@@ -20,6 +21,15 @@ const double deg = M_PI / 180;
 static int16_t opencapcount = 0;
 float refx, refy, refz;
 float sp_x, sp_y, sp_z;
+
+namespace {
+void save_surface_display_settings() {
+    noctis::set_setting_draw_hud(draw_hud);
+    noctis::set_setting_lens_flare_mode(lens_flare_mode);
+    noctis::set_setting_seamless_border(seamless_border);
+    noctis::save_display_settings(noctis::runtime_paths().config_dir);
+}
+} // namespace
 
 /*  Funzioni e variabili globali di tracciamento e gestione
     delle superfici planetarie, in poligonale (h! ce la far??)
@@ -5714,6 +5724,7 @@ nosecondarysun:
                     if (w == 't') {
                         draw_hud = !draw_hud;
                         status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
+                        save_surface_display_settings();
                         continue;
                     }
                     if (w == 'f') {
@@ -5722,11 +5733,32 @@ nosecondarysun:
                                : lens_flare_mode == -1 ? "FLARES OFF"
                                                        : "VISOR FLARES",
                                100);
+                        save_surface_display_settings();
                         continue;
                     }
                     if (w == 'b' || w == noctis::delete_snapshot_key) {
                         seamless_border = !seamless_border;
                         status(seamless_border ? "SEAMLESS BD." : "DEFAULT BD.", 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 'u' || w == 'U') {
+                        const auto new_mode = noctis::cycle_upscale_mode(noctis::get_upscale_mode());
+                        noctis::set_upscale_mode(new_mode);
+                        status(noctis::upscale_mode_name(new_mode), 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 'c' || w == 'C') {
+                        const bool active = noctis::toggle_crt_shader();
+                        status(active ? "CRT SHADER ON" : "CRT SHADER OFF", 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 'g' || w == 'G') {
+                        const bool active = noctis::toggle_subpixel_fidelity();
+                        status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
+                        save_surface_display_settings();
                         continue;
                     }
                 }
@@ -5753,6 +5785,7 @@ nosecondarysun:
                 if (!graphics_menu_status && !movie_recorder.menu_open() && (w == '[' || w == ']')) {
                     const auto m = noctis::step_timewarp_multiplier((w == '[') ? -1 : 1);
                     noctis::touch_timewarp_slider();
+                    save_surface_display_settings();
                     char msg[32];
                     std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
                     status(msg, 50);

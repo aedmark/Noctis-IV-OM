@@ -7,6 +7,7 @@
 #include "audio.h"
 #include "brtl.h"
 #include "display.h"
+#include "upscale.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
 #include "indexed_framebuffer.h"
@@ -599,7 +600,15 @@ void apply_native_state(const noctis::NativeSaveState &state) {
 
 } // namespace
 
+void save_display_settings_current() {
+    noctis::set_setting_draw_hud(draw_hud);
+    noctis::set_setting_lens_flare_mode(lens_flare_mode);
+    noctis::set_setting_seamless_border(seamless_border);
+    noctis::save_display_settings(noctis::runtime_paths().config_dir);
+}
+
 void freeze() {
+    save_display_settings_current();
     const auto result = noctis::save_native_save(native_situation_file, capture_native_state());
     if (result.status != noctis::NativeSaveStatus::ok) {
         noctis::log_event("error", "native_save", result.message);
@@ -2491,6 +2500,7 @@ float starmass_correction[star_classes] = {
 };
 
 Texture2D screen_texture;
+Texture2D screen_texture_2x;
 
 // Actual noctis stuff starts here.
 float satur, DfCoS;
@@ -2867,6 +2877,10 @@ int main(int argc, char **argv) {
         return 1;
     }
     configure_runtime_file_paths();
+    noctis::load_display_settings(noctis::runtime_paths().config_dir);
+    draw_hud        = noctis::get_setting_draw_hud();
+    lens_flare_mode = noctis::get_setting_lens_flare_mode();
+    seamless_border = noctis::get_setting_seamless_border();
     noctis::log_event("info", "runtime_storage",
                       "ready; copied=" + std::to_string(storage.copied_files) +
                           "; preserved=" + std::to_string(storage.preserved_files));
@@ -2883,12 +2897,22 @@ int main(int argc, char **argv) {
             noctis::log_event("error", "graphics", "window initialization failed");
             return 1;
         }
+        if (noctis::is_fullscreen()) {
+            ToggleFullscreen();
+        }
         SetWindowMinSize(640, 480);
         DisableCursor();
         auto image     = GenImageColor(adapted_width, adapted_height, {});
         screen_texture = LoadTextureFromImage(image);
         SetTextureFilter(screen_texture, TEXTURE_FILTER_POINT);
         UnloadImage(image);
+
+        auto image_2x     = GenImageColor(adapted_width * 2, adapted_height * 2, {});
+        screen_texture_2x = LoadTextureFromImage(image_2x);
+        SetTextureFilter(screen_texture_2x, TEXTURE_FILTER_POINT);
+        UnloadImage(image_2x);
+
+        noctis::init_display_shaders();
 
         if (!no_audio_mode) {
             noctis::initialize_audio();
@@ -2901,11 +2925,24 @@ int main(int argc, char **argv) {
         noctis::set_fullscreen_toggle_handler([]() {
             noctis::toggle_fullscreen();
             status(noctis::is_fullscreen() ? "FULLSCREEN" : "WINDOWED", 50);
+            save_display_settings_current();
         });
         noctis::set_aspect_toggle_handler([]() {
             const auto next_mode = noctis::cycle_aspect_ratio_mode(noctis::get_aspect_ratio_mode());
             noctis::set_aspect_ratio_mode(next_mode);
             status(noctis::aspect_ratio_mode_name(next_mode), 50);
+            save_display_settings_current();
+        });
+        noctis::set_upscale_toggle_handler([]() {
+            const auto next_mode = noctis::cycle_upscale_mode(noctis::get_upscale_mode());
+            noctis::set_upscale_mode(next_mode);
+            status(noctis::upscale_mode_name(next_mode), 50);
+            save_display_settings_current();
+        });
+        noctis::set_crt_toggle_handler([]() {
+            const bool active = noctis::toggle_crt_shader();
+            status(active ? "CRT SHADER: ACTIVE" : "CRT SHADER: DISABLED", 50);
+            save_display_settings_current();
         });
     }
 
@@ -3929,6 +3966,8 @@ int main(int argc, char **argv) {
     if (graphical_smoke_mode) {
         noctis::log_event("info", "graphical_smoke", "window opened, resources loaded, and three frames presented");
         UnloadTexture(screen_texture);
+        UnloadTexture(screen_texture_2x);
+        noctis::cleanup_display_shaders();
         CloseWindow();
     }
 }
@@ -3977,10 +4016,29 @@ void swapBuffers() {
     }
     const auto viewport = noctis::calculate_viewport(render_w, render_h, noctis::get_aspect_ratio_mode());
 
-    DrawTexturePro(screen_texture,
-                   Rectangle{0.0f, 0.0f, static_cast<float>(adapted_width), static_cast<float>(adapted_height)},
-                   Rectangle{viewport.x, viewport.y, viewport.width, viewport.height},
-                   Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    const auto upscale_mode = noctis::get_upscale_mode();
+    noctis::begin_crt_shader(render_w, render_h);
+
+    if (upscale_mode == noctis::UpscaleMode::edge_scale2x) {
+        static std::vector<std::uint32_t> pixels_2x((adapted_width * 2) * (adapted_height * 2));
+        noctis::scale2x_rgba(reinterpret_cast<const std::uint32_t *>(pixels.data()),
+                             adapted_width, adapted_height, pixels_2x.data());
+        UpdateTexture(screen_texture_2x, pixels_2x.data());
+        DrawTexturePro(screen_texture_2x,
+                       Rectangle{0.0f, 0.0f, static_cast<float>(adapted_width * 2), static_cast<float>(adapted_height * 2)},
+                       Rectangle{viewport.x, viewport.y, viewport.width, viewport.height},
+                       Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    } else {
+        SetTextureFilter(screen_texture, (upscale_mode == noctis::UpscaleMode::smooth_bilinear)
+                                             ? TEXTURE_FILTER_BILINEAR
+                                             : TEXTURE_FILTER_POINT);
+        DrawTexturePro(screen_texture,
+                       Rectangle{0.0f, 0.0f, static_cast<float>(adapted_width), static_cast<float>(adapted_height)},
+                       Rectangle{viewport.x, viewport.y, viewport.width, viewport.height},
+                       Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    }
+
+    noctis::end_crt_shader();
 
     if (fcs_status_delay > 0) {
         noctis::render_high_dpi_hud(reinterpret_cast<const char *>(fcs_status_extended),
@@ -6097,15 +6155,31 @@ resynctoplanet:
                 if (mc == 't') {
                     draw_hud = !draw_hud;
                     status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
+                    save_display_settings_current();
                 } else if (mc == 'f') {
                     lens_flare_mode = noctis::cycle_lens_flare_mode(lens_flare_mode);
                     status(lens_flare_mode == 1    ? "FLARES ON"
                            : lens_flare_mode == -1 ? "FLARES OFF"
                                                    : "VISOR FLARES",
                            100);
+                    save_display_settings_current();
                 } else if (mc == 'b' || mc == noctis::delete_snapshot_key) {
                     seamless_border = !seamless_border;
                     status(seamless_border ? "SEAMLESS BD." : "DEFAULT BD.", 100);
+                    save_display_settings_current();
+                } else if (mc == 'u') {
+                    const auto new_mode = noctis::cycle_upscale_mode(noctis::get_upscale_mode());
+                    noctis::set_upscale_mode(new_mode);
+                    status(noctis::upscale_mode_name(new_mode), 100);
+                    save_display_settings_current();
+                } else if (mc == 'c') {
+                    const bool active = noctis::toggle_crt_shader();
+                    status(active ? "CRT SHADER: ACTIVE" : "CRT SHADER: DISABLED", 100);
+                    save_display_settings_current();
+                } else if (mc == 'g') {
+                    const bool active = noctis::toggle_subpixel_fidelity();
+                    status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
+                    save_display_settings_current();
                 }
             } else if (noctis::is_roof_speed_key(mc)) {
                 noctis::toggle_timewarp();
@@ -6118,6 +6192,7 @@ resynctoplanet:
             } else if (mc == '[' || mc == ']' || mc == '-' || mc == '+' || mc == '=') {
                 const auto m = noctis::step_timewarp_multiplier((mc == '[' || mc == '-') ? -1 : 1);
                 noctis::touch_timewarp_slider();
+                save_display_settings_current();
                 char msg[32];
                 std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
                 status(msg, 50);
@@ -6231,6 +6306,7 @@ resynctoplanet:
                     if (mc == 't') {
                         draw_hud = !draw_hud;
                         status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
+                        save_display_settings_current();
                         goto endmain;
                     }
                     if (mc == 'f') {
@@ -6239,11 +6315,32 @@ resynctoplanet:
                                : lens_flare_mode == -1 ? "FLARES OFF"
                                                        : "VISOR FLARES",
                                100);
+                        save_display_settings_current();
                         goto endmain;
                     }
                     if (mc == 'b' || mc == noctis::delete_snapshot_key) {
                         seamless_border = !seamless_border;
                         status(seamless_border ? "SEAMLESS BD." : "DEFAULT BD.", 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'u') {
+                        const auto new_mode = noctis::cycle_upscale_mode(noctis::get_upscale_mode());
+                        noctis::set_upscale_mode(new_mode);
+                        status(noctis::upscale_mode_name(new_mode), 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'c') {
+                        const bool active = noctis::toggle_crt_shader();
+                        status(active ? "CRT SHADER: ACTIVE" : "CRT SHADER: DISABLED", 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'g') {
+                        const bool active = noctis::toggle_subpixel_fidelity();
+                        status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
+                        save_display_settings_current();
                         goto endmain;
                     }
                 }
@@ -6276,6 +6373,7 @@ resynctoplanet:
                     !ip_targetting && !manual_target) {
                     const auto m = noctis::step_timewarp_multiplier((mc == '[' || mc == '-') ? -1 : 1);
                     noctis::touch_timewarp_slider();
+                    save_display_settings_current();
                     char msg[32];
                     std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
                     status(msg, 50);

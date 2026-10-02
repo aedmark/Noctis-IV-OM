@@ -22,7 +22,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M7 | Cross-platform compatibility preview | DONE |
 | M8 | Stabilization and 1.0 General Availability | DONE |
 | M9 | Modern Presentation & Display Enhancements | DONE |
-| M10 | Deterministic Upscaling & Fidelity Increase | PLANNED |
+| M10 | Deterministic Upscaling & Fidelity Increase | DONE |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -233,16 +233,19 @@ containers, not substitutes for that ledger.
 
 **Goal:** Provide advanced deterministic post-processing, upscaling, and geometry fidelity enhancements to elevate visual presentation on modern high-resolution displays.
 
-| ID | Work item | Status | Dependencies |
+| ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M10-W01 | Deterministic edge-directed upscaling | PLANNED | Evaluate and implement deterministic edge-scaling filters (such as integer scaling, xBRZ, or EPX) to scale the 320x200 software framebuffer to high resolutions with smooth curves while retaining authentic color palettes |
-| M10-W02 | CRT simulation shader pipeline | PLANNED | Design optional GLSL post-processing shaders modeling authentic vintage space-sim monitors: aperture grille / shadow mask phosphors, subtle scanline weighting, bloom on bright star cores, and gentle barrel curvature |
-| M10-W03 | Sub-pixel geometry rasterization & fidelity mode | PLANNED | Add high-fidelity software rasterization pipeline with sub-pixel vertex precision and high-precision transcendental math, switchable via runtime preference with byte-exact legacy mode toggle |
+| M10-W01 | Deterministic edge-directed upscaling | DONE | Implemented Scale2x / EPX deterministic edge-directed filter expanding 320x200 to 640x400 with diagonal smoothing and 100% color/palette preservation; cycle with `F7` or `F2` menu; verified in `tests/upscale_test.cpp` |
+| M10-W02 | CRT simulation shader pipeline | DONE | Implemented OpenGL 3.3 GLSL CRT post-processing shader with aperture grille phosphor triads, 200-line scanlines, gentle glass curvature, corner vignette, and star core bloom; toggle with `F6` or `F2` menu; verified in `tests/display_test.cpp` |
+| M10-W03 | Sub-pixel geometry rasterization & fidelity mode | DONE | Implemented sub-pixel geometry rasterization across `poly3d` (continuous barycentric half-pixel sampling) and `polymap` (floating-point vertex projection, sub-pixel edge pre-stepping and scanline rounding eliminating 3D mesh wobble and jitter) plus bilinear celestial point distribution in `far_pixel_at`; toggle with `F2` menu (`G`); preserved byte-exact legacy mode by default with 100% fixture agreement in `tests/renderer_fixture_test.cpp` |
+| M10-W04 | Display & presentation settings persistence | DONE | Implemented user configuration persistence in `display_settings.ini` within platform `config_dir`; automatically saves and reloads aspect ratio mode, upscale mode, CRT shader, sub-pixel fidelity, fullscreen, timewarp multiplier, HUD text, lens flare mode, and seamless border; verified in `tests/display_test.cpp` |
 
 **Exit criteria**
 
 - Upscaling filters produce deterministic results across platforms without visual artifacts or tearing.
 - CRT shaders run within a strict 1.0 ms GPU budget.
+- Sub-pixel fidelity eliminates geometric jitter on textured and flat 3D surfaces and celestial bodies.
+- Display and presentation preferences persist across game sessions in the user configuration directory.
 - Legacy software rendering remains available as a toggleable baseline, with 100% regression fixture agreement.
 
 ## Work item template

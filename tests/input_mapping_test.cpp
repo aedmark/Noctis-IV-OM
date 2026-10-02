@@ -111,20 +111,30 @@ int main() {
     // Use static flag pointers to test C-style function pointer handlers safely
     static bool s_fullscreen_invoked = false;
     static bool s_aspect_invoked     = false;
+    static bool s_upscale_invoked    = false;
+    static bool s_crt_invoked        = false;
     noctis::set_fullscreen_toggle_handler([]() { s_fullscreen_invoked = true; });
     noctis::set_aspect_toggle_handler([]() { s_aspect_invoked = true; });
+    noctis::set_upscale_toggle_handler([]() { s_upscale_invoked = true; });
+    noctis::set_crt_toggle_handler([]() { s_crt_invoked = true; });
 
     noctis::set_input_provider([]() {
         noctis::InputFrame f;
         f.toggle_fullscreen_pressed = true;
         f.toggle_aspect_pressed     = true;
+        f.toggle_upscale_pressed    = true;
+        f.toggle_crt_pressed        = true;
         return f;
     });
     handle_input();
     ok &= s_fullscreen_invoked;
     ok &= s_aspect_invoked;
+    ok &= s_upscale_invoked;
+    ok &= s_crt_invoked;
     noctis::set_fullscreen_toggle_handler(nullptr);
     noctis::set_aspect_toggle_handler(nullptr);
+    noctis::set_upscale_toggle_handler(nullptr);
+    noctis::set_crt_toggle_handler(nullptr);
     noctis::reset_input_provider();
     return ok ? 0 : 1;
 }

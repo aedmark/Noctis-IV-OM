@@ -44,6 +44,8 @@ struct InputFrame {
     bool toggle_audio_pressed      = false;
     bool toggle_fullscreen_pressed = false;
     bool toggle_aspect_pressed     = false;
+    bool toggle_upscale_pressed    = false;
+    bool toggle_crt_pressed        = false;
 };
 
 using InputProvider        = InputFrame (*)();
@@ -57,6 +59,8 @@ void reset_input_state();
 void set_audio_toggle_handler(AudioToggleHandler handler);
 void set_fullscreen_toggle_handler(DisplayToggleHandler handler);
 void set_aspect_toggle_handler(DisplayToggleHandler handler);
+void set_upscale_toggle_handler(DisplayToggleHandler handler);
+void set_crt_toggle_handler(DisplayToggleHandler handler);
 
 } // namespace noctis
 

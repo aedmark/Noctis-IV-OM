@@ -50,6 +50,8 @@
 #include "ship_interface.h"
 #include "plus_controls.h"
 #include "plus_presentation.h"
+#include "display.h"
+#include "upscale.h"
 #include "noctis.h"
 
 // Date and specific functions imported from ASSEMBLY.H
@@ -2985,52 +2987,112 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
         pyy += VIEW_Y_CENTER;
 
         if (pxx > 10 && pyy > 10 && pxx < (adapted_width - 10) && pyy < (adapted_height - 10)) {
-            vptr = (uint32_t) (adapted_width * (int32_t) pyy + pxx);
+            if (noctis::get_subpixel_fidelity()) {
+                if (pixel_spreads) {
+                    vptr = (uint32_t) (adapted_width * (int32_t) std::round(pyy) + (int32_t) std::round(pxx));
 
-            if (pixel_spreads) {
-                edge_color_1 = pixel_color >> 1u;
-                edge_color_2 = pixel_color >> 2u;
-                edge_color_3 = pixel_color >> 3u;
-                edge_color_4 = pixel_color >> 4u;
+                    edge_color_1 = pixel_color >> 1u;
+                    edge_color_2 = pixel_color >> 2u;
+                    edge_color_3 = pixel_color >> 3u;
+                    edge_color_4 = pixel_color >> 4u;
 
-                if (edge_color_1 > 7) {
-                    single_pixel_at_ptr(vptr - adapted_width, edge_color_1);
-                    single_pixel_at_ptr(vptr + adapted_width, edge_color_1);
-                    single_pixel_at_ptr(vptr - 1, edge_color_1);
-                    single_pixel_at_ptr(vptr + 1, edge_color_1);
-                }
+                    if (edge_color_1 > 7) {
+                        single_pixel_at_ptr(vptr - adapted_width, edge_color_1);
+                        single_pixel_at_ptr(vptr + adapted_width, edge_color_1);
+                        single_pixel_at_ptr(vptr - 1, edge_color_1);
+                        single_pixel_at_ptr(vptr + 1, edge_color_1);
+                    }
 
-                if (edge_color_2 > 7) {
-                    single_pixel_at_ptr(vptr - (adapted_width + 1), edge_color_2);
-                    single_pixel_at_ptr(vptr - (adapted_width - 1), edge_color_2);
-                    single_pixel_at_ptr(vptr + (adapted_width + 1), edge_color_2);
-                    single_pixel_at_ptr(vptr + (adapted_width - 1), edge_color_2);
-                }
+                    if (edge_color_2 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width + 1), edge_color_2);
+                        single_pixel_at_ptr(vptr - (adapted_width - 1), edge_color_2);
+                        single_pixel_at_ptr(vptr + (adapted_width + 1), edge_color_2);
+                        single_pixel_at_ptr(vptr + (adapted_width - 1), edge_color_2);
+                    }
 
-                if (edge_color_3 > 7) {
-                    single_pixel_at_ptr(vptr - (adapted_width * 2), edge_color_3);
-                    single_pixel_at_ptr(vptr + (adapted_width * 2), edge_color_3);
-                    single_pixel_at_ptr(vptr - 2, edge_color_3);
-                    single_pixel_at_ptr(vptr + 2, edge_color_3);
-                }
+                    if (edge_color_3 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width * 2), edge_color_3);
+                        single_pixel_at_ptr(vptr + (adapted_width * 2), edge_color_3);
+                        single_pixel_at_ptr(vptr - 2, edge_color_3);
+                        single_pixel_at_ptr(vptr + 2, edge_color_3);
+                    }
 
-                if (edge_color_4 > 7) {
-                    single_pixel_at_ptr(vptr - (adapted_width * 2 + 1), edge_color_4);
-                    single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
-                    single_pixel_at_ptr(vptr + (adapted_width * 2 + 1), edge_color_4);
-                    single_pixel_at_ptr(vptr + (adapted_width * 2 - 1), edge_color_4);
-                    single_pixel_at_ptr(vptr - (adapted_width + 2), edge_color_4);
-                    single_pixel_at_ptr(vptr - (adapted_width - 2), edge_color_4);
-                    single_pixel_at_ptr(vptr + (adapted_width + 2), edge_color_4);
-                    single_pixel_at_ptr(vptr + (adapted_width - 2), edge_color_4);
-                }
+                    if (edge_color_4 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 + 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width * 2 + 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width + 2), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width - 2), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width + 2), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width - 2), edge_color_4);
+                    }
 
-                if (pixel_color > 7) {
-                    single_pixel_at_ptr(vptr, pixel_color);
+                    if (pixel_color > 7) {
+                        single_pixel_at_ptr(vptr, pixel_color);
+                    }
+                } else if (pixel_color) {
+                    const int32_t x0 = static_cast<int32_t>(std::floor(pxx));
+                    const int32_t y0 = static_cast<int32_t>(std::floor(pyy));
+                    const double u = pxx - x0;
+                    const double v = pyy - y0;
+                    const auto c00 = static_cast<uint8_t>(std::round(pixel_color * (1.0 - u) * (1.0 - v)));
+                    const auto c10 = static_cast<uint8_t>(std::round(pixel_color * u * (1.0 - v)));
+                    const auto c01 = static_cast<uint8_t>(std::round(pixel_color * (1.0 - u) * v));
+                    const auto c11 = static_cast<uint8_t>(std::round(pixel_color * u * v));
+                    if (c00 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * y0 + x0), c00);
+                    if (c10 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * y0 + (x0 + 1)), c10);
+                    if (c01 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * (y0 + 1) + x0), c01);
+                    if (c11 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * (y0 + 1) + (x0 + 1)), c11);
                 }
             } else {
-                if (pixel_color) {
-                    single_pixel_at_ptr(vptr, pixel_color);
+                vptr = (uint32_t) (adapted_width * (int32_t) pyy + pxx);
+
+                if (pixel_spreads) {
+                    edge_color_1 = pixel_color >> 1u;
+                    edge_color_2 = pixel_color >> 2u;
+                    edge_color_3 = pixel_color >> 3u;
+                    edge_color_4 = pixel_color >> 4u;
+
+                    if (edge_color_1 > 7) {
+                        single_pixel_at_ptr(vptr - adapted_width, edge_color_1);
+                        single_pixel_at_ptr(vptr + adapted_width, edge_color_1);
+                        single_pixel_at_ptr(vptr - 1, edge_color_1);
+                        single_pixel_at_ptr(vptr + 1, edge_color_1);
+                    }
+
+                    if (edge_color_2 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width + 1), edge_color_2);
+                        single_pixel_at_ptr(vptr - (adapted_width - 1), edge_color_2);
+                        single_pixel_at_ptr(vptr + (adapted_width + 1), edge_color_2);
+                        single_pixel_at_ptr(vptr + (adapted_width - 1), edge_color_2);
+                    }
+
+                    if (edge_color_3 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width * 2), edge_color_3);
+                        single_pixel_at_ptr(vptr + (adapted_width * 2), edge_color_3);
+                        single_pixel_at_ptr(vptr - 2, edge_color_3);
+                        single_pixel_at_ptr(vptr + 2, edge_color_3);
+                    }
+
+                    if (edge_color_4 > 7) {
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 + 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width * 2 + 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width + 2), edge_color_4);
+                        single_pixel_at_ptr(vptr - (adapted_width - 2), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width + 2), edge_color_4);
+                        single_pixel_at_ptr(vptr + (adapted_width - 2), edge_color_4);
+                    }
+
+                    if (pixel_color > 7) {
+                        single_pixel_at_ptr(vptr, pixel_color);
+                    }
+                } else {
+                    if (pixel_color) {
+                        single_pixel_at_ptr(vptr, pixel_color);
+                    }
                 }
             }
 
@@ -5579,8 +5641,8 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
 
 void draw_plus_overlay(bool surface) {
     if (!about && !graphics_menu_status && !movie_recorder.menu_open()) return;
-    area_clear(adapted, 11, 130, 0, 0, 298, 42, 112);
     if (about) {
+        area_clear(adapted, 11, 130, 0, 0, 298, 42, 112);
         const auto &lines = noctis::plus_help_lines(surface);
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0,
@@ -5589,11 +5651,19 @@ void draw_plus_overlay(bool surface) {
     } else if (graphics_menu_status) {
         const auto lines = noctis::plus_visual_menu_lines(draw_hud != 0, lens_flare_mode,
                                                           seamless_border != 0,
-                                                          noctis::get_timewarp_multiplier());
+                                                          noctis::get_timewarp_multiplier(),
+                                                          static_cast<int>(noctis::get_upscale_mode()),
+                                                          noctis::is_crt_shader_enabled(),
+                                                          noctis::get_subpixel_fidelity(),
+                                                          true);
+        const int box_h = static_cast<int>(lines.size()) * 8 + 8;
+        const int box_y = std::max(10, 185 - box_h);
+        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
         for (std::size_t index = 0; index < lines.size(); ++index) {
-            wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0, lines[index].c_str());
+            wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
     } else {
+        area_clear(adapted, 11, 130, 0, 0, 298, 42, 112);
         const auto lines = noctis::plus_movie_menu_lines(
             movie_recorder.deck(), movie_recorder.cadence(), movie_recorder.black_flash(),
             movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir), movie_recorder.recording(),
