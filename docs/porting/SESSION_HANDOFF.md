@@ -61,12 +61,23 @@ Replace this document at the end of every session; Git holds older versions.
   - Updated public dev diary [`devlog.html`](../../devlog.html).
   - Tagged `v1.0.0` and pushed to `origin/master`.
 
+- **Release 1.0.1 (Patch Release):**
+  - Resolved landing descent soft-lock on low-gravity worlds like Oakenshield P01 with a descent acceleration floor.
+  - Enabled `Escape` key abort during descent to safely return to cockpit.
+  - Added atmospheric starlight floor and terrain ambient illumination floor for dim-star systems (`dfs <= 0.2`).
+  - Protected `ip_targetted` against power-loss reset while on planetary surfaces (`surface_active` / `SurfaceActiveScope`).
+  - Added defensive nearest-body recovery for `ip_targetted` on surface session resume.
+  - Added `oakenshield_landing_fixture` automated test (41/41 passing test suite).
+  - Restored `Page Up` (raise helmet visor / open suit HUD) and `Page Down` (lower helmet visor / close suit HUD) on planetary surfaces.
+  - Restored `Page Up` / `Page Down` full-page scrolling in the GOES Guide reader.
+  - Mapped `Home` and `End` keys for GOES prompt clearing and boundary scrolling.
+  - Packaged, checksummed, verified, and tagged `v1.0.1`.
+
 ## Test suite and package status
 
-- **Clang Release:** 40/40 passed (3.12s).
-- **Clang Debug:** 40/40 passed (3.10s).
-- **GCC Debug:** 40/40 passed (14.52s).
-- **Clang Sanitized (ASan + UBSan):** 40/40 passed (50.81s, zero leaks, zero UB).
+- **Clang Release:** 41/41 passed (4.00s).
+- **GCC Debug:** 41/41 passed (16.96s).
+- **Clang Sanitized (ASan + UBSan):** 41/41 passed (58.88s, zero leaks, zero UB).
 - **MinGW Windows Cross-Compilation:** Built cleanly with zero warnings.
 - **Linux Package (`.tar.gz`):** Built, checksummed, verified with `VerifyLinuxPackage.cmake`.
 - **Windows Package (`.zip`):** Built, checksummed, verified with `VerifyWindowsPackage.cmake`.
@@ -74,6 +85,5 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Next steps
 
-1. Conduct community outreach and announce 1.0 General Availability release.
-2. Monitor issue tracker for feedback on diverse hardware/distributions.
-3. Plan subsequent post-1.0 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).
+1. Monitor community feedback on 1.0.1 release.
+2. Plan subsequent post-1.0 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).

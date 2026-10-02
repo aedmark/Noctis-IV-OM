@@ -87,6 +87,12 @@
     <p>Following the release of v0.0.1-preview and verification of the lithium persistence fix, Milestone 8 turned its focus toward comprehensive stabilization. We audited the software rasterizer to eliminate off-screen flare buffer overflows, corrected flare blending arithmetic, eliminated font glyph underflows, and added defensive bounds checks across the rendering pipeline.</p>
     <p>Empirical profiling established strict performance budgets: the software rasterizer completes in under 2 milliseconds per frame, preserving over 96% headroom under the 55 ms DOS simulation tick. We expanded documentation with a comprehensive troubleshooting guide, contributor guidelines, and release runbooks. Release and rollback rehearsals passed cleanly for both Linux and Windows packages, preparing Noctis IV OM for 1.0 General Availability.</p>
   </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.0.1 Patch: Smooth Landings, Starlight Floors, and Visor Controls</h2>
+    <p>Following the 1.0 General Availability release, community exploration on low-gravity worlds like star Oakenshield’s first planet revealed an unexpected stall during descent. We investigated and established a solid vertical acceleration floor to guarantee smooth touchdown regardless of planetary mass, along with an instant Escape abort back to the cockpit.</p>
+    <p>We also illuminated planets around very dim stars that previously went pitch-black, protected the ship’s targeted body from power-loss resets while the pilot is outside, and restored the Page Up and Page Down controls for suit helmet visor operation and GOES guide scrolling.</p>
+  </section>
 </article>
 </body>
 </html>
