@@ -55,6 +55,9 @@ int8_t manual_x_string[11];
 int8_t manual_y_string[11];
 int8_t manual_z_string[11];
 
+static noctis::TravelPhase g_active_travel_phase = noctis::TravelPhase::arrived;
+static float g_active_travel_speed               = 0.0f;
+
 // Set the autopilot travel parameters.
 void fix_remote_target() {
     status("TGT FIXED", 105);
@@ -1576,7 +1579,9 @@ void fcs_commands() {
 
     case 2:
         if (stspeed) {
-            stspeed = 0;
+            stspeed               = 0;
+            g_active_travel_speed = 0.0f;
+            g_active_travel_phase = noctis::TravelPhase::arrived;
             status("IDLE", 50);
         } else {
             if (lithium_collector || manual_target) {
@@ -1585,7 +1590,9 @@ void fcs_commands() {
             }
 
             if (pwr > 15000) {
-                stspeed = 1;
+                stspeed               = 1;
+                g_active_travel_phase = noctis::TravelPhase::charging;
+                g_active_travel_speed = 0.0f;
 
                 if (ap_targetted) {
                     nsnp         = 1;
@@ -1613,12 +1620,16 @@ void fcs_commands() {
         } else {
             if (ip_reaching) {
                 status("IDLE", 50);
-                ip_targetted = -1;
-                ip_reaching  = 0;
-                ip_reached   = 1;
+                ip_targetted          = -1;
+                ip_reaching           = 0;
+                ip_reached            = 1;
+                g_active_travel_speed = 0.0f;
+                g_active_travel_phase = noctis::TravelPhase::arrived;
             } else {
                 if (pwr > 15000) {
-                    ip_reaching = 1;
+                    ip_reaching           = 1;
+                    g_active_travel_phase = noctis::TravelPhase::warming_up;
+                    g_active_travel_speed = 0.0f;
                     status("CONFIRM", 50);
                 }
             }
@@ -3949,15 +3960,11 @@ void swapBuffers() {
     // Frame limiter (18 FPS)
     static constexpr auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
     static auto next_frame     = std::chrono::steady_clock::now() + goal;
-    if (noctis::should_wait_for_frame(ontheroof != 0, roof_speed != 0)) {
-        std::this_thread::sleep_until(next_frame);
-        const auto now = std::chrono::steady_clock::now();
-        next_frame += goal;
-        if (next_frame < now)
-            next_frame = now + goal;
-    } else {
-        next_frame = std::chrono::steady_clock::now() + goal;
-    }
+    std::this_thread::sleep_until(next_frame);
+    const auto now = std::chrono::steady_clock::now();
+    next_frame += goal;
+    if (next_frame < now)
+        next_frame = now + goal;
     EndDrawing();
 }
 
@@ -5282,11 +5289,19 @@ ext_1: //
 
             if (travel.arrived) {
                 status("CALIBRATED", 50);
-                ap_reached = 1;
-                stspeed    = 0;
+                ap_reached            = 1;
+                stspeed               = 0;
+                g_active_travel_speed = 0.0f;
+                g_active_travel_phase = noctis::TravelPhase::arrived;
             } else {
                 status(noctis::travel_phase_status(travel.phase), 0);
                 pwr -= travel.power_cost;
+                double move_ratio =
+                    (guidance.current_coefficient > 0.0) ? (travel.distance / guidance.current_coefficient) : 0.0;
+                // Move ratio climbs from ~0.001 at start, up to 100,000 at peak warp, and drops to ~200 during parking
+                g_active_travel_speed =
+                    std::clamp(static_cast<float>(std::log10(std::max(1.0, move_ratio)) / 5.0), 0.0f, 1.0f);
+                g_active_travel_phase = travel.phase;
             }
         }
     }
@@ -5362,8 +5377,16 @@ resynctoplanet:
 
             if (travel.arrived) {
                 status("STANDBY", 0);
-                ip_reaching = 0;
-                ip_reached  = 1;
+                ip_reaching           = 0;
+                ip_reached            = 1;
+                g_active_travel_speed = 0.0f;
+                g_active_travel_phase = noctis::TravelPhase::arrived;
+            } else {
+                double move_ratio =
+                    (guidance.current_coefficient > 0.0) ? (travel.distance / guidance.current_coefficient) : 0.0;
+                // Move ratio peaks at 20.0 during cruise approach, ~0.04 at warmup, and ~0.02 at refining
+                g_active_travel_speed = std::clamp(static_cast<float>(move_ratio / 20.0), 0.0f, 1.0f);
+                g_active_travel_phase = travel.phase;
             }
         }
     }
@@ -5750,9 +5773,8 @@ resynctoplanet:
         noctis::AudioTelemetry telemetry{};
         telemetry.scene              = ontheroof ? noctis::AudioScene::roof : noctis::AudioScene::cabin;
         telemetry.travel_active      = (stspeed == 1) || (ip_reaching == 1);
-        telemetry.travel_phase       = (stspeed == 1) ? 16 : ((ip_reaching == 1) ? 20 : 0);
-        telemetry.travel_speed       = (stspeed == 1) ? static_cast<float>(current_vimana_coefficient)
-                                                      : static_cast<float>(current_approach_coefficient);
+        telemetry.travel_phase       = static_cast<int>(g_active_travel_phase);
+        telemetry.travel_speed       = telemetry.travel_active ? g_active_travel_speed : 0.0f;
         telemetry.atmosphere_density = 0.0f;
         telemetry.weather_rain       = 0.0f;
         telemetry.player_walking     = false;
@@ -6169,12 +6191,6 @@ resynctoplanet:
 
                 if (snapshot_command == noctis::SnapshotAction::raw) {
                     snapshot(0, 0);
-                    goto endmain;
-                }
-
-                if (mc == 's' && !(labstar || labplanet)) {
-                    roof_speed = !roof_speed;
-                    status(roof_speed ? "ROOFSPEED" : "NO ROOFSPD", 50);
                     goto endmain;
                 }
 

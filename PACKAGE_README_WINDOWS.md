@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.0 Release
+# Noctis IV OM — Windows 1.3.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.3.0 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -71,7 +71,8 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 1.2.0 Celestial Resonance release with built-in procedural ambient audio and exploration Foley. The Microsoft C/C++ runtime is
+This is the 1.3.0 Aural Update release with built-in procedural ambient audio,
+dynamic Vimana warp acoustics, and canonical observation deck pacing. The Microsoft C/C++ runtime is
 statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

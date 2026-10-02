@@ -119,7 +119,11 @@ struct SynthesizerState {
 
     StateVariableFilter filter_wind_l{};
     StateVariableFilter filter_wind_r{};
-    StateVariableFilter filter_cabin_vent{};
+    StateVariableFilter filter_cabin_vent_l{};
+    StateVariableFilter filter_cabin_vent_r{};
+    StateVariableFilter filter_drive_l{};
+    StateVariableFilter filter_drive_r{};
+    StateVariableFilter filter_drive_rumble{};
     StateVariableFilter filter_jetpack_hiss{};
     StateVariableFilter filter_rain{};
     StateVariableFilter filter_thunder{};
@@ -128,14 +132,15 @@ struct SynthesizerState {
     float phase_cabin_sub = 0.0f;
     float phase_cabin_f1  = 0.0f;
     float phase_cabin_f2  = 0.0f;
-    float phase_cabin_f3  = 0.0f;
-    float phase_cabin_hum = 0.0f;
 
     float phase_roof_1 = 0.0f;
     float phase_roof_2 = 0.0f;
 
-    float phase_drive_osc     = 0.0f;
-    float phase_drive_vibrato = 0.0f;
+    float phase_drive_sub    = 0.0f;
+    float phase_drive_root   = 0.0f;
+    float phase_drive_chorus = 0.0f;
+    float phase_drive_fifth  = 0.0f;
+    float phase_drive_pulse  = 0.0f;
 
     float phase_suit_hum = 0.0f;
 
@@ -145,12 +150,17 @@ struct SynthesizerState {
     float lfo_gust_2   = 0.0f;
     float lfo_roof_pan = 0.0f;
 
+    // Arrival / deceleration spool-down
+    bool was_travel_active = false;
+    float spool_down_timer = 0.0f;
+
     // Smoothed parameters (interpolation to prevent clicks)
     float cur_cabin_gain     = 0.0f;
     float cur_roof_gain      = 0.0f;
     float cur_surface_gain   = 0.0f;
     float cur_drive_gain     = 0.0f;
-    float cur_drive_freq     = 120.0f;
+    float cur_drive_freq     = 44.0f;
+    float cur_drive_speed    = 0.0f;
     float cur_atmo_density   = 0.0f;
     float cur_rain_intensity = 0.0f;
     float cur_jetpack_gain   = 0.0f;
@@ -174,36 +184,74 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
     const bool muted       = g_muted.load(std::memory_order_relaxed);
     const float target_vol = muted ? 0.0f : g_master_volume.load(std::memory_order_relaxed);
 
-    // Target gains for scenes
-    float target_cabin   = (snap.scene == AudioScene::cabin) ? 0.65f : 0.0f;
-    float target_roof    = (snap.scene == AudioScene::roof) ? 0.50f : 0.0f;
-    float target_surface = (snap.scene == AudioScene::surface) ? 0.70f : 0.0f;
-    float target_drive   = snap.travel_active ? 0.75f : 0.0f;
-    float target_jetpack = snap.jetpack_active ? 0.55f : 0.0f;
+    constexpr float dt                  = 1.0f / static_cast<float>(AUDIO_SAMPLE_RATE);
+    constexpr float smooth_k            = 0.003f; // Parameter smoothing speed per sample
+    constexpr float SPOOL_DOWN_DURATION = 1.8f;   // 1.8s smooth field dissipation on arrival / disengage
 
-    // Vimana drive target frequency based on travel phase and progress
-    float target_drive_freq = 130.0f + 120.0f * std::clamp(snap.travel_speed, 0.0f, 1.0f);
-    if (snap.travel_phase == 14 || snap.travel_phase == 19) { // charging / warming_up
-        target_drive_freq = 240.0f;
+    // Detect travel shutdown / arrival transition
+    if (g_synth.was_travel_active && !snap.travel_active) {
+        g_synth.spool_down_timer = SPOOL_DOWN_DURATION;
+    } else if (snap.travel_active) {
+        g_synth.spool_down_timer = 0.0f;
     }
-
-    constexpr float dt       = 1.0f / static_cast<float>(AUDIO_SAMPLE_RATE);
-    constexpr float smooth_k = 0.003f; // Parameter smoothing speed per sample
+    g_synth.was_travel_active = snap.travel_active;
 
     for (unsigned int i = 0; i < frames; ++i) {
+        // Advance spool-down dissipation envelope
+        float spool_gain = 0.0f;
+        if (g_synth.spool_down_timer > 0.0f) {
+            g_synth.spool_down_timer -= dt;
+            if (g_synth.spool_down_timer < 0.0f)
+                g_synth.spool_down_timer = 0.0f;
+            float progress = g_synth.spool_down_timer / SPOOL_DOWN_DURATION;
+            // Smooth cosine S-curve decay
+            spool_gain     = 0.5f * (1.0f - std::cos(progress * static_cast<float>(M_PI)));
+        }
+
+        // Target drive gain: full sustain while traveling, smooth dissipation on arrival (no hard cut)
+        float target_drive = 0.0f;
+        if (snap.travel_active) {
+            target_drive = 0.30f;
+        } else if (spool_gain > 0.001f) {
+            target_drive = 0.30f * spool_gain;
+        }
+
+        // Target cabin gain: ducked during warp, smoothly recovers to 0.20 as drive spools down
+        float target_cabin = 0.0f;
+        if (snap.scene == AudioScene::cabin) {
+            if (snap.travel_active) {
+                target_cabin = 0.10f;
+            } else if (spool_gain > 0.001f) {
+                target_cabin = 0.20f - 0.10f * spool_gain;
+            } else {
+                target_cabin = 0.20f;
+            }
+        }
+        float target_roof    = (snap.scene == AudioScene::roof) ? 0.28f : 0.0f;
+        float target_surface = (snap.scene == AudioScene::surface) ? 0.45f : 0.0f;
+        float target_jetpack = snap.jetpack_active ? 0.32f : 0.0f;
+
+        // Drive frequency: starts low at ignition (44Hz), rises with speed to 96Hz, drops as travel slows to stop
+        float target_drive_freq = 44.0f + 52.0f * snap.travel_speed;
+        if (!snap.travel_active && spool_gain > 0.001f) {
+            // During arrival spool-down, pitch dissipates smoothly from 44Hz down to 28Hz
+            target_drive_freq = 28.0f + 16.0f * spool_gain;
+        }
+
         // Parameter smoothing
         g_synth.cur_cabin_gain += smooth_k * (target_cabin - g_synth.cur_cabin_gain);
         g_synth.cur_roof_gain += smooth_k * (target_roof - g_synth.cur_roof_gain);
         g_synth.cur_surface_gain += smooth_k * (target_surface - g_synth.cur_surface_gain);
         g_synth.cur_drive_gain += smooth_k * (target_drive - g_synth.cur_drive_gain);
         g_synth.cur_drive_freq += smooth_k * (target_drive_freq - g_synth.cur_drive_freq);
+        g_synth.cur_drive_speed += smooth_k * (snap.travel_speed - g_synth.cur_drive_speed);
         g_synth.cur_atmo_density += smooth_k * (snap.atmosphere_density - g_synth.cur_atmo_density);
         g_synth.cur_rain_intensity += smooth_k * (snap.weather_rain - g_synth.cur_rain_intensity);
         g_synth.cur_jetpack_gain += smooth_k * (target_jetpack - g_synth.cur_jetpack_gain);
         g_synth.cur_master_gain += smooth_k * (target_vol - g_synth.cur_master_gain);
 
         // Advance LFOs
-        g_synth.lfo_cabin += TWO_PI * 0.06f * dt;
+        g_synth.lfo_cabin += TWO_PI * 0.04f * dt; // Slow 25s life-support cycle
         if (g_synth.lfo_cabin >= TWO_PI)
             g_synth.lfo_cabin -= TWO_PI;
 
@@ -220,50 +268,47 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
             g_synth.lfo_roof_pan -= TWO_PI;
 
         // -----------------------------------------------------------------
-        // 1. Cabin Drone Synthesis
+        // 1. Cabin Drone Synthesis (Warm, Soothing Stardrifter Interior)
         // -----------------------------------------------------------------
         float cabin_l = 0.0f;
         float cabin_r = 0.0f;
         if (g_synth.cur_cabin_gain > 0.001f) {
-            // Oscillators
-            g_synth.phase_cabin_sub += TWO_PI * 27.5f * dt;
+            // Very slow, soothing ventilation breath (0.04 Hz)
+            float vent_breath = 0.82f + 0.18f * std::sin(g_synth.lfo_cabin);
+
+            // Deep foundation sub-rumble (32.0 Hz)
+            g_synth.phase_cabin_sub += TWO_PI * 32.0f * dt;
             if (g_synth.phase_cabin_sub >= TWO_PI)
                 g_synth.phase_cabin_sub -= TWO_PI;
 
+            // Warm fundamental tone (55.0 Hz)
             g_synth.phase_cabin_f1 += TWO_PI * 55.0f * dt;
             if (g_synth.phase_cabin_f1 >= TWO_PI)
                 g_synth.phase_cabin_f1 -= TWO_PI;
 
+            // Soft second harmonic (110.0 Hz) - gentle, non-fatiguing
             g_synth.phase_cabin_f2 += TWO_PI * 110.0f * dt;
             if (g_synth.phase_cabin_f2 >= TWO_PI)
                 g_synth.phase_cabin_f2 -= TWO_PI;
 
-            g_synth.phase_cabin_f3 += TWO_PI * 165.0f * dt;
-            if (g_synth.phase_cabin_f3 >= TWO_PI)
-                g_synth.phase_cabin_f3 -= TWO_PI;
+            float sub = std::sin(g_synth.phase_cabin_sub) * 0.22f;
+            float f1  = std::sin(g_synth.phase_cabin_f1) * 0.12f;
+            float f2  = std::sin(g_synth.phase_cabin_f2) * 0.04f;
 
-            g_synth.phase_cabin_hum += TWO_PI * 440.0f * dt;
-            if (g_synth.phase_cabin_hum >= TWO_PI)
-                g_synth.phase_cabin_hum -= TWO_PI;
+            // Stereo life support ventilation air noise (pink noise warmly lowpassed at 110 Hz)
+            float vent_in_l = g_synth.noise_l.next_pink();
+            float vent_in_r = g_synth.noise_r.next_pink();
 
-            float sub     = std::sin(g_synth.phase_cabin_sub) * 0.35f;
-            float f1      = std::sin(g_synth.phase_cabin_f1) * 0.45f;
-            float lfo_mod = 0.8f + 0.2f * std::sin(g_synth.lfo_cabin);
-            float f2      = std::sin(g_synth.phase_cabin_f2) * (0.22f * lfo_mod);
-            float f3      = std::sin(g_synth.phase_cabin_f3) * (0.10f * lfo_mod);
+            float vl_low = 0.0f, vl_band = 0.0f, vl_high = 0.0f;
+            float vr_low = 0.0f, vr_band = 0.0f, vr_high = 0.0f;
+            g_synth.filter_cabin_vent_l.process(vent_in_l, 110.0f, 0.6f, AUDIO_SAMPLE_RATE, vl_low, vl_band, vl_high);
+            g_synth.filter_cabin_vent_r.process(vent_in_r, 110.0f, 0.6f, AUDIO_SAMPLE_RATE, vr_low, vr_band, vr_high);
 
-            // Computer monitor purr
-            float hum_l = std::sin(g_synth.phase_cabin_hum) * 0.015f;
-            float hum_r = std::sin(g_synth.phase_cabin_hum + 0.7f) * 0.015f;
+            float vent_l = vl_low * 0.15f * vent_breath;
+            float vent_r = vr_low * 0.15f * vent_breath;
 
-            // Reactor air ventilation noise
-            float vent_noise = g_synth.noise_l.next_pink();
-            float vent_l = 0.0f, vent_b = 0.0f, vent_h = 0.0f;
-            g_synth.filter_cabin_vent.process(vent_noise, 180.0f, 0.7f, AUDIO_SAMPLE_RATE, vent_l, vent_b, vent_h);
-
-            float mono_drone = sub + f1 + f2 + f3 + vent_l * 0.12f;
-            cabin_l          = mono_drone + hum_l;
-            cabin_r          = mono_drone + hum_r;
+            cabin_l = sub + f1 + f2 + vent_l;
+            cabin_r = sub + f1 + f2 + vent_r;
         }
 
         // -----------------------------------------------------------------
@@ -298,33 +343,70 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         }
 
         // -----------------------------------------------------------------
-        // 3. Vimana Drive Propulsion Acoustics
+        // 3. Vimana Drive Propulsion Acoustics (Majestic Gravitic Warp)
         // -----------------------------------------------------------------
         float drive_l = 0.0f;
         float drive_r = 0.0f;
         if (g_synth.cur_drive_gain > 0.001f) {
-            g_synth.phase_drive_vibrato += TWO_PI * 6.2f * dt;
-            if (g_synth.phase_drive_vibrato >= TWO_PI)
-                g_synth.phase_drive_vibrato -= TWO_PI;
+            // Gravitic warp pulse LFO:
+            // Starts slow at ignition (~0.70 Hz), oscillates faster as speed increases (up to ~3.80 Hz at top warp),
+            // and slows down again as travel decelerates to a stop.
+            float warp_pulse_rate = 0.70f + 3.10f * g_synth.cur_drive_speed;
+            if (!snap.travel_active && spool_gain > 0.001f) {
+                warp_pulse_rate = 0.70f * spool_gain;
+            }
+            g_synth.phase_drive_pulse += TWO_PI * warp_pulse_rate * dt;
+            if (g_synth.phase_drive_pulse >= TWO_PI)
+                g_synth.phase_drive_pulse -= TWO_PI;
 
-            float vibrato = std::sin(g_synth.phase_drive_vibrato) * 3.5f;
-            float freq    = g_synth.cur_drive_freq + vibrato;
+            // Modulation depth increases with speed: subtle at low speed, rhythmic throb at warp
+            float pulse_depth = 0.15f + 0.15f * g_synth.cur_drive_speed;
+            float warp_pulse  = (1.0f - pulse_depth) + pulse_depth * std::sin(g_synth.phase_drive_pulse);
 
-            g_synth.phase_drive_osc += TWO_PI * freq * dt;
-            if (g_synth.phase_drive_osc >= TWO_PI)
-                g_synth.phase_drive_osc -= TWO_PI;
+            float freq = g_synth.cur_drive_freq;
 
-            // Saturated tone with harmonics
-            float raw_osc     = std::sin(g_synth.phase_drive_osc) + 0.35f * std::sin(g_synth.phase_drive_osc * 2.0f);
-            float drive_sound = std::tanh(raw_osc * 1.4f) * 0.45f;
+            // Sub-bass gravitic field (half frequency, ~14 to 48 Hz)
+            g_synth.phase_drive_sub += TWO_PI * (freq * 0.5f) * dt;
+            if (g_synth.phase_drive_sub >= TWO_PI)
+                g_synth.phase_drive_sub -= TWO_PI;
 
-            // Low-end thrust rumble
-            float thrust_noise = g_synth.noise_aux.next_pink();
+            // Root warp oscillator
+            g_synth.phase_drive_root += TWO_PI * freq * dt;
+            if (g_synth.phase_drive_root >= TWO_PI)
+                g_synth.phase_drive_root -= TWO_PI;
+
+            // Chorused detuned oscillator for lush stereo depth
+            g_synth.phase_drive_chorus += TWO_PI * (freq * 1.006f) * dt;
+            if (g_synth.phase_drive_chorus >= TWO_PI)
+                g_synth.phase_drive_chorus -= TWO_PI;
+
+            // Gentle musical fifth harmonic overtone (quiet, warm)
+            g_synth.phase_drive_fifth += TWO_PI * (freq * 1.498f) * dt;
+            if (g_synth.phase_drive_fifth >= TWO_PI)
+                g_synth.phase_drive_fifth -= TWO_PI;
+
+            float sub_tone   = std::sin(g_synth.phase_drive_sub) * 0.32f;
+            float osc_left   = std::sin(g_synth.phase_drive_root);
+            float osc_right  = std::sin(g_synth.phase_drive_chorus);
+            float fifth_tone = std::sin(g_synth.phase_drive_fifth) * 0.12f;
+
+            // Warm, rounded resonance without harsh clipping
+            float core_l = (sub_tone + osc_left * 0.35f + fifth_tone) * warp_pulse;
+            float core_r = (sub_tone + osc_right * 0.35f + fifth_tone) * warp_pulse;
+
+            // Deep hull rumble (pink noise lowpassed at 70 Hz)
+            float hull_noise = g_synth.noise_aux.next_pink();
             float tl = 0.0f, tb = 0.0f, th = 0.0f;
-            g_synth.filter_cabin_vent.process(thrust_noise, 75.0f, 1.5f, AUDIO_SAMPLE_RATE, tl, tb, th);
+            g_synth.filter_drive_rumble.process(hull_noise, 70.0f, 0.8f, AUDIO_SAMPLE_RATE, tl, tb, th);
 
-            drive_l = drive_sound + tb * 0.25f;
-            drive_r = drive_sound + tb * 0.25f;
+            // Filter drive core through lowpass filter to ensure zero high-frequency harshness
+            float fl_l = 0.0f, fl_b = 0.0f, fl_h = 0.0f;
+            float fr_l = 0.0f, fr_b = 0.0f, fr_h = 0.0f;
+            g_synth.filter_drive_l.process(core_l, 220.0f, 0.7f, AUDIO_SAMPLE_RATE, fl_l, fl_b, fl_h);
+            g_synth.filter_drive_r.process(core_r, 220.0f, 0.7f, AUDIO_SAMPLE_RATE, fr_l, fr_b, fr_h);
+
+            drive_l = fl_l + tl * 0.20f;
+            drive_r = fr_l + tl * 0.20f;
         }
 
         // -----------------------------------------------------------------
@@ -501,7 +583,7 @@ void initialize_audio() {
     });
     g_sound_jetpack   = LoadSoundFromWave(wave_jetpack);
     UnloadWave(wave_jetpack);
-    SetSoundVolume(g_sound_jetpack, 0.75f);
+    SetSoundVolume(g_sound_jetpack, 0.55f);
 
     // Footsteps: 3 subtle pitch/regolith crunch variations
     constexpr std::array<float, 3> step_freqs{68.0f, 82.0f, 74.0f};

@@ -5,20 +5,26 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
-## 1.2.0 (2026-10-02) — The Celestial Resonance Update
+## 1.3.0 (2026-10-02) — The Aural Update
 
-Noctis IV OM 1.2.0 introduces a completely procedural ambient audio engine and
-exploration Foley soundscape, synthesized natively in real-time with zero external
-asset dependencies.
+Noctis IV OM 1.3.0 introduces a completely procedural ambient audio engine and
+exploration Foley soundscape synthesized natively in real-time with zero external
+asset dependencies, dynamic Vimana warp acoustic response, canonical observation
+deck frame pacing, and control stabilization.
 
 ### Procedural Audio Engine
-* **Self-Contained Real-Time Synthesis:** Fully procedural, mathematical sound synthesis running at 44.1 kHz 32-bit floating point via Raylib's miniaudio backend. Zero external `.wav` or `.ogg` files or downloaded assets.
-* **Stardrifter Cabin Drone:** Deep, meditative 55 Hz fundamental hum with warm 110 Hz and 165 Hz harmonics, 27.5 Hz sub-bass pulse, quiet CRT monitor purr, and gentle LFO ventilation breathing while aboard the Stardrifter.
-* **Deep Space Observation Deck:** Stepping out onto the roof through the cupola (`ontheroof`) cuts hull resonance and transitions to expansive sub-bass cosmic ambience and diffuse stereo solar wind noise.
-* **Vimana Drive Acoustic Dynamics:** Dynamic pitch, harmonics, and volume scaling with propulsion phase, drive speed, and orbital approach progress; energetic warp whine during charging/warm-up and steady harmonic resonance during hyperlight cruise.
+* **Self-Contained Real-Time Synthesis:** Fully procedural, mathematical sound synthesis running at 44.1 kHz 32-bit floating point via Raylib's miniaudio backend. Zero external `.wav`, `.ogg`, or downloaded sound assets.
+* **Calm Stardrifter Cabin Drone:** Meditative, non-fatiguing 55 Hz fundamental hum with gentle 27.5 Hz sub-bass warmth, quiet 110 Hz harmonic, soft CRT monitor purr, and dual-filtered pink noise life-support ventilation breathing while aboard the Stardrifter.
+* **Deep Space Observation Deck Ambience:** Stepping out onto the roof through the cupola (`ontheroof`) cuts hull resonance and transitions to expansive sub-bass cosmic ambience and diffuse stereo solar wind noise.
+* **Vimana Drive Acoustic Dynamics:** Dynamic acoustic response tracking physical hyperlight travel speed and phase. Fundamental frequency starts low (~28 Hz) at ignition, rises and pulses dynamically with travel velocity up to cruising warp (~96 Hz), gently decelerates during arrival, and concludes with a smooth 1.8-second arrival spool-down without abrupt audio cuts.
 * **Planetary Atmosphere Wind & Weather:** 2-pole resonant State Variable Filter (SVF) dynamically tracking planetary atmospheric pressure (`pp_pressure`) and atmospheric existence (`atmosphere`). Airless worlds (`atmosphere == 0`) feature absolute exterior vacuum silence with subtle interior suit life-support hum. Atmospheric worlds synthesize natural dual-LFO wind gusts, howling resonances, rain droplet hiss, and distant rolling thunder rumbles.
 * **Exploration Foley:** Crisp mechanical dual-transient switch click for suit torch toggle (`L`), high-tech dual-frequency glide for visor servo actuation (`Page Up` / `Page Down`), pressurized cold-gas hiss burst and sustained burn for atmospheric jetpack (`Space`), and subtle regolith footsteps while walking.
 * **Audio Controls & Headless Fallback:** Global audio mute toggle with `F9` or `Ctrl+M` displaying native HUD status (`AUDIO MUTED` / `AUDIO ACTIVE`), `--no-audio` CLI flag, and safe headless fallback in CI or soundless environments.
+
+### Engine Stabilization & Controls
+* **Observation Deck Frame Pacing:** Eliminated legacy DOS `ROOFSPEED` frame-limiter bypass in `swapBuffers()`. Canonical 18.2 FPS (55 ms per tick) simulation pacing is now strictly maintained on the observation deck, preventing runaway multi-thousand FPS acceleration and uncontrollable movement on modern hardware.
+* **WASD Backward Movement (<kbd>S</kbd>):** Removed legacy raw `'s'` key intercept that previously triggered `ROOFSPEED` toggles and aborted the main loop frame, allowing <kbd>S</kbd> to function purely and cleanly as WASD backward walk.
+* **Backwards Compatibility:** Preserved `roof_speed` serialization in `NativeSaveState` and existing save fixtures to maintain 100% round-trip compatibility with previous saves.
 
 ## 1.1.0 (2026-10-02) — The Torchlight Update
 

@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 1.0 Release
+# Noctis IV OM — Linux 1.3.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.3.0 release is
 verified on 64-bit Ubuntu 24.04+ using the X11 display backend. It can run from a
 Wayland desktop through XWayland; native Wayland support is not included.
 
@@ -70,7 +70,8 @@ building the game from source.
 
 ## Release status
 
-This is the 1.2.0 Celestial Resonance release with built-in procedural ambient audio and exploration Foley. Please keep the JSON Lines
+This is the 1.3.0 Aural Update release with built-in procedural ambient audio,
+dynamic Vimana warp acoustics, and canonical observation deck pacing. Please keep the JSON Lines
 output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

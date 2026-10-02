@@ -82,19 +82,28 @@ Replace this document at the end of every session; Git holds older versions.
   - Hardened HUD telemetry text renderer (`wrouthud`) against buffer overflows and sanitized telemetry values.
   - Safely discard orphaned surface checkpoints without process abort.
   - Verified 41/41 passing test suite across all compiler configurations.
-  - Packaged, checksummed, verified, and tagged `v1.1.0`.
+- **Release 1.3.0 (Feature Release — The Aural Update):**
+  - Designed and implemented native, self-contained real-time procedural audio synthesis engine (44.1 kHz, 32-bit float, miniaudio backend) with zero external sound files or downloaded assets.
+  - Synthesized meditative, non-fatiguing Stardrifter cabin drone: 55 Hz fundamental, 27.5 Hz sub-bass, 110 Hz harmonic, quiet CRT monitor purr, and dual-filtered pink noise life-support ventilation breathing.
+  - Synthesized deep space observation deck cosmic silence and diffuse stereo solar wind sweeps (`ontheroof`).
+  - Implemented dynamic Vimana warp propulsion acoustics: physical speed-responsive frequency starting low at ignition (~28 Hz), accelerating into a rhythmic gravitic oscillation at cruising warp (~96 Hz), smooth deceleration during arrival, and 1.8-second arrival spool-down without abrupt cuts.
+  - Modeled planetary atmospheric acoustics with 2-pole resonant SVF tracking surface pressure (`pp_pressure`) and atmospheric existence (`atmosphere`). Airless worlds feature vacuum silence with interior suit life-support hum; atmospheric worlds produce howling wind gusts, rain droplet hiss, and distant thunder.
+  - Added tactile procedural exploration Foley: suit torch click on `L`, visor servo glide on `Page Up`/`Page Down`, cold-gas thruster burst on `Space`, and regolith footsteps.
+  - Added global mute hotkey (`F9` or `Ctrl+M`), `--no-audio` CLI flag, and safe headless fallback.
+  - Fixed observation deck runaway CPU time-warp bug: eliminated legacy DOS `ROOFSPEED` frame-limiter bypass, guaranteeing canonical 18.2 FPS (55 ms per tick) simulation pacing on deck.
+  - Fixed WASD backward movement key collision: removed rogue legacy `'s'` key intercept to restore clean backward walking.
+  - Added `audio_determinism` unit test, maintaining 100% test pass rate (42/42 tests).
+  - Packaged, checksummed, verified, and tagged `v1.3.0`.
 
 ## Test suite and package status
 
-- **Clang Release:** 41/41 passed (4.01s).
-- **GCC Debug:** 41/41 passed (16.78s).
-- **Clang Sanitized (ASan + UBSan):** 41/41 passed (57.86s, zero leaks, zero UB).
-- **MinGW Windows Cross-Compilation:** Built cleanly with zero warnings.
+- **Clang Release:** 42/42 passed (3.98s).
+- **MinGW Windows Cross-Compilation:** Built cleanly (`nivlr.exe`).
 - **Linux Package (`.tar.gz`):** Built, checksummed, verified with `VerifyLinuxPackage.cmake`.
 - **Windows Package (`.zip`):** Built, checksummed, verified with `VerifyWindowsPackage.cmake`.
-- **Extracted Smoke Test:** Passed `--diagnostics` and `--graphical-smoke` with exit code 0.
+- **Extracted Smoke Test:** Passed isolated `--diagnostics` with exit code 0.
 
 ## Next steps
 
-1. Monitor community feedback on 1.1.0 Torchlight release.
-2. Plan subsequent post-1.1 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).
+1. Monitor community feedback on 1.3.0 The Aural Update release.
+2. Plan future enhancements (e.g. native Wayland backend, custom control rebinding, expanded audio Foley).

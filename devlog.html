@@ -22,7 +22,7 @@
         <a href="index.html#first-flight">Flight Manual</a>
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
-        <a class="nav-cta" href="index.html#download">Get 1.0</a>
+        <a class="nav-cta" href="index.html#download">Get 1.3</a>
       </nav>
     </div>
   </header>
@@ -101,10 +101,12 @@
   </section>
 
   <section class="update-entry">
-    <h2>[UPDATE] 1.2.0: The Celestial Resonance Update — Procedural Audio and Exploration Foley</h2>
-    <p>Space in Noctis IV has always been vast and contemplative; now, it has a voice. Version 1.2.0 introduces a completely self-contained procedural ambient audio engine and Foley soundscape, synthesized in real-time with zero external audio assets or binary sound files.</p>
-    <p>Aboard the Stardrifter, explorers are grounded by a gentle 55 Hz cabin hum, warm harmonics, a deep 27.5 Hz sub-bass pulse, reactor ventilation, and quiet CRT terminal purrs. Stepping through the cupola out onto the roof in open space (<kbd>ontheroof</kbd>) transitions to an expansive cosmic silence with diffuse solar wind sweeps. During flight, the Vimana drive dynamically adjusts pitch and harmonic resonance in real-time with propulsion velocity and approach maneuvers.</p>
+    <h2>[UPDATE] 1.3.0: The Aural Update — Procedural Audio Engine, Vimana Warp Acoustics, and Observation Deck Pacing</h2>
+    <p>Space in Noctis IV has always been vast and contemplative; now, it has a voice. Version 1.3.0 introduces a completely self-contained procedural ambient audio engine and Foley soundscape, synthesized in real-time at 44.1 kHz 32-bit floating point with zero external audio assets or binary sound files.</p>
+    <p>Aboard the Stardrifter, explorers are grounded by a meditative 55 Hz cabin hum, warm sub-bass warmth, gentle harmonics, soft CRT terminal purrs, and dual-filtered pink noise life-support ventilation breathing. Stepping through the cupola out onto the roof in open space (<kbd>ontheroof</kbd>) transitions to an expansive cosmic silence with diffuse solar wind sweeps.</p>
+    <p>During propulsion maneuvers, the Vimana drive dynamically tracks physical hyperlight velocity: starting deep and low (~28 Hz) at ignition, accelerating and oscillating into a rhythmic gravitic pulse as speed climbs to cruising warp (~96 Hz), gently decelerating into orbital parking, and spooling down over a seamless 1.8-second decay without abrupt cuts.</p>
     <p>On planetary surfaces, the procedural engine dynamically models atmospheric pressure: airless moons and asteroids (<kbd>atmosphere == 0</kbd>) immerse the player in eerie dead silence punctuated only by the suit’s internal life-support hum, while worlds with atmosphere produce realistic howling winds, gust dynamics, rain droplet textures, and rolling thunder. Tactile mechanical Foley brings exploration to life: a dual-click for the suit torch (<kbd>L</kbd>), micro-stepper servo hums for the visor (<kbd>PgUp</kbd>/<kbd>PgDn</kbd>), cold-gas thruster bursts for the jetpack (<kbd>Space</kbd>), and subtle regolith footsteps, with quick mute control via <kbd>F9</kbd> or <kbd>Ctrl+M</kbd>.</p>
+    <p>Finally, version 1.3.0 eliminates the legacy DOS <kbd>ROOFSPEED</kbd> frame-limiter bypass, guaranteeing canonical 18.2 FPS (55 ms per tick) simulation pacing on the observation deck and fixing the runaway multi-thousand FPS acceleration bug on modern CPUs, while restoring pure WASD backward movement on the <kbd>S</kbd> key.</p>
   </section>
 </article>
 </body>
