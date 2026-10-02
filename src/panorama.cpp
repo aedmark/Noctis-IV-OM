@@ -10,16 +10,14 @@
 
 namespace noctis {
 namespace {
-constexpr std::size_t header_size = 54;
-constexpr std::size_t palette_size = 1024;
 constexpr std::size_t source_width = 320;
 constexpr std::size_t output_width = 916;
 constexpr std::size_t height = 200;
-constexpr std::size_t pixel_offset = header_size + palette_size;
+constexpr std::size_t pixel_offset = indexed_bmp_pixel_offset;
 constexpr std::size_t source_size = pixel_offset + source_width * height;
 constexpr std::size_t output_size = pixel_offset + output_width * height;
 
-void write_u32(std::vector<std::uint8_t> &bytes, std::size_t offset, std::uint32_t value) {
+void write_u32(std::uint8_t *bytes, std::size_t offset, std::uint32_t value) {
     for (unsigned shift = 0; shift < 32; shift += 8) bytes[offset++] = static_cast<std::uint8_t>(value >> shift);
 }
 
@@ -31,6 +29,15 @@ bool read_frame(const std::filesystem::path &path, std::vector<std::uint8_t> &by
 }
 } // namespace
 
+void normalize_indexed_bmp_header(std::uint8_t *header, std::uint32_t width, std::uint32_t height) {
+    const auto image_size = width * height;
+    write_u32(header, 2, static_cast<std::uint32_t>(indexed_bmp_pixel_offset + image_size));
+    write_u32(header, 10, static_cast<std::uint32_t>(indexed_bmp_pixel_offset));
+    write_u32(header, 18, width);
+    write_u32(header, 22, height);
+    write_u32(header, 34, image_size);
+}
+
 PanoramaResult compose_panorama(const std::array<std::filesystem::path, 3> &frames,
                                 const std::filesystem::path &destination) {
     std::array<std::vector<std::uint8_t>, 3> source;
@@ -40,9 +47,7 @@ PanoramaResult compose_panorama(const std::array<std::filesystem::path, 3> &fram
 
     std::vector<std::uint8_t> output(output_size, 0);
     std::copy_n(source[0].begin(), pixel_offset, output.begin());
-    write_u32(output, 2, static_cast<std::uint32_t>(output_size));
-    write_u32(output, 18, output_width);
-    write_u32(output, 34, output_width * height);
+    normalize_indexed_bmp_header(output.data(), output_width, height);
     for (std::size_t row = 0; row < height; ++row) {
         const auto source_row = pixel_offset + row * source_width;
         const auto output_row = pixel_offset + row * output_width;

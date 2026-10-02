@@ -52,6 +52,7 @@
 #include "plus_presentation.h"
 #include "display.h"
 #include "upscale.h"
+#include "panorama.h"
 #include "noctis.h"
 
 // Date and specific functions imported from ASSEMBLY.H
@@ -5798,12 +5799,14 @@ extern int8_t planet_label[25];
 std::filesystem::path snapfilename;
 
 bool write_indexed_bmp(const std::filesystem::path &path) {
-    int8_t header[54];
+    uint8_t header[noctis::indexed_bmp_header_size];
     FILE *source = sa_open(header_bmp);
     if (source == nullptr) return false;
     const bool header_read = fread(header, 1, sizeof(header), source) == sizeof(header);
     fclose(source);
     if (!header_read) return false;
+    // The archived template declares stale bfSize/biSizeImage values; fix them for a 320x200 frame.
+    noctis::normalize_indexed_bmp_header(header, 320, 200);
 
     FILE *output = fopen(path.string().c_str(), "wb");
     if (output == nullptr) return false;
