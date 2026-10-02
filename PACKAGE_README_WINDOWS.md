@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.4.0 Release
+# Noctis IV OM — Windows 1.5.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.4.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.5.0 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -78,10 +78,10 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 1.4.0 Celestial & Display Update release featuring authentic CRT aspect ratio
-cycling, fullscreen toggle, window resizing, real-time planetary axial rotation, and
-an interactive timewarp multiplier slider HUD. The Microsoft C/C++ runtime is
-statically linked into the executable, so the ZIP does not require a separate
+This is the 1.5.0 Visual Fidelity & Post-Processing Update release featuring deterministic
+Scale2x / EPX upscaling, GLSL CRT monitor emulation, sub-pixel geometry rasterization,
+antialiased celestial point distribution, and persistent user configuration. The Microsoft
+C/C++ runtime is statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for
 compiler-specific presentation details, and consult `TROUBLESHOOTING.md` for

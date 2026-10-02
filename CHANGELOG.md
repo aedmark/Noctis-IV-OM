@@ -5,6 +5,32 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.5.0 (2026-10-02) — The Visual Fidelity & Post-Processing Update
+
+Noctis IV OM 1.5.0 introduces modern post-processing and visual fidelity enhancements,
+featuring deterministic edge-directed upscaling, an authentic OpenGL GLSL CRT monitor
+simulation shader pipeline, sub-pixel geometry rasterization, antialiased celestial
+bodies, and persistent user configuration.
+
+### Deterministic Edge-Directed Upscaling (<kbd>F7</kbd>)
+* **Scale2x / EPX Filtering:** Deterministic edge-directed upscaling expanding the retro 320x200 canvas to 640x400. Smooths jagged pixel staircasing along diagonal boundaries while strictly preserving the original 256-color palette and color purity.
+* **Upscale Modes & Hotkey:** Cycle between Crisp Pixel 1x (direct nearest-neighbor integer scaling), Scale2x Edge-Directed, and Smooth Bilinear filtering dynamically via <kbd>F7</kbd> or through the <kbd>F2</kbd> configuration menu.
+
+### CRT Simulation Shader Pipeline (<kbd>F6</kbd>)
+* **Vintage Display Emulation:** OpenGL 3.3 GLSL post-processing shader faithfully reproducing the visual aesthetic of a curved vintage CRT monitor.
+* **Scanlines, Triads & Bloom:** Features subtle horizontal 200-line scanlines, aperture grille phosphor triad masks, gentle radial glass curvature, corner vignette shading, and celestial core glow/bloom within a strict 1.0 ms GPU render budget. Toggle dynamically via <kbd>F6</kbd> or through the <kbd>F2</kbd> menu.
+
+### Sub-Pixel Geometry & Antialiased Point Distribution
+* **Polymap Sub-Pixel Rasterization:** Textured terrain, planetary surfaces, mountain peaks, and interior cabin structures retain floating-point vertex coordinates, using continuous edge slopes, sub-pixel edge pre-stepping, and scanline rounding. Completely eliminates polygon crawling and vertex wobbling during 3D movement.
+* **Continuous Barycentric Poly3d:** Flat-shaded polygons (cockpit bezel, target reticles, radar compass) utilize sub-pixel half-pixel barycentric evaluation.
+* **Bilinear Celestial Points:** Single-pixel stars and distant planets interpolate brightness across a 2x2 pixel footprint based on fractional sub-pixel coordinate offsets (`far_pixel_at`), smoothing star travel when panning.
+* **Fidelity Toggle:** Sub-pixel geometry mode can be toggled on/off in the <kbd>F2</kbd> menu with <kbd>G</kbd>. Legacy integer rasterization remains available as a baseline with 100% regression test hash parity.
+
+### Display & Presentation Settings Persistence
+* **User Configuration File (`display_settings.ini`):** Display preferences are automatically preserved in the platform configuration directory (`~/.config/noctis-iv-om/` on Linux, `%APPDATA%\Noctis IV OM\` on Windows, or `./config/` in portable mode).
+* **Saved Preferences:** Preserves aspect ratio mode, upscale mode, CRT shader toggle, sub-pixel fidelity, fullscreen state, timewarp simulation rate, HUD text visibility, lens flare mode, and seamless border settings across sessions.
+* **Atomic File Writes:** Safe atomic configuration writes prevent corrupted files upon unexpected shutdown. Settings are restored before window creation on startup.
+
 ## 1.4.0 (2026-10-02) — The Celestial & Display Update
 
 Noctis IV OM 1.4.0 introduces modern presentation and display enhancements,

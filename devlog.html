@@ -22,7 +22,7 @@
         <a href="index.html#first-flight">Flight Manual</a>
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
-        <a class="nav-cta" href="index.html#download">Get 1.3</a>
+        <a class="nav-cta" href="index.html#download">Get 1.5.0</a>
       </nav>
     </div>
   </header>
@@ -114,6 +114,14 @@
     <p>Version 1.4.0 brings the cosmos into living motion and modernizes presentation without compromising retro software rendering authenticity. Planetary bodies now dynamically rotate on their spin axes in real time during spaceflight, synchronized with the simulation clock while keeping day/night terminators physically locked to host stars.</p>
     <p>An interactive high-DPI Timewarp Multiplier slider HUD now allows explorers to adjust simulation rates smoothly from 1x to 5000x via mouse drag, step buttons, or <kbd>[</kbd> / <kbd>]</kbd> bracket keys, with universal timewarp toggle (<kbd>T</kbd> / <kbd>Shift+S</kbd>) available aboard the cabin, on planetary surfaces, and on the observation deck.</p>
     <p>Modern display support adds authentic 4:3 CRT aspect ratio letterboxing with perfectly round celestial bodies (<kbd>F8</kbd> to cycle with 16:10 square and 16:9 stretch), true/borderless fullscreen toggle (<kbd>F11</kbd> / <kbd>Alt+Enter</kbd>), dynamic window resizing, and high-DPI frosted glass HUD telemetry badges.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.5.0: The Visual Fidelity &amp; Post-Processing Update — Deterministic Upscaling, CRT Shader, Sub-Pixel Geometry, and Settings Persistence</h2>
+    <p>Version 1.5.0 elevates visual fidelity on modern high-resolution displays while strictly preserving retro determinism and 100% regression hash parity. We introduced deterministic Scale2x / EPX edge-directed upscaling (<kbd>F7</kbd>) to expand the 320x200 canvas to 640x400 with diagonal smoothing and complete palette purity.</p>
+    <p>For authentic retro presentation, an OpenGL 3.3 GLSL CRT simulation shader (<kbd>F6</kbd>) faithfully reproduces subtle 200-line scanlines, aperture grille phosphor triads, gentle glass curvature, corner vignette shading, and celestial core glow within a tight 1.0 ms GPU budget.</p>
+    <p>In the 3D software rasterizer, we introduced sub-pixel geometry rasterization across <kbd>polymap</kbd> and <kbd>poly3d</kbd>, employing floating-point vertex projection, sub-pixel edge pre-stepping, and scanline endpoint rounding. This completely eliminates vertex crawling and jitter on planetary terrain, mountain meshes, and ship interior geometry, while bilinear point distribution in <kbd>far_pixel_at</kbd> eliminates discrete jumping when panning past distant stars.</p>
+    <p>Finally, user display preferences now automatically persist across sessions via <kbd>display_settings.ini</kbd> in platform configuration directories, seamlessly remembering aspect ratios, upscaling filters, CRT emulation, sub-pixel fidelity, fullscreen state, and timewarp multipliers.</p>
   </section>
 </article>
 </body>
