@@ -16,12 +16,22 @@ extracted directory and run:
 .\nivlr.exe
 ```
 
-The extracted folder contains read-only game resources and default catalogs.
-The game writes saves, mutable catalogs, screenshots, and Moviemaker decks
-under `%LOCALAPPDATA%\Noctis IV OM`, and reserves
-`%APPDATA%\Noctis IV OM` for configuration. These locations are created on
-first normal launch, so the extracted game folder does not need to be writable.
-Do not run the game directly from inside the ZIP.
+This release preview runs in **portable mode by default**. Player files,
+saves, mutable catalogs, screenshots, and Moviemaker decks are kept
+self-contained within the extracted game directory:
+
+- saves and mutable catalogs: `.\data\` beside `nivlr.exe`;
+- screenshots and Moviemaker decks: `.\gallery\` and `.\movies\`;
+- configuration: `.\config\`.
+
+The runtime folders and clean catalog copies are created on first normal launch.
+Ensure the extracted folder is placed in a writable directory. Do not run the
+game directly from inside the ZIP archive.
+
+If you prefer system user directories instead:
+Run `.\nivlr.exe --system-user-data` to store saves under
+`%LOCALAPPDATA%\Noctis IV OM` and configuration under `%APPDATA%\Noctis IV OM`.
+You can also specify a custom profile path using `--user-data-dir DIRECTORY`.
 
 For a headless installation check, run:
 

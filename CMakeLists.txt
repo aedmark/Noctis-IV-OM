@@ -84,6 +84,11 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE shell32 ole32)
 endif()
 
+option(NIVLR_PORTABLE_DEFAULT "Default to portable user data beside executable" OFF)
+if(NIVLR_PORTABLE_DEFAULT)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NIVLR_PORTABLE_DEFAULT)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)

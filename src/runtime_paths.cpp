@@ -163,7 +163,8 @@ RuntimePaths resolve_runtime_paths(const std::filesystem::path &executable_dir,
 bool initialize_runtime_paths(const char *argv0,
                               const std::optional<std::filesystem::path> &user_root_override,
                               const std::optional<std::filesystem::path> &migration_source_override,
-                              std::string *error) {
+                              std::string *error,
+                              std::optional<bool> portable_mode_override) {
     const auto executable_dir = executable_directory(argv0);
     if (executable_dir.empty()) {
         if (error) *error = "could not determine the executable directory";
@@ -183,21 +184,39 @@ bool initialize_runtime_paths(const char *argv0,
 #else
     constexpr auto platform = RuntimePlatform::linux_desktop;
 #endif
+
+    bool portable_mode = false;
+#if defined(NIVLR_PORTABLE_DEFAULT)
+    portable_mode = true;
+#endif
+    const auto env_portable = environment_path("NOCTIS_IV_OM_PORTABLE");
+    if (!env_portable.empty()) {
+        const auto str = env_portable.string();
+        if (str == "1" || str == "true" || str == "on" || str == "yes") portable_mode = true;
+        else if (str == "0" || str == "false" || str == "off" || str == "no") portable_mode = false;
+    }
+    if (portable_mode_override.has_value()) {
+        portable_mode = *portable_mode_override;
+    }
+
     auto effective_user_root = user_root_override;
     if (!effective_user_root) {
         const auto environment_override = environment_path("NOCTIS_IV_OM_HOME");
         if (!environment_override.empty()) effective_user_root = environment_override;
     }
+    if (!effective_user_root && portable_mode) {
+        effective_user_root = executable_dir;
+    }
     if (!effective_user_root) {
 #if defined(_WIN32)
         if (environment.local_app_data.empty()) {
-            if (error) *error = "Windows Local AppData is unavailable; use --user-data-dir";
+            if (error) *error = "Windows Local AppData is unavailable; use --user-data-dir or --portable";
             return false;
         }
 #else
         if (environment.home.empty()
             && (environment.xdg_data_home.empty() || environment.xdg_config_home.empty())) {
-            if (error) *error = "HOME/XDG user directories are unavailable; use --user-data-dir";
+            if (error) *error = "HOME/XDG user directories are unavailable; use --user-data-dir or --portable";
             return false;
         }
 #endif

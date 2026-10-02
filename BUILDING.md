@@ -105,12 +105,30 @@ The archive and its `.sha256` checksum are written to
 
 ## Windows builds
 
-Windows builds normally run in GitHub Actions, so development can remain on
-Linux:
+Windows builds can be cross-compiled directly on Linux using MinGW, or built
+natively on Windows using Visual Studio 2022 / GitHub Actions:
 
 - `.github/workflows/windows.yml` builds and tests MSVC Debug.
 - `.github/workflows/windows-package.yml` builds and verifies the portable
-  Release ZIP.
+  MSVC Release ZIP.
+
+### Cross-compiling on Linux (MinGW)
+
+To build a standalone portable Windows release from Linux:
+
+```sh
+cmake --preset windows-mingw-release
+cmake --build --preset windows-mingw-release --parallel
+cpack --config build/windows-mingw-release/CPackConfig.cmake
+cmake \
+  -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64-preview.zip" \
+  -P cmake/VerifyWindowsPackage.cmake
+```
+
+This statically links the GCC/C++ runtime so the resulting `nivlr.exe` runs
+without extra DLL dependencies.
+
+### Native Windows build (MSVC)
 
 On a Windows machine with Visual Studio 2022, the Release commands are:
 
@@ -132,6 +150,18 @@ graphics check for a normal Windows PC is:
 See [`WINDOWS_PACKAGING.md`](docs/porting/WINDOWS_PACKAGING.md) for package
 evidence and [`WINDOWS_MSVC.md`](docs/porting/WINDOWS_MSVC.md) for the
 remaining compatibility boundary.
+
+## Portable mode
+
+Release presets (`linux-clang-release`, `windows-mingw-release`, and
+`windows-msvc-release`) configure `-DNIVLR_PORTABLE_DEFAULT=ON` by default.
+In portable mode, all saves, catalogs, screenshots, movies, and configs are
+stored directly within the game directory beside the executable.
+
+To use standard OS user directories instead, launch with `--system-user-data`,
+or configure CMake with `-DNIVLR_PORTABLE_DEFAULT=OFF`. You can also force
+portable mode on any build using the `--portable` CLI flag or by setting
+`NOCTIS_IV_OM_PORTABLE=1`.
 
 ## Offline build using the retained cache
 

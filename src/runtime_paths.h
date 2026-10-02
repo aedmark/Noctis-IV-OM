@@ -51,7 +51,8 @@ struct RuntimeSetupResult {
     const char *argv0,
     const std::optional<std::filesystem::path> &user_root_override = std::nullopt,
     const std::optional<std::filesystem::path> &migration_source_override = std::nullopt,
-    std::string *error = nullptr);
+    std::string *error = nullptr,
+    std::optional<bool> portable_mode_override = std::nullopt);
 [[nodiscard]] const RuntimePaths &runtime_paths();
 [[nodiscard]] RuntimeSetupResult prepare_runtime_storage(const RuntimePaths &paths);
 

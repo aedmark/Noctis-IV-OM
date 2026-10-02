@@ -12,19 +12,23 @@ Keep the archive contents together. Open a terminal in this directory and run:
 ./nivlr
 ```
 
-The extracted folder contains read-only game resources and default catalogs.
-Player files live outside it:
+This release preview runs in **portable mode by default**. Player files,
+saves, mutable catalogs, screenshots, and Moviemaker decks are kept
+self-contained within the extracted game directory:
 
-- saves and catalogs: `$XDG_DATA_HOME/noctis-iv-om/data`, or
-  `~/.local/share/noctis-iv-om/data` when `XDG_DATA_HOME` is unset;
-- screenshots and Moviemaker decks: the neighboring `gallery/` and `movies/`
-  directories;
-- configuration: `$XDG_CONFIG_HOME/noctis-iv-om`, or
-  `~/.config/noctis-iv-om` when `XDG_CONFIG_HOME` is unset.
+- saves and catalogs: `./data/` beside `nivlr`;
+- screenshots and Moviemaker decks: `./gallery/` and `./movies/`;
+- configuration: `./config/`.
 
-The folders and clean catalog copies are created on first normal launch. The
-archive therefore does not need to be installed in a writable location. Do not
-run the game directly from inside the compressed archive.
+The runtime folders and clean catalog copies are created on first normal launch.
+Ensure the extracted game folder is placed in a writable location. Do not run
+the game directly from inside the compressed archive.
+
+If you prefer system user directories instead:
+Run `./nivlr --system-user-data` to store player data in
+`$XDG_DATA_HOME/noctis-iv-om/data` (`~/.local/share/noctis-iv-om/data`) and
+configuration in `$XDG_CONFIG_HOME/noctis-iv-om` (`~/.config/noctis-iv-om`).
+You can also specify a custom profile path using `--user-data-dir DIRECTORY`.
 
 For a headless installation check, run `./nivlr --diagnostics`.
 

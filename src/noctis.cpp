@@ -2598,6 +2598,7 @@ int main(int argc, char **argv) {
     const char *persistence_fixture_phase = nullptr;
     std::optional<std::filesystem::path> user_data_override;
     std::optional<std::filesystem::path> migration_source;
+    std::optional<bool> portable_mode_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -2605,6 +2606,10 @@ int main(int argc, char **argv) {
             prepare_user_data_only = true;
         } else if (std::string_view(argv[arg]) == "--graphical-smoke") {
             graphical_smoke_mode = true;
+        } else if (std::string_view(argv[arg]) == "--portable") {
+            portable_mode_override = true;
+        } else if (std::string_view(argv[arg]) == "--system-user-data") {
+            portable_mode_override = false;
         } else if (std::string_view(argv[arg]) == "--omega-drive") {
             drive_override = -1;
         } else if (std::string_view(argv[arg]) == "--standard-drive") {
@@ -2653,7 +2658,7 @@ int main(int argc, char **argv) {
             }
         } else {
             noctis::log_event("error", "arguments",
-                              "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data] [--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--omega-drive|--standard-drive]");
+                              "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data] [--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] [--omega-drive|--standard-drive]");
             return 2;
         }
     }
@@ -2679,7 +2684,7 @@ int main(int argc, char **argv) {
         }
     }
     std::string path_error;
-    if (!noctis::initialize_runtime_paths(argv[0], user_data_override, migration_source, &path_error)) {
+    if (!noctis::initialize_runtime_paths(argv[0], user_data_override, migration_source, &path_error, portable_mode_override)) {
         noctis::log_event("error", "runtime_paths", path_error);
         return 1;
     }

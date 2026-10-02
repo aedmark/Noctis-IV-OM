@@ -107,6 +107,34 @@ int main() {
     ok &= require(!broken.ok && broken.message.find("required catalog") != std::string::npos,
                   "missing catalog seeds did not stop profile preparation");
 
+    const auto portable_install = test_root / "portable-game";
+    write(portable_install / "defaults/STARMAP.BIN", "portable-map");
+    write(portable_install / "defaults/GUIDE.BIN", "portable-guide");
+    const auto portable_paths = noctis::resolve_runtime_paths(
+        portable_install, noctis::RuntimePlatform::linux_desktop, linux_environment, portable_install);
+    ok &= require(portable_paths.user_root == portable_install, "portable user_root mismatch");
+    ok &= require(portable_paths.data_dir == portable_install / "data", "portable data_dir mismatch");
+    ok &= require(portable_paths.config_dir == portable_install / "config", "portable config_dir mismatch");
+    const auto portable_prep = noctis::prepare_runtime_storage(portable_paths);
+    ok &= require(portable_prep.ok, portable_prep.message.c_str());
+    ok &= require(read(portable_install / "data/STARMAP.BIN") == "portable-map", "portable map seed missing");
+    ok &= require(read(portable_install / "data/GUIDE.BIN") == "portable-guide", "portable guide seed missing");
+    ok &= require(std::filesystem::is_directory(portable_install / "gallery"), "portable gallery missing");
+    ok &= require(std::filesystem::is_directory(portable_install / "movies"), "portable movies missing");
+    ok &= require(std::filesystem::is_directory(portable_install / "config"), "portable config missing");
+
+    ok &= require(noctis::initialize_runtime_paths(nullptr, std::nullopt, std::nullopt, nullptr, true),
+                  "portable mode initialization failed");
+    ok &= require(noctis::runtime_paths().user_root == noctis::runtime_paths().executable_dir,
+                  "initialized portable user_root mismatch");
+    ok &= require(noctis::runtime_paths().data_dir == noctis::runtime_paths().executable_dir / "data",
+                  "initialized portable data_dir mismatch");
+
+    ok &= require(noctis::initialize_runtime_paths(nullptr, std::nullopt, std::nullopt, nullptr, false),
+                  "system mode initialization failed");
+    ok &= require(noctis::runtime_paths().user_root != noctis::runtime_paths().executable_dir,
+                  "system user_root should differ from executable_dir");
+
     std::filesystem::remove_all(test_root, ignored);
     return ok ? 0 : 1;
 }

@@ -2,6 +2,7 @@ if(NOT DEFINED PACKAGE OR NOT EXISTS "${PACKAGE}")
     message(FATAL_ERROR "PACKAGE must name an existing Linux .tar.gz archive")
 endif()
 
+get_filename_component(PACKAGE "${PACKAGE}" ABSOLUTE)
 get_filename_component(package_directory "${PACKAGE}" DIRECTORY)
 set(work "${package_directory}/linux-package-verification")
 file(REMOVE_RECURSE "${work}")
