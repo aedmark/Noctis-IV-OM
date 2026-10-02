@@ -67,5 +67,44 @@ int main() {
     ok &= require(test_frame[108 * 320 + 161] == 70, "torch active should preserve sky/stars");
     ok &= require(test_frame[108 * 320 + 162] > 192, "torch active should illuminate objects");
 
+    // Suit torch RGBA spotlight presentation test
+    std::vector<std::uint8_t> test_rgba(320 * 200 * 4, 16);
+    std::vector<std::uint8_t> test_indices(320 * 200, 0);
+    test_indices[110 * 320 + 160] = 0;   // Ground at hotspot
+    test_indices[110 * 320 + 161] = 70;  // Sky in beam area
+    test_indices[110 * 320 + 162] = 195; // Object in beam area
+    test_indices[5 * 320 + 160] = 0;     // Visor top margin
+    test_indices[10 * 320 + 10] = 0;     // Outside beam
+
+    noctis::apply_suit_torch_rgba(test_rgba.data(), test_indices.data(), 320, 200);
+
+    const std::size_t hotspot_offset = (110 * 320 + 160) * 4;
+    const std::size_t sky_offset = (110 * 320 + 161) * 4;
+    const std::size_t obj_offset = (110 * 320 + 162) * 4;
+    const std::size_t visor_offset = (5 * 320 + 160) * 4;
+    const std::size_t outside_offset = (10 * 320 + 10) * 4;
+
+    ok &= require(test_rgba[hotspot_offset + 0] > 150, "RGBA torch should brightly illuminate ground hotspot");
+    ok &= require(test_rgba[sky_offset + 0] == 16, "RGBA torch should preserve sky pixels");
+    ok &= require(test_rgba[obj_offset + 0] > 150, "RGBA torch should brightly illuminate objects in beam");
+    ok &= require(test_rgba[visor_offset + 0] == 16, "RGBA torch should preserve visor margin");
+    ok &= require(test_rgba[outside_offset + 0] == 16, "RGBA torch should not modify pixels outside beam");
+
+    // Surface HUD status text test
+    std::vector<std::uint8_t> hud_frame(320 * 200, 0);
+    noctis::draw_surface_status_text(hud_frame.data(), 320, 200, "TORCH ON");
+
+    bool found_white = false;
+    bool found_shadow = false;
+    for (int y = 98; y <= 106; ++y) {
+        for (int x = 120; x <= 200; ++x) {
+            const auto val = hud_frame[y * 320 + x];
+            if (val == 127) found_white = true;
+            if (val == 64) found_shadow = true;
+        }
+    }
+    ok &= require(found_white, "HUD status text should render crisp star-white glyph pixels (index 127)");
+    ok &= require(found_shadow, "HUD status text should render drop shadow pixels (index 64)");
+
     return ok ? 0 : 1;
 }

@@ -18,6 +18,7 @@ extern std::uint32_t last_snapshot;
 extern std::int8_t option_mouse_look;
 extern std::int16_t roof_speed;
 extern std::int8_t draw_hud;
+extern std::int8_t suit_torch;
 extern std::int8_t lens_flare_mode;
 extern std::int8_t seamless_border;
 extern std::int8_t graphics_menu_status;

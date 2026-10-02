@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 namespace noctis {
 
@@ -69,6 +70,198 @@ void apply_suit_torch(std::uint8_t *framebuffer, std::int32_t width, std::int32_
                 val = static_cast<std::uint8_t>(std::min(137, val + (boost >> 2)));
             } else if (val >= 192) {
                 val = static_cast<std::uint8_t>(std::min(255, val + boost));
+            }
+        }
+    }
+}
+
+void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
+                           std::int32_t width, std::int32_t height) {
+    if (!rgba || !adapted || width <= 0 || height <= 0) return;
+
+    const int cx = width / 2;
+    const int cy = height / 2 + 10;
+    constexpr float rx = 96.0f;
+    constexpr float ry = 70.0f;
+    constexpr float inv_rx2 = 1.0f / (rx * rx);
+    constexpr float inv_ry2 = 1.0f / (ry * ry);
+
+    const int min_y = std::max(10, cy - static_cast<int>(ry));
+    const int max_y = std::min(height - 11, cy + static_cast<int>(ry));
+    const int min_x = std::max(10, cx - static_cast<int>(rx));
+    const int max_x = std::min(width - 11, cx + static_cast<int>(rx));
+
+    for (int y = min_y; y <= max_y; ++y) {
+        const float dy = static_cast<float>(y - cy);
+        const float dy2_term = dy * dy * inv_ry2;
+        if (dy2_term >= 1.0f) continue;
+
+        const std::size_t row_pixel_offset = static_cast<std::size_t>(y) * width;
+        for (int x = min_x; x <= max_x; ++x) {
+            const float dx = static_cast<float>(x - cx);
+            const float d2 = dx * dx * inv_rx2 + dy2_term;
+            if (d2 >= 1.0f) continue;
+
+            const std::uint8_t idx = adapted[row_pixel_offset + x];
+            // Preserve sky, stars, menu overlays, and status text (64..127)
+            if (idx >= 64 && idx <= 127) continue;
+            // Preserve distant horizon sky haze (138..191)
+            if (idx >= 138 && idx < 192) continue;
+
+            const float edge_fade = 1.0f - d2;
+            float intensity = edge_fade * edge_fade;
+            if (d2 < 0.25f) {
+                intensity += (1.0f - d2 / 0.25f) * 0.40f;
+            }
+
+            float surface_mod = 1.0f;
+            if (idx < 44) {
+                surface_mod = 0.70f + 0.30f * (static_cast<float>(idx) / 43.0f);
+            } else if (idx < 64) {
+                surface_mod = 1.0f;
+            } else if (idx >= 192) {
+                surface_mod = 0.75f + 0.25f * (static_cast<float>(idx - 192) / 63.0f);
+            } else if (idx >= 128 && idx < 138) {
+                surface_mod = 0.65f + 0.35f * (static_cast<float>(idx - 128) / 9.0f);
+            }
+
+            constexpr float max_beam = 180.0f;
+            const float beam = intensity * surface_mod * max_beam;
+            const int beam_r = static_cast<int>(beam);
+            const int beam_g = static_cast<int>(beam * 0.96f);
+            const int beam_b = static_cast<int>(beam * 0.90f);
+
+            const std::size_t rgba_idx = (row_pixel_offset + x) * 4;
+            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 0] + beam_r));
+            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 1] + beam_g));
+            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 2] + beam_b));
+        }
+    }
+}
+
+namespace {
+constexpr std::uint8_t surface_hud_font[65 * 5] = {
+    0, 0, 0, 0, 0, // 32 ' '
+    2, 2, 2, 0, 2, // 33 '!'
+    5, 0, 0, 0, 0, // 34 '"'
+    0, 0, 3, 5, 5, // 35 '#'
+    2, 2, 6, 2, 2, // 36 '$'
+    1, 4, 2, 1, 4, // 37 '%'
+    0, 0, 2, 0, 0, // 38 '&'
+    0, 2, 2, 0, 0, // 39 '\''
+    4, 2, 2, 2, 4, // 40 '('
+    1, 2, 2, 2, 1, // 41 ')'
+    0, 0, 7, 2, 2, // 42 '*'
+    0, 2, 7, 2, 0, // 43 '+'
+    0, 0, 0, 2, 1, // 44 ','
+    0, 0, 7, 0, 0, // 45 '-'
+    0, 0, 0, 0, 2, // 46 '.'
+    0, 4, 2, 1, 0, // 47 '/'
+    7, 5, 5, 5, 7, // 48 '0'
+    3, 2, 2, 2, 7, // 49 '1'
+    7, 4, 7, 1, 7, // 50 '2'
+    7, 4, 6, 4, 7, // 51 '3'
+    4, 6, 5, 7, 4, // 52 '4'
+    7, 1, 7, 4, 7, // 53 '5'
+    7, 1, 7, 5, 7, // 54 '6'
+    7, 4, 4, 4, 4, // 55 '7'
+    7, 5, 7, 5, 7, // 56 '8'
+    7, 5, 7, 4, 4, // 57 '9'
+    0, 2, 0, 2, 0, // 58 ':'
+    0, 2, 0, 2, 1, // 59 ';'
+    4, 2, 1, 2, 4, // 60 '<'
+    0, 7, 0, 7, 0, // 61 '='
+    1, 2, 4, 2, 1, // 62 '>'
+    7, 4, 6, 0, 2, // 63 '?'
+    0, 2, 0, 0, 0, // 64 '@'
+    7, 5, 7, 5, 5, // 65 'A'
+    7, 5, 3, 5, 7, // 66 'B'
+    7, 1, 1, 1, 7, // 67 'C'
+    3, 5, 5, 5, 3, // 68 'D'
+    7, 1, 3, 1, 7, // 69 'E'
+    7, 1, 3, 1, 1, // 70 'F'
+    7, 1, 5, 5, 7, // 71 'G'
+    5, 5, 7, 5, 5, // 72 'H'
+    2, 2, 2, 2, 2, // 73 'I'
+    4, 4, 4, 5, 7, // 74 'J'
+    5, 5, 3, 5, 5, // 75 'K'
+    1, 1, 1, 1, 7, // 76 'L'
+    7, 7, 5, 5, 5, // 77 'M'
+    5, 7, 7, 5, 5, // 78 'N'
+    7, 5, 5, 5, 7, // 79 'O'
+    7, 5, 7, 1, 1, // 80 'P'
+    7, 5, 5, 1, 5, // 81 'Q'
+    7, 5, 3, 5, 5, // 82 'R'
+    7, 1, 7, 4, 7, // 83 'S'
+    7, 2, 2, 2, 2, // 84 'T'
+    5, 5, 5, 5, 7, // 85 'U'
+    5, 5, 5, 5, 2, // 86 'V'
+    5, 5, 7, 7, 5, // 87 'W'
+    5, 5, 2, 5, 5, // 88 'X'
+    5, 5, 7, 2, 2, // 89 'Y'
+    7, 4, 2, 1, 7, // 90 'Z'
+    0, 0, 6, 2, 2, // 91 '['
+    1, 3, 7, 3, 1, // 92 '\\'
+    2, 2, 6, 0, 0, // 93 ']'
+    2, 2, 2, 2, 2, // 94 '^'
+    0, 0, 0, 0, 7, // 95 '_'
+    1, 2, 0, 0, 0  // 96 '`'
+};
+} // namespace
+
+void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std::int32_t height,
+                              const char *text) {
+    if (!framebuffer || !text || width <= 0 || height <= 0) return;
+    const std::size_t len = std::strlen(text);
+    if (len == 0) return;
+
+    constexpr int char_step = 6;
+    const int total_width = static_cast<int>(len) * char_step - 2;
+    const int start_x = (width - total_width) / 2;
+    const int start_y = 100;
+
+    // Pass 1: Draw black shadow (index 64) offset by (+1, +1)
+    for (std::size_t n = 0; n < len; ++n) {
+        char ch = text[n];
+        if (ch >= 'a' && ch <= 'z') ch = static_cast<char>(ch - 'a' + 'A');
+        if (ch < 32 || ch > 96) continue;
+        const int glyph_idx = (ch - 32) * 5;
+        const int gx = start_x + static_cast<int>(n) * char_step;
+
+        for (int row = 0; row < 5; ++row) {
+            const int py = start_y + row + 1;
+            if (py < 0 || py >= height) continue;
+            const auto bits = surface_hud_font[glyph_idx + row];
+            for (int col = 0; col < 3; ++col) {
+                if (bits & (1 << col)) {
+                    const int px = gx + col + 1;
+                    if (px >= 0 && px < width) {
+                        framebuffer[py * width + px] = 64; // Dark shadow
+                    }
+                }
+            }
+        }
+    }
+
+    // Pass 2: Draw crisp star-white glyphs (index 127) at (0, 0)
+    for (std::size_t n = 0; n < len; ++n) {
+        char ch = text[n];
+        if (ch >= 'a' && ch <= 'z') ch = static_cast<char>(ch - 'a' + 'A');
+        if (ch < 32 || ch > 96) continue;
+        const int glyph_idx = (ch - 32) * 5;
+        const int gx = start_x + static_cast<int>(n) * char_step;
+
+        for (int row = 0; row < 5; ++row) {
+            const int py = start_y + row;
+            if (py < 0 || py >= height) continue;
+            const auto bits = surface_hud_font[glyph_idx + row];
+            for (int col = 0; col < 3; ++col) {
+                if (bits & (1 << col)) {
+                    const int px = gx + col;
+                    if (px >= 0 && px < width) {
+                        framebuffer[py * width + px] = 127; // Crisp star-white
+                    }
+                }
             }
         }
     }

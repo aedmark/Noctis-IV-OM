@@ -2394,6 +2394,7 @@ std::uint32_t last_snapshot = UINT32_MAX;
 std::int8_t option_mouse_look = 0;
 std::int16_t roof_speed = 0;
 std::int8_t draw_hud = 1;
+std::int8_t suit_torch = 0;
 std::int8_t lens_flare_mode = 0;
 std::int8_t seamless_border = 0;
 std::int8_t graphics_menu_status = 0;
@@ -3764,6 +3765,9 @@ void swapBuffers() {
 
     static std::vector<std::uint8_t> pixels(adapted_width * adapted_height * 4);
     noctis::expand_indexed_rgba(adapted, adapted_width * adapted_height, currpal, pixels.data());
+    if (suit_torch) {
+        noctis::apply_suit_torch_rgba(pixels.data(), adapted, adapted_width, adapted_height);
+    }
     UpdateTexture(screen_texture, pixels.data());
     DrawTextureNPatch(screen_texture,
                       {.source = {.x = 0, .y = 0, .width = (float) adapted_width, .height = (float) adapted_height}},

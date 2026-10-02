@@ -3992,7 +3992,7 @@ void planetary_main() {
     int8_t raw_widesnap     = 0;
     bool jumping            = false;
     bool jetpack            = false;
-    int8_t suit_torch       = 0;
+    suit_torch              = 0;
     int16_t w, lw = 10, now = 25, waveratio = 5, waveblur = 0;
     int16_t flick, flicks, fshift;
     int8_t secondarysun = 0;
@@ -5491,13 +5491,6 @@ nosecondarysun:
     // subito dopo che si ? stati bagnati da un'onda...
     ends:
 
-        if (fcs_status_delay > 0 && draw_hud) {
-            const auto length = std::strlen(reinterpret_cast<char *>(fcs_status_extended));
-            const auto x = static_cast<uint16_t>(160 - std::min<std::size_t>(length * 2, 150));
-            wrouthud(x, 100, 0, reinterpret_cast<char *>(fcs_status_extended));
-            --fcs_status_delay;
-        }
-
         if (waveblur) {
             ptr = waveblur;
 
@@ -5517,6 +5510,11 @@ nosecondarysun:
         // il fotogramma ? finito. ora lo visualizza.
         noctis::apply_suit_torch(adapted, adapted_width, adapted_height, suit_torch != 0);
         draw_plus_overlay(true);
+        if (fcs_status_delay > 0 && draw_hud) {
+            noctis::draw_surface_status_text(adapted, adapted_width, adapted_height,
+                                             reinterpret_cast<char *>(fcs_status_extended));
+            --fcs_status_delay;
+        }
         surrounding(draw_hud || graphics_menu_status || about || movie_recorder.menu_open(), openhudcount);
         QUADWORDS = 16000;
 
@@ -5860,6 +5858,7 @@ nosecondarysun:
     }
 
 nodissolve:
+    suit_torch         = 0;
     memset(adapted, 0, adapted_width * adapted_height);
     dzat_x             = backup_dzat_x;
     dzat_y             = backup_dzat_y;
