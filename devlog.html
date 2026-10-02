@@ -99,6 +99,13 @@
     <p>Exploring the unlit nightside of planets or tidally locked worlds no longer requires fumbling in total darkness. Version 1.1.0 introduces the planetary Suit Torch headlamp, toggled at any time with the <kbd>L</kbd> key. The headlamp casts an authentic spotlight beam directly in front of the explorer, blending ambient illumination, radial beam focus, quadratic distance attenuation, and smooth surface normal shading in 32-bit RGBA color space.</p>
     <p>In addition, transient HUD status messages (such as TORCH ON/OFF and MOUSELOOK notifications) now render at crisp native display resolution directly over the retro framebuffer, eliminating text blur. Under the hood, surface session quitting via Escape now seamlessly synchronizes the ship’s orbital situation and guards celestial coordinates against cold-restart resets, ensuring your expeditions can be saved and resumed anywhere across the galaxy.</p>
   </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.2.0: The Celestial Resonance Update — Procedural Audio and Exploration Foley</h2>
+    <p>Space in Noctis IV has always been vast and contemplative; now, it has a voice. Version 1.2.0 introduces a completely self-contained procedural ambient audio engine and Foley soundscape, synthesized in real-time with zero external audio assets or binary sound files.</p>
+    <p>Aboard the Stardrifter, explorers are grounded by a gentle 55 Hz cabin hum, warm harmonics, a deep 27.5 Hz sub-bass pulse, reactor ventilation, and quiet CRT terminal purrs. Stepping through the cupola out onto the roof in open space (<kbd>ontheroof</kbd>) transitions to an expansive cosmic silence with diffuse solar wind sweeps. During flight, the Vimana drive dynamically adjusts pitch and harmonic resonance in real-time with propulsion velocity and approach maneuvers.</p>
+    <p>On planetary surfaces, the procedural engine dynamically models atmospheric pressure: airless moons and asteroids (<kbd>atmosphere == 0</kbd>) immerse the player in eerie dead silence punctuated only by the suit’s internal life-support hum, while worlds with atmosphere produce realistic howling winds, gust dynamics, rain droplet textures, and rolling thunder. Tactile mechanical Foley brings exploration to life: a dual-click for the suit torch (<kbd>L</kbd>), micro-stepper servo hums for the visor (<kbd>PgUp</kbd>/<kbd>PgDn</kbd>), cold-gas thruster bursts for the jetpack (<kbd>Space</kbd>), and subtle regolith footsteps, with quick mute control via <kbd>F9</kbd> or <kbd>Ctrl+M</kbd>.</p>
+  </section>
 </article>
 </body>
 </html>

@@ -62,9 +62,16 @@ For a deliberately portable or test profile, `--user-data-dir DIRECTORY`
 selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 `config\`.
 
+## Controls and Audio
+
+- **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
+- **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
+- **Audio Mute:** Press `F9` or `Ctrl+M` to toggle procedural audio mute.
+- **Jetpack:** Press `Space` to burst thrusters while airborne on low-gravity worlds.
+
 ## Release status
 
-This is the 1.0 General Availability release. The Microsoft C/C++ runtime is
+This is the 1.2.0 Celestial Resonance release with built-in procedural ambient audio and exploration Foley. The Microsoft C/C++ runtime is
 statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

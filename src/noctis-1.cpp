@@ -1,16 +1,17 @@
-#include <algorithm>
+#include "audio.h"
 #include "brtl.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
 #include "native_save.h"
+#include "noctis-0.h"
+#include "noctis-d.h"
+#include "noctis.h"
 #include "panorama.h"
 #include "plus_controls.h"
 #include "plus_presentation.h"
 #include "runtime_paths.h"
-#include "noctis-0.h"
-#include "noctis-d.h"
-#include "noctis.h"
 #include "startup_diagnostics.h"
+#include <algorithm>
 
 const double deg = M_PI / 180;
 
@@ -56,10 +57,10 @@ int8_t mirror    = 0; // effetto specchio d'acqua (agisce su "fragment").
 int8_t waves_in  = 0; // flag di presenza delle onde sui mari.
 int8_t waves_out = 0; // flag di produzione di onde sui mari.
 int32_t T_SCALE;      // scala della texture, passata in H/V_MATRIXS.
-uint32_t fixture_tree_draws = 0;
-uint32_t fixture_rock_draws = 0;
-uint32_t fixture_animal_draws = 0;
-uint32_t fixture_ruin_draws = 0;
+uint32_t fixture_tree_draws    = 0;
+uint32_t fixture_rock_draws    = 0;
+uint32_t fixture_animal_draws  = 0;
+uint32_t fixture_ruin_draws    = 0;
 uint32_t fixture_capsule_draws = 0;
 
 float base_pp_temp;
@@ -131,8 +132,8 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2, int32_
     z += correction;
 
     if (!noseed) {
-        fast_srand((legacy_i32_from_double(x) >> 14) + (legacy_i32_from_double(y) >> 14)
-                   + (legacy_i32_from_double(z) >> 14));
+        fast_srand((legacy_i32_from_double(x) >> 14) + (legacy_i32_from_double(y) >> 14) +
+                   (legacy_i32_from_double(z) >> 14));
     }
 
     m1 = 1 + fast_random(mask_1);
@@ -245,10 +246,10 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = 3;
             V_MATRIXS = 8;
             change_txm_repeating_mode();
-            previoustexture = txtr;
+            previoustexture       = txtr;
             previous_texture_bias = texture_address_bias;
-            x2              = x + cos(b_angle) * range;
-            z2              = z + sin(b_angle) * range;
+            x2                    = x + cos(b_angle) * range;
+            z2                    = z + sin(b_angle) * range;
 
             if (isrootnode) {
                 y2 = y - (fast_flandom() * rootheight + 0.1) * scaling;
@@ -288,7 +289,7 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = hm;
             V_MATRIXS = vm;
             change_txm_repeating_mode();
-            txtr = previoustexture;
+            txtr                 = previoustexture;
             texture_address_bias = previous_texture_bias;
             build_fractal_tree(x2, y2, z2, scaling * reduction, reduction, globalwidth, layers - 1, divisions,
                                distance_from_perfection, rootcolormask, leafcolormask, branchdetail, 0, occurrence + 1);
@@ -919,10 +920,10 @@ inactive:
         if (ani_scale[n] > 10) {
             // modello di comportamento:
             // in volo, grandi uccelli.
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, 0, std::abs(10 - (tick % 20)) * -4.5,
-                  bird_wing1);
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, 0, std::abs(10 - (tick % 20)) * +4.5,
-                  bird_wing2);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, 0,
+                  std::abs(10 - (tick % 20)) * -4.5, bird_wing1);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, 0,
+                  std::abs(10 - (tick % 20)) * +4.5, bird_wing2);
         } else {
             // modello di comportamento:
             // in volo, piccoli uccelli.
@@ -992,8 +993,8 @@ inactive:
                 }
             }
 
-            ay2 = hpoint(ax - an_incl_prec * sin(deg * ani_pitch[n]), az - an_incl_prec * cos(deg * ani_pitch[n])) -
-                  ani_quote[n];
+            ay2  = hpoint(ax - an_incl_prec * sin(deg * ani_pitch[n]), az - an_incl_prec * cos(deg * ani_pitch[n])) -
+                   ani_quote[n];
             incl = ay - ay2;
             incl /= an_incl_prec;
 
@@ -1349,7 +1350,7 @@ void fragment(int32_t x, int32_t z) {
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr = (uint8_t *) n_globes_map;
+            txtr                 = (uint8_t *) n_globes_map;
             texture_address_mask = 0x7FFF;
             cam_y += 515;
             polycupola(-1, 1);
@@ -1374,9 +1375,9 @@ void fragment(int32_t x, int32_t z) {
                 }
             }
 
-            cam_x = px;
-            cam_y = py;
-            cam_z = pz;
+            cam_x                = px;
+            cam_y                = py;
+            cam_z                = pz;
             texture_address_mask = UINT16_MAX;
         }
     } else {
@@ -1426,7 +1427,7 @@ void fragment(int32_t x, int32_t z) {
                     YSIZE = TEXTURE_Y_SIZE;
                 }
 
-                flares = groundflares;
+                flares               = groundflares;
                 texture_address_bias = static_cast<uint16_t>(x << 3);
                 c1 &= 0xC0;
             }
@@ -1479,7 +1480,8 @@ void fragment(int32_t x, int32_t z) {
     // nella distanza... eh, b?, anche la velocit? vuole la
     // sua parte, ? assurdo ma consigliabile. E si nota poco.
     count = noctis::visible_surface_objects(count, depth);
-    if (!count) return;
+    if (!count)
+        return;
 
     // impostazione texture per gli oggetti.
     flares = 0;
@@ -3295,16 +3297,16 @@ void create_sky(int8_t atmosphere) {
     float br = (float) sky_red_filter / 64, bg = (float) sky_grn_filter / 64, bb = (float) sky_blu_filter / 64;
     float tr = (float) gnd_red_filter / 64, tg = (float) gnd_grn_filter / 64, tb = (float) gnd_blu_filter / 64;
     float fr[4] = {0.0f}, fg[4] = {0.0f}, fb[4] = {0.0f}; // filtri colorati per 4 sfumature.
-    float al = (static_cast<float>(albedo) / 64.0f);  // costante di albedo
+    float al = (static_cast<float>(albedo) / 64.0f);      // costante di albedo
     // calcola il fattore "distanza dal sole" per l'intensit? della luce
     // ? infuenzato anche dal tipo di stella.
     float sb, dfs;
     int16_t owner = nearstar_p_owner[ip_targetted];
 
     if (owner == -1) {
-        dfs = 1 - ((float) (ip_targetted) *0.05);
+        dfs = 1 - ((float) (ip_targetted) * 0.05);
     } else {
-        dfs = 1 - ((float) (owner) *0.05);
+        dfs = 1 - ((float) (owner) * 0.05);
     }
 
     if (!atmosphere) {
@@ -3667,12 +3669,18 @@ void create_sky(int8_t atmosphere) {
     }
 
     if (dfs <= 0.2f) {
-        if (fr[0] < 4.0f) fr[0] = 4.0f;
-        if (fg[0] < 4.0f) fg[0] = 4.0f;
-        if (fb[0] < 4.0f) fb[0] = 4.0f;
-        if (fr[2] < 6.0f) fr[2] = 6.0f;
-        if (fg[2] < 6.0f) fg[2] = 6.0f;
-        if (fb[2] < 6.0f) fb[2] = 6.0f;
+        if (fr[0] < 4.0f)
+            fr[0] = 4.0f;
+        if (fg[0] < 4.0f)
+            fg[0] = 4.0f;
+        if (fb[0] < 4.0f)
+            fb[0] = 4.0f;
+        if (fr[2] < 6.0f)
+            fr[2] = 6.0f;
+        if (fg[2] < 6.0f)
+            fg[2] = 6.0f;
+        if (fb[2] < 6.0f)
+            fb[2] = 6.0f;
     }
 
     // sfumatura per il suolo.
@@ -3959,9 +3967,7 @@ int8_t entryflag = 0; // flag: se settato all'ingresso di planetary_main,
 void planetary_main() {
     struct SurfaceActiveScope {
         const int8_t cached_body;
-        SurfaceActiveScope(int8_t body) : cached_body(body) {
-            surface_active = 1;
-        }
+        SurfaceActiveScope(int8_t body) : cached_body(body) { surface_active = 1; }
         ~SurfaceActiveScope() {
             surface_active = 0;
             if (cached_body >= 0) {
@@ -3972,9 +3978,8 @@ void planetary_main() {
 
     // Surface rendering must retain the landed body's type even if low power
     // clears the ship's orbital target while the player is still outside.
-    const int8_t surface_body_type = (ip_targetted >= 0 && ip_targetted < nearstar_nob)
-        ? nearstar_p_type[ip_targetted]
-        : 0;
+    const int8_t surface_body_type =
+        (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_type[ip_targetted] : 0;
     const int16_t widesnappingangle = 71;
     uint16_t pqw                    = QUADWORDS;
     int32_t cpos;
@@ -4060,11 +4065,11 @@ void planetary_main() {
 
     float gravity, crcy, temp;
     double backup_dzat_x = dzat_x;
-    dzat_x              = 0;
+    dzat_x               = 0;
     double backup_dzat_y = dzat_y;
-    dzat_y              = 0;
+    dzat_y               = 0;
     double backup_dzat_z = dzat_z;
-    dzat_z              = 0;
+    dzat_z               = 0;
     float backup_cam_x, backup_cam_y, backup_cam_z;
     float backup__alfa, backup__beta;
     float drop_x, drop_y, drop_z;
@@ -4152,7 +4157,7 @@ void planetary_main() {
     // "exposure" viene normalizzato per l'area diurna fra 0 e 90 gradi,
     // e in pratica rappresenta la declinazione del sole locale: zero
     // significa che il sole ? all'orizzonte.
-    exposure = (float) (crepzone) *0.7826; // 90/115
+    exposure = (float) (crepzone) * 0.7826; // 90/115
     // "sun_x_factor" prende il valore -1 quando il sole ? verso il lato
     // ovest (tramonto), altrimenti prende il valore +1. Per calcolare
     // le tre coordinate del sole si parte dalle coordinate come
@@ -4309,7 +4314,7 @@ void planetary_main() {
     // funzione "planets". Per? resta da ripetere i calcoli di prima,
     // su altre variabili col prefisso "pri_".
     // Oh, naturalmente bisogna usare "dsd2" al posto di "dsd1".
-    pri_exposure = (float) (pri_crepzone) *0.7826; // 90/115
+    pri_exposure = (float) (pri_crepzone) * 0.7826; // 90/115
     alfa         = deg * (90 - latitude + pri_latitude);
     beta         = deg * pri_exposure;
     pri_x        = -dsd2 * cos(beta) * pri_sun_x_factor;
@@ -4397,8 +4402,10 @@ nosecondarysun:
         (cambia solo con la latitudine, ma ? previsto che sia cos?, dato
         che bisogna differenziare gli ambienti caldi da quelli freddi). */
     const double target_ray = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_ray[ip_targetted] : 0.0;
-    const double target_orb_ray = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_ray[ip_targetted] : 0.0;
-    const double target_orb_orient = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_orient[ip_targetted] : 0.0;
+    const double target_orb_ray =
+        (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_ray[ip_targetted] : 0.0;
+    const double target_orb_orient =
+        (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_orient[ip_targetted] : 0.0;
     global_surface_seed = (target_ray + target_orb_ray + target_orb_orient) * 4112;
 
     if (surface_body_type == 3) {
@@ -4446,7 +4453,8 @@ nosecondarysun:
             minimum_height = std::min(minimum_height, p_surfacemap[index]);
             maximum_height = std::max(maximum_height, p_surfacemap[index]);
         }
-        printf("surface_fixture case=%s type=%d seed=%d scenario=%d texture_scale=%d height=%016llx texture=%016llx objects=%016llx min=%u max=%u\n",
+        printf("surface_fixture case=%s type=%d seed=%d scenario=%d texture_scale=%d height=%016llx texture=%016llx "
+               "objects=%016llx min=%u max=%u\n",
                surface_fixture_name, surface_body_type, global_surface_seed, sctype, T_SCALE,
                static_cast<unsigned long long>(fnv1a(p_surfacemap, ps_bytes)),
                static_cast<unsigned long long>(fnv1a(txtr, 65536)),
@@ -4462,7 +4470,7 @@ nosecondarysun:
     int16_t bounces  = 0;
     int16_t resolve  = 1;
     float fixed_step = 0;
-    exitflag = 0;
+    exitflag         = 0;
 
     if (entryflag) {
         noctis::SurfaceRestore restored;
@@ -4470,21 +4478,21 @@ nosecondarysun:
         if (restore_result.status == noctis::NativeSaveStatus::ok) {
             landing_pt_lon = restored.state.landing_longitude;
             landing_pt_lat = restored.state.landing_latitude;
-            atl_x = restored.state.atl_x;
-            atl_z = restored.state.atl_z;
-            atl_x2 = restored.state.atl_x2;
-            atl_z2 = restored.state.atl_z2;
-            pos_x = restored.state.pos_x;
-            pos_y = restored.state.pos_y;
-            pos_z = restored.state.pos_z;
-            user_alfa = restored.state.user_alfa;
-            user_beta = restored.state.user_beta;
-            openhuddelta = restored.state.openhuddelta;
-            openhudcount = std::clamp<int16_t>(restored.state.openhudcount, 0, 180);
+            atl_x          = restored.state.atl_x;
+            atl_z          = restored.state.atl_z;
+            atl_x2         = restored.state.atl_x2;
+            atl_z2         = restored.state.atl_z2;
+            pos_x          = restored.state.pos_x;
+            pos_y          = restored.state.pos_y;
+            pos_z          = restored.state.pos_z;
+            user_alfa      = restored.state.user_alfa;
+            user_beta      = restored.state.user_beta;
+            openhuddelta   = restored.state.openhuddelta;
+            openhudcount   = std::clamp<int16_t>(restored.state.openhudcount, 0, 180);
             hud_rtl_closed = restored.state.hud_rtl_closed;
-            landed       = 1;
-            opencapdelta = 0;
-            opencapcount = 0;
+            landed         = 1;
+            opencapdelta   = 0;
+            opencapcount   = 0;
         } else if (restore_result.status == noctis::NativeSaveStatus::not_found) {
             goto nosurfacefile;
         } else {
@@ -4502,14 +4510,14 @@ nosecondarysun:
     }
 
     if (environment_fixture_mode || content_fixture_mode) {
-        pos_x = 1638400;
-        pos_z = 1638400;
-        pos_y = hpoint(pos_x, pos_z);
-        atl_x = static_cast<int32_t>(pos_x) >> 14;
-        atl_z = static_cast<int32_t>(pos_z) >> 14;
-        atl_x2 = static_cast<int32_t>(pos_x) & 16383;
-        atl_z2 = static_cast<int32_t>(pos_z) & 16383;
-        landed = 1;
+        pos_x        = 1638400;
+        pos_z        = 1638400;
+        pos_y        = hpoint(pos_x, pos_z);
+        atl_x        = static_cast<int32_t>(pos_x) >> 14;
+        atl_z        = static_cast<int32_t>(pos_z) >> 14;
+        atl_x2       = static_cast<int32_t>(pos_x) & 16383;
+        atl_z2       = static_cast<int32_t>(pos_z) & 16383;
+        landed       = 1;
         opencapdelta = 0;
         opencapcount = 0;
     }
@@ -4605,12 +4613,13 @@ nosecondarysun:
 
         uint8_t surface_speed_multiplier = 5;
         if (pos_y == 0 && surface_body_type == 3) {
-            if (sctype == ICY) surface_speed_multiplier = 10;
-            else if (sctype != PLAINS) surface_speed_multiplier = 2;
+            if (sctype == ICY)
+                surface_speed_multiplier = 10;
+            else if (sctype != PLAINS)
+                surface_speed_multiplier = 2;
         }
-        const auto mouse_control = noctis::surface_mouse_control(
-            option_mouse_look, (mpul & 2U) != 0, (mpul & 1U) != 0, mdltx, mdlty,
-            landed != 0, surface_speed_multiplier);
+        const auto mouse_control = noctis::surface_mouse_control(option_mouse_look, (mpul & 2U) != 0, (mpul & 1U) != 0,
+                                                                 mdltx, mdlty, landed != 0, surface_speed_multiplier);
         shift += mouse_control.shift;
         step += mouse_control.step;
         dlt_alfa += mouse_control.pitch;
@@ -5152,7 +5161,7 @@ nosecondarysun:
 
             // usa i primi 32K, dove c'? la sfumatura del mare...
             texture_address_mask = 0x7FFF;
-            V_MATRIXS = 8;
+            V_MATRIXS            = 8;
             change_txm_repeating_mode();
             // ora attiva poligoni brillanti...
             setfx(2);
@@ -5232,7 +5241,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr = p_background;
+            txtr                 = p_background;
         }
 
         // qui disegna tutto il landscape.
@@ -5251,11 +5260,11 @@ nosecondarysun:
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr  = (uint8_t *) n_globes_map;
+            txtr                 = (uint8_t *) n_globes_map;
             texture_address_mask = 0x7FFF;
-            cam_x = 0;
-            cam_z = 0;
-            cam_y = 1030;
+            cam_x                = 0;
+            cam_z                = 0;
+            cam_y                = 1030;
             polycupola(-1, 1);
             setfx(0);
             cupola(-1, 8);
@@ -5271,7 +5280,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr = p_background;
+            txtr                 = p_background;
         }
 
         // tracciamento onde in partenza (acqua smossa)
@@ -5282,7 +5291,7 @@ nosecondarysun:
             txtr = (uint8_t *) n_globes_map;
             // usa i primi 32K, dove c'? la sfumatura del mare...
             texture_address_mask = 0x7FFF;
-            V_MATRIXS = 8;
+            V_MATRIXS            = 8;
             change_txm_repeating_mode();
             // ora attiva poligoni brillanti...
             setfx(2);
@@ -5364,7 +5373,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr = p_background;
+            txtr                 = p_background;
         }
 
         // tracciamento dell'alone del "sole", eventualmente.
@@ -5521,6 +5530,17 @@ nosecondarysun:
         surrounding(draw_hud || graphics_menu_status || about || movie_recorder.menu_open(), openhudcount);
         QUADWORDS = 16000;
 
+        {
+            noctis::AudioTelemetry telemetry{};
+            telemetry.scene              = noctis::AudioScene::surface;
+            telemetry.atmosphere_density = atmosphere ? std::clamp<float>(pp_pressure, 0.05f, 5.0f) : 0.0f;
+            telemetry.weather_rain       = rainy;
+            telemetry.travel_active      = false;
+            telemetry.player_walking = (landed != 0) && (std::fabs(step) > 0.1f || std::fabs(shift) > 0.1f) && !jumping;
+            telemetry.jetpack_active = jetpack;
+            noctis::update_audio_telemetry(telemetry);
+        }
+
         if (!widesnapping) {
             advance_movie_capture(!landed && recover);
             swapBuffers();
@@ -5603,12 +5623,11 @@ nosecondarysun:
                 widesnapping = 0;
                 user_beta += widesnappingangle;
                 const auto &gallery = noctis::runtime_paths().gallery_dir;
-                const auto slot = noctis::next_snapshot_slot(gallery, last_snapshot);
+                const auto slot     = noctis::next_snapshot_slot(gallery, last_snapshot);
                 if (slot) {
                     last_snapshot = slot->number;
                     noctis::compose_panorama(
-                        {gallery / "WIDE9997.BMP", gallery / "WIDE9998.BMP", gallery / "WIDE9999.BMP"},
-                        slot->path);
+                        {gallery / "WIDE9997.BMP", gallery / "WIDE9998.BMP", gallery / "WIDE9999.BMP"}, slot->path);
                 }
                 std::error_code ignored;
                 std::filesystem::remove(gallery / "WIDE9997.BMP", ignored);
@@ -5627,27 +5646,31 @@ nosecondarysun:
                 if (w == 0x49) {
                     openhuddelta   = -5;
                     hud_rtl_closed = 0;
+                    noctis::play_visor_servo();
                 }
 
                 if (w == 0x51) {
                     openhuddelta = +5;
+                    noctis::play_visor_servo();
                 }
 
                 if (w == 0x50) {
                     option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0 ? "MOUSELOOK DISABLED"
-                           : option_mouse_look == 1 ? "MOUSELOOK ENABLED" : "INVERTED Y AXIS", 50);
+                    status(option_mouse_look == 0   ? "MOUSELOOK DISABLED"
+                           : option_mouse_look == 1 ? "MOUSELOOK ENABLED"
+                                                    : "INVERTED Y AXIS",
+                           50);
                 }
 
                 if (w == 0x3B) {
-                    about = !about;
+                    about                = !about;
                     graphics_menu_status = 0;
                     movie_recorder.close_menu();
                 }
 
                 if (w == 0x3C) {
                     graphics_menu_status = !graphics_menu_status;
-                    about = 0;
+                    about                = 0;
                     movie_recorder.close_menu();
                 }
 
@@ -5682,7 +5705,8 @@ nosecondarysun:
                     pri_z = +dsd2 * sin(beta) * cos(alfa);
                     }*/
             } else {
-                if (handle_movie_key(w, false)) continue;
+                if (handle_movie_key(w, false))
+                    continue;
 
                 if (graphics_menu_status) {
                     if (w == 't') {
@@ -5692,8 +5716,10 @@ nosecondarysun:
                     }
                     if (w == 'f') {
                         lens_flare_mode = noctis::cycle_lens_flare_mode(lens_flare_mode);
-                        status(lens_flare_mode == 1 ? "FLARES ON"
-                               : lens_flare_mode == -1 ? "FLARES OFF" : "VISOR FLARES", 100);
+                        status(lens_flare_mode == 1    ? "FLARES ON"
+                               : lens_flare_mode == -1 ? "FLARES OFF"
+                                                       : "VISOR FLARES",
+                               100);
                         continue;
                     }
                     if (w == 'b' || w == noctis::delete_snapshot_key) {
@@ -5703,9 +5729,11 @@ nosecondarysun:
                     }
                 }
 
-                if (w == 'l' || w == 'L' || (!graphics_menu_status && !movie_recorder.menu_open() && (w == 'f' || w == 'F'))) {
+                if (w == 'l' || w == 'L' ||
+                    (!graphics_menu_status && !movie_recorder.menu_open() && (w == 'f' || w == 'F'))) {
                     suit_torch = !suit_torch;
                     status(suit_torch ? "TORCH ON" : "TORCH OFF", 50);
+                    noctis::play_torch_click(suit_torch != 0);
                     continue;
                 }
 
@@ -5717,8 +5745,7 @@ nosecondarysun:
                     surlight--;
                 }
 
-                const auto snapshot_command = noctis::snapshot_action(
-                    w, true, false, widesnapping != 0);
+                const auto snapshot_command = noctis::snapshot_action(w, true, false, widesnapping != 0);
                 if (snapshot_command == noctis::SnapshotAction::normal) {
                     dzat_x = backup_dzat_x;
                     dzat_y = backup_dzat_y;
@@ -5745,11 +5772,15 @@ nosecondarysun:
                     snapshot(0, 0);
                 }
 
+                bool prev_jetpack = jetpack;
                 noctis::SurfaceVerticalState vertical{gravity, jumping, jetpack};
                 noctis::apply_surface_vertical_key(w, landed != 0, pos_y, crcy, vertical);
                 gravity = vertical.gravity;
                 jumping = vertical.jumping;
                 jetpack = vertical.jetpack;
+                if (jetpack && !prev_jetpack) {
+                    noctis::play_jetpack_burst();
+                }
 
                 if (w == '1') {
                     if (fixed_step == 10) {
@@ -5832,10 +5863,10 @@ nosecondarysun:
                         if (surface_scope.cached_body >= 0) {
                             ip_targetted = surface_scope.cached_body;
                         }
-                        const noctis::SurfaceSaveState state{
-                            landing_pt_lon, landing_pt_lat, atl_x, atl_z, atl_x2, atl_z2,
-                            pos_x, pos_y, pos_z, user_alfa, user_beta,
-                            openhuddelta, openhudcount, hud_rtl_closed};
+                        const noctis::SurfaceSaveState state{landing_pt_lon, landing_pt_lat, atl_x,     atl_z,
+                                                             atl_x2,         atl_z2,         pos_x,     pos_y,
+                                                             pos_z,          user_alfa,      user_beta, openhuddelta,
+                                                             openhudcount,   hud_rtl_closed};
                         const auto save_result = noctis::save_surface_save(native_surface_file, state);
                         if (save_result.status == noctis::NativeSaveStatus::ok) {
                             exitflag = 1;
@@ -5861,7 +5892,7 @@ nosecondarysun:
     }
 
 nodissolve:
-    suit_torch         = 0;
+    suit_torch = 0;
     memset(adapted, 0, adapted_width * adapted_height);
     dzat_x             = backup_dzat_x;
     dzat_y             = backup_dzat_y;

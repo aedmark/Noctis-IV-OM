@@ -3,35 +3,36 @@
     Supervision functions for the base module.
 */
 
+#include "noctis.h"
+#include "audio.h"
 #include "brtl.h"
-#include "legacy_numeric.h"
+#include "goesnet_commands.h"
+#include "goesnet_data.h"
 #include "indexed_framebuffer.h"
 #include "input.h"
+#include "legacy_numeric.h"
 #include "legacy_save.h"
-#include "native_save.h"
 #include "movie_capture.h"
+#include "native_save.h"
+#include "noctis-0.h"
+#include "noctis-d.h"
 #include "plus_controls.h"
 #include "plus_presentation.h"
 #include "runtime_paths.h"
-#include "goesnet_commands.h"
-#include "goesnet_data.h"
 #include "ship_interface.h"
 #include "startup_diagnostics.h"
 #include "travel.h"
-#include <string_view>
-#include "noctis-0.h"
-#include "noctis-d.h"
-#include "noctis.h"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
-#include <iterator>
 #include <fstream>
+#include <iterator>
 #include <optional>
 #include <raylib.h>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
-#include <string>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -59,12 +60,12 @@ void fix_remote_target() {
     status("TGT FIXED", 105);
     const noctis::TravelPosition position{dzat_x, dzat_y, dzat_z};
     const noctis::TravelPosition target{ap_target_x, ap_target_y, ap_target_z};
-    const auto guidance = noctis::begin_travel(position, target);
-    ap_target_initial_d = guidance.initial_distance;
+    const auto guidance          = noctis::begin_travel(position, target);
+    ap_target_initial_d          = guidance.initial_distance;
     requested_vimana_coefficient = guidance.requested_coefficient;
-    current_vimana_coefficient = guidance.current_coefficient;
-    vimana_reaction_time = guidance.reaction_time;
-    ap_reached = 0;
+    current_vimana_coefficient   = guidance.current_coefficient;
+    vimana_reaction_time         = guidance.reaction_time;
+    ap_reached                   = 0;
 
     if (!noctis::remote_target_in_range(target)) {
         status("OUTOFRANGE", 105);
@@ -77,11 +78,11 @@ void fix_remote_target() {
 void fix_local_target() {
     status("TGT FIXED", 105);
     planet_xyz(ip_targetted);
-    const auto guidance = noctis::begin_travel({dzat_x, dzat_y, dzat_z}, {plx, ply, plz});
-    ip_target_initial_d = guidance.initial_distance;
+    const auto guidance            = noctis::begin_travel({dzat_x, dzat_y, dzat_z}, {plx, ply, plz});
+    ip_target_initial_d            = guidance.initial_distance;
     requested_approach_coefficient = guidance.requested_coefficient;
-    current_approach_coefficient = guidance.current_coefficient;
-    reaction_time = guidance.reaction_time;
+    current_approach_coefficient   = guidance.current_coefficient;
+    reaction_time                  = guidance.reaction_time;
 }
 
 /* Lampada alogena (ovvero il laser a diffusione interno alle zattere). */
@@ -412,9 +413,9 @@ void mswrite(int16_t screen_id, const char *text) {
     }
 }
 
-int8_t gnc_pos            = 0;               // Character number in command line.
-int32_t goesfile_pos      = 0;               // Position of the GOES output file
-char goesnet_command[120] = "_";             // GOES Net Command Line
+int8_t gnc_pos            = 0;   // Character number in command line.
+int32_t goesfile_pos      = 0;   // Position of the GOES output file
+char goesnet_command[120] = "_"; // GOES Net Command Line
 std::string goes_output_cells;
 
 namespace {
@@ -424,60 +425,166 @@ noctis::NativeSaveState preserved_save_state;
 noctis::NativeSaveState capture_native_state() {
     noctis::NativeSaveState state;
 #define CAPTURE(name) state.name = name
-    CAPTURE(nsync); CAPTURE(anti_rad); CAPTURE(pl_search); CAPTURE(field_amplificator);
-    CAPTURE(ilight); CAPTURE(ilightv); CAPTURE(charge); CAPTURE(revcontrols);
-    CAPTURE(ap_targetting); CAPTURE(ap_targetted); CAPTURE(ip_targetting); CAPTURE(ip_targetted);
-    CAPTURE(ip_reaching); CAPTURE(ip_reached); CAPTURE(ap_target_spin); CAPTURE(ap_target_r);
-    CAPTURE(ap_target_g); CAPTURE(ap_target_b); CAPTURE(nearstar_spin); CAPTURE(nearstar_r);
-    CAPTURE(nearstar_g); CAPTURE(nearstar_b); CAPTURE(gburst); CAPTURE(menusalwayson); CAPTURE(depolarize);
-    CAPTURE(sys); CAPTURE(pwr); CAPTURE(dev_page); CAPTURE(ap_target_class); CAPTURE(f_ray_elapsed);
-    CAPTURE(nearstar_class); CAPTURE(nearstar_nop); CAPTURE(pos_x); CAPTURE(pos_y); CAPTURE(pos_z);
-    CAPTURE(user_alfa); CAPTURE(user_beta); CAPTURE(navigation_beta); CAPTURE(ap_target_ray); CAPTURE(nearstar_ray);
-    CAPTURE(dzat_x); CAPTURE(dzat_y); CAPTURE(dzat_z); CAPTURE(ap_target_x); CAPTURE(ap_target_y); CAPTURE(ap_target_z);
-    CAPTURE(nearstar_x); CAPTURE(nearstar_y); CAPTURE(nearstar_z); CAPTURE(helptime); CAPTURE(ip_target_initial_d);
-    CAPTURE(requested_approach_coefficient); CAPTURE(current_approach_coefficient); CAPTURE(reaction_time);
-    CAPTURE(fcs_status_delay); CAPTURE(psys); CAPTURE(ap_target_initial_d); CAPTURE(requested_vimana_coefficient);
-    CAPTURE(current_vimana_coefficient); CAPTURE(vimana_reaction_time); CAPTURE(lithium_collector);
-    CAPTURE(autoscreenoff); CAPTURE(ap_reached); CAPTURE(lifter); CAPTURE(secs); CAPTURE(data); CAPTURE(surlight);
-    CAPTURE(gnc_pos); CAPTURE(goesfile_pos);
+    CAPTURE(nsync);
+    CAPTURE(anti_rad);
+    CAPTURE(pl_search);
+    CAPTURE(field_amplificator);
+    CAPTURE(ilight);
+    CAPTURE(ilightv);
+    CAPTURE(charge);
+    CAPTURE(revcontrols);
+    CAPTURE(ap_targetting);
+    CAPTURE(ap_targetted);
+    CAPTURE(ip_targetting);
+    CAPTURE(ip_targetted);
+    CAPTURE(ip_reaching);
+    CAPTURE(ip_reached);
+    CAPTURE(ap_target_spin);
+    CAPTURE(ap_target_r);
+    CAPTURE(ap_target_g);
+    CAPTURE(ap_target_b);
+    CAPTURE(nearstar_spin);
+    CAPTURE(nearstar_r);
+    CAPTURE(nearstar_g);
+    CAPTURE(nearstar_b);
+    CAPTURE(gburst);
+    CAPTURE(menusalwayson);
+    CAPTURE(depolarize);
+    CAPTURE(sys);
+    CAPTURE(pwr);
+    CAPTURE(dev_page);
+    CAPTURE(ap_target_class);
+    CAPTURE(f_ray_elapsed);
+    CAPTURE(nearstar_class);
+    CAPTURE(nearstar_nop);
+    CAPTURE(pos_x);
+    CAPTURE(pos_y);
+    CAPTURE(pos_z);
+    CAPTURE(user_alfa);
+    CAPTURE(user_beta);
+    CAPTURE(navigation_beta);
+    CAPTURE(ap_target_ray);
+    CAPTURE(nearstar_ray);
+    CAPTURE(dzat_x);
+    CAPTURE(dzat_y);
+    CAPTURE(dzat_z);
+    CAPTURE(ap_target_x);
+    CAPTURE(ap_target_y);
+    CAPTURE(ap_target_z);
+    CAPTURE(nearstar_x);
+    CAPTURE(nearstar_y);
+    CAPTURE(nearstar_z);
+    CAPTURE(helptime);
+    CAPTURE(ip_target_initial_d);
+    CAPTURE(requested_approach_coefficient);
+    CAPTURE(current_approach_coefficient);
+    CAPTURE(reaction_time);
+    CAPTURE(fcs_status_delay);
+    CAPTURE(psys);
+    CAPTURE(ap_target_initial_d);
+    CAPTURE(requested_vimana_coefficient);
+    CAPTURE(current_vimana_coefficient);
+    CAPTURE(vimana_reaction_time);
+    CAPTURE(lithium_collector);
+    CAPTURE(autoscreenoff);
+    CAPTURE(ap_reached);
+    CAPTURE(lifter);
+    CAPTURE(secs);
+    CAPTURE(data);
+    CAPTURE(surlight);
+    CAPTURE(gnc_pos);
+    CAPTURE(goesfile_pos);
 #undef CAPTURE
     std::copy(std::begin(fcs_status), std::end(fcs_status), state.fcs_status.begin());
     std::copy(std::begin(goesnet_command), std::end(goesnet_command), state.goesnet_command.begin());
-    state.last_snapshot = last_snapshot;
+    state.last_snapshot     = last_snapshot;
     state.option_mouse_look = option_mouse_look;
-    state.roof_speed = roof_speed;
-    state.hud_closed = preserved_save_state.hud_closed;
-    state.draw_hud = draw_hud;
-    state.lens_flare_mode = lens_flare_mode;
-    state.seamless_border = seamless_border;
+    state.roof_speed        = roof_speed;
+    state.hud_closed        = preserved_save_state.hud_closed;
+    state.draw_hud          = draw_hud;
+    state.lens_flare_mode   = lens_flare_mode;
+    state.seamless_border   = seamless_border;
     return state;
 }
 
 void apply_native_state(const noctis::NativeSaveState &state) {
     preserved_save_state = state;
-    last_snapshot = state.last_snapshot;
-    option_mouse_look = state.option_mouse_look;
-    roof_speed = state.roof_speed;
-    draw_hud = state.draw_hud;
-    lens_flare_mode = state.lens_flare_mode;
-    seamless_border = state.seamless_border;
+    last_snapshot        = state.last_snapshot;
+    option_mouse_look    = state.option_mouse_look;
+    roof_speed           = state.roof_speed;
+    draw_hud             = state.draw_hud;
+    lens_flare_mode      = state.lens_flare_mode;
+    seamless_border      = state.seamless_border;
 #define APPLY(name) name = state.name
-    APPLY(nsync); APPLY(anti_rad); APPLY(pl_search); APPLY(field_amplificator);
-    APPLY(ilight); APPLY(ilightv); APPLY(charge); APPLY(revcontrols);
-    APPLY(ap_targetting); APPLY(ap_targetted); APPLY(ip_targetting); APPLY(ip_targetted);
-    APPLY(ip_reaching); APPLY(ip_reached); APPLY(ap_target_spin); APPLY(ap_target_r);
-    APPLY(ap_target_g); APPLY(ap_target_b); APPLY(nearstar_spin); APPLY(nearstar_r);
-    APPLY(nearstar_g); APPLY(nearstar_b); APPLY(gburst); APPLY(menusalwayson); APPLY(depolarize);
-    APPLY(sys); APPLY(pwr); APPLY(dev_page); APPLY(ap_target_class); APPLY(f_ray_elapsed);
-    APPLY(nearstar_class); APPLY(nearstar_nop); APPLY(pos_x); APPLY(pos_y); APPLY(pos_z);
-    APPLY(user_alfa); APPLY(user_beta); APPLY(navigation_beta); APPLY(ap_target_ray); APPLY(nearstar_ray);
-    APPLY(dzat_x); APPLY(dzat_y); APPLY(dzat_z); APPLY(ap_target_x); APPLY(ap_target_y); APPLY(ap_target_z);
-    APPLY(nearstar_x); APPLY(nearstar_y); APPLY(nearstar_z); APPLY(helptime); APPLY(ip_target_initial_d);
-    APPLY(requested_approach_coefficient); APPLY(current_approach_coefficient); APPLY(reaction_time);
-    APPLY(fcs_status_delay); APPLY(psys); APPLY(ap_target_initial_d); APPLY(requested_vimana_coefficient);
-    APPLY(current_vimana_coefficient); APPLY(vimana_reaction_time); APPLY(lithium_collector);
-    APPLY(autoscreenoff); APPLY(ap_reached); APPLY(lifter); APPLY(secs); APPLY(data); APPLY(surlight);
-    APPLY(gnc_pos); APPLY(goesfile_pos);
+    APPLY(nsync);
+    APPLY(anti_rad);
+    APPLY(pl_search);
+    APPLY(field_amplificator);
+    APPLY(ilight);
+    APPLY(ilightv);
+    APPLY(charge);
+    APPLY(revcontrols);
+    APPLY(ap_targetting);
+    APPLY(ap_targetted);
+    APPLY(ip_targetting);
+    APPLY(ip_targetted);
+    APPLY(ip_reaching);
+    APPLY(ip_reached);
+    APPLY(ap_target_spin);
+    APPLY(ap_target_r);
+    APPLY(ap_target_g);
+    APPLY(ap_target_b);
+    APPLY(nearstar_spin);
+    APPLY(nearstar_r);
+    APPLY(nearstar_g);
+    APPLY(nearstar_b);
+    APPLY(gburst);
+    APPLY(menusalwayson);
+    APPLY(depolarize);
+    APPLY(sys);
+    APPLY(pwr);
+    APPLY(dev_page);
+    APPLY(ap_target_class);
+    APPLY(f_ray_elapsed);
+    APPLY(nearstar_class);
+    APPLY(nearstar_nop);
+    APPLY(pos_x);
+    APPLY(pos_y);
+    APPLY(pos_z);
+    APPLY(user_alfa);
+    APPLY(user_beta);
+    APPLY(navigation_beta);
+    APPLY(ap_target_ray);
+    APPLY(nearstar_ray);
+    APPLY(dzat_x);
+    APPLY(dzat_y);
+    APPLY(dzat_z);
+    APPLY(ap_target_x);
+    APPLY(ap_target_y);
+    APPLY(ap_target_z);
+    APPLY(nearstar_x);
+    APPLY(nearstar_y);
+    APPLY(nearstar_z);
+    APPLY(helptime);
+    APPLY(ip_target_initial_d);
+    APPLY(requested_approach_coefficient);
+    APPLY(current_approach_coefficient);
+    APPLY(reaction_time);
+    APPLY(fcs_status_delay);
+    APPLY(psys);
+    APPLY(ap_target_initial_d);
+    APPLY(requested_vimana_coefficient);
+    APPLY(current_vimana_coefficient);
+    APPLY(vimana_reaction_time);
+    APPLY(lithium_collector);
+    APPLY(autoscreenoff);
+    APPLY(ap_reached);
+    APPLY(lifter);
+    APPLY(secs);
+    APPLY(data);
+    APPLY(surlight);
+    APPLY(gnc_pos);
+    APPLY(goesfile_pos);
 #undef APPLY
     std::copy(state.fcs_status.begin(), state.fcs_status.end(), std::begin(fcs_status));
     std::snprintf(reinterpret_cast<char *>(fcs_status_extended), sizeof(fcs_status_extended), "%s",
@@ -492,31 +599,36 @@ void freeze() {
     if (result.status != noctis::NativeSaveStatus::ok) {
         noctis::log_event("error", "native_save", result.message);
     }
-
 }
 
 // Native GOESnet dispatch. No process, shell, or interchange file is involved.
 void run_goesnet_module() {
     const auto &paths = noctis::runtime_paths();
-    const noctis::GoesCommandContext context{
-        starmap_file, paths.data_dir / "GUIDE.BIN", paths.data_dir / "guide-export.txt",
-        dzat_x, dzat_y, dzat_z, nearstar_x, nearstar_y, nearstar_z};
-    auto answer = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
+    const noctis::GoesCommandContext context{starmap_file,
+                                             paths.data_dir / "GUIDE.BIN",
+                                             paths.data_dir / "guide-export.txt",
+                                             dzat_x,
+                                             dzat_y,
+                                             dzat_z,
+                                             nearstar_x,
+                                             nearstar_y,
+                                             nearstar_z};
+    auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
     goes_output_cells = std::move(answer.cells);
 
     if (answer.target && answer.action == noctis::GoesResultAction::set_remote_target) {
-        ap_target_x = answer.target->x;
-        ap_target_y = answer.target->y;
-        ap_target_z = answer.target->z;
+        ap_target_x   = answer.target->x;
+        ap_target_y   = answer.target->y;
+        ap_target_z   = answer.target->z;
         ap_targetting = 0;
         extract_ap_target_infos();
         fix_remote_target();
         if (lithium_collector || manual_target) {
             status("CONFLICT", 50);
         } else if (pwr > 15000) {
-            stspeed = 1;
-            nsnp = 1;
-            ip_reached = 0;
+            stspeed      = 1;
+            nsnp         = 1;
+            ip_reached   = 0;
             ip_targetted = -1;
         }
     } else if (answer.target && answer.action == noctis::GoesResultAction::set_local_target) {
@@ -526,8 +638,8 @@ void run_goesnet_module() {
             ip_targetted = answer.target->planet_index;
             fix_local_target();
             ip_targetting = 0;
-            ip_reached = 0;
-            ip_reaching = 1;
+            ip_reached    = 0;
+            ip_reaching   = 1;
         }
     }
 
@@ -882,7 +994,8 @@ void vehicle(float opencapcount) {
                 case 0x4F:
                 case 0x76:
                 case 0x91: {
-                    goesfile_pos = noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::end);
+                    goesfile_pos =
+                        noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::end);
                     goesk_e = -1;
                     break;
                 }
@@ -935,8 +1048,9 @@ void vehicle(float opencapcount) {
         std::array<std::uint8_t, noctis::goes_screen_bytes + 1> page{};
         goesfile_pos = noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::none);
         const auto available = goesfile_pos < static_cast<std::int32_t>(goes_output_cells.size())
-            ? goes_output_cells.size() - static_cast<std::size_t>(goesfile_pos) : 0;
-        const auto count = std::min<std::size_t>(available, noctis::goes_screen_bytes);
+                                   ? goes_output_cells.size() - static_cast<std::size_t>(goesfile_pos)
+                                   : 0;
+        const auto count     = std::min<std::size_t>(available, noctis::goes_screen_bytes);
         std::copy_n(goes_output_cells.begin() + goesfile_pos, count, page.begin());
         std::copy(page.begin(), page.end(), std::begin(osscreen[1]));
     }
@@ -1958,7 +2072,8 @@ void dev_commands() {
                     }
                 } else {
                     std::string name(reinterpret_cast<char *>(star_label), 20);
-                    while (!name.empty() && name.back() == ' ') name.pop_back();
+                    while (!name.empty() && name.back() == ' ')
+                        name.pop_back();
                     const auto assigned = noctis::append_starmap_label(
                         starmap_file, star_id, name, noctis::GoesObjectKind::star,
                         static_cast<std::int16_t>((star_label[22] - '0') * 10 + star_label[23] - '0'), star_label_pos);
@@ -1968,7 +2083,7 @@ void dev_commands() {
                     } else if (assigned.status == noctis::GoesDataStatus::rejected) {
                         status("EXTANT", 50);
                         ap_target_previd = 12345;
-                        star_label_pos = -1;
+                        star_label_pos   = -1;
                     } else {
                         status("INT. ERROR", 50);
                     }
@@ -2011,16 +2126,17 @@ void dev_commands() {
                     }
                 } else {
                     std::string name(reinterpret_cast<char *>(planet_label), 20);
-                    while (!name.empty() && name.back() == ' ') name.pop_back();
-                    const auto assigned = noctis::append_starmap_label(
-                        starmap_file, planet_id, name, noctis::GoesObjectKind::planet,
-                        static_cast<std::int16_t>(ip_targetted + 1), planet_label_pos);
+                    while (!name.empty() && name.back() == ' ')
+                        name.pop_back();
+                    const auto assigned =
+                        noctis::append_starmap_label(starmap_file, planet_id, name, noctis::GoesObjectKind::planet,
+                                                     static_cast<std::int16_t>(ip_targetted + 1), planet_label_pos);
                     if (assigned.status == noctis::GoesDataStatus::ok) {
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else if (assigned.status == noctis::GoesDataStatus::rejected) {
                         status("EXTANT", 50);
-                        prev_planet_id = 12345;
+                        prev_planet_id   = 12345;
                         planet_label_pos = -1;
                     } else {
                         status("INT. ERROR", 50);
@@ -2246,8 +2362,8 @@ bool unfreeze() {
         apply_native_state(imported.state);
         is_legacy_migration = true;
         noctis::log_event("info", "legacy_migration",
-                          std::string("migrated ") + std::string(noctis::legacy_layout_name(imported.layout))
-                              + " situation to native v1");
+                          std::string("migrated ") + std::string(noctis::legacy_layout_name(imported.layout)) +
+                              " situation to native v1");
     }
 
     /* Resynchronization of the situation
@@ -2274,7 +2390,7 @@ bool unfreeze() {
     }
 
     /* Reconstruction of the current star system. */
-    npcs = -12345;
+    npcs   = -12345;
     _delay = 0;
     prepare_nearstar();
 
@@ -2390,35 +2506,36 @@ int32_t p1, p2, p3, p4;
 
 std::chrono::steady_clock::time_point right_dblclick_timing{};
 
-int16_t resolve = 64;
-std::uint32_t last_snapshot = UINT32_MAX;
-std::int8_t option_mouse_look = 0;
-std::int16_t roof_speed = 0;
-std::int8_t draw_hud = 1;
-std::int8_t suit_torch = 0;
-std::int8_t lens_flare_mode = 0;
-std::int8_t seamless_border = 0;
+int16_t resolve                  = 64;
+std::uint32_t last_snapshot      = UINT32_MAX;
+std::int8_t option_mouse_look    = 0;
+std::int16_t roof_speed          = 0;
+std::int8_t draw_hud             = 1;
+std::int8_t suit_torch           = 0;
+std::int8_t lens_flare_mode      = 0;
+std::int8_t seamless_border      = 0;
 std::int8_t graphics_menu_status = 0;
-std::int8_t about = 0;
+std::int8_t about                = 0;
 noctis::MovieRecorder movie_recorder;
-bool surface_fixture_mode = false;
-bool landing_fixture_mode = false;
-bool environment_fixture_mode = false;
-bool content_fixture_mode = false;
-bool orbit_surface_fixture_mode = false;
-bool oakenshield_fixture_mode = false;
-const char *surface_fixture_name = "felysia-habitable";
+bool surface_fixture_mode            = false;
+bool landing_fixture_mode            = false;
+bool environment_fixture_mode        = false;
+bool content_fixture_mode            = false;
+bool orbit_surface_fixture_mode      = false;
+bool oakenshield_fixture_mode        = false;
+const char *surface_fixture_name     = "felysia-habitable";
 const char *environment_fixture_name = "felysia-habitable";
 
 void handle_movie_extended_key(std::int16_t key) {
     if (key == 0x3D) {
         movie_recorder.toggle_menu();
         graphics_menu_status = 0;
-        about = 0;
+        about                = 0;
         status(movie_recorder.menu_open() ? "MOVIEMAKER" : "MVMENU OFF", 100);
         return;
     }
-    if (!movie_recorder.menu_open() || movie_recorder.session_active()) return;
+    if (!movie_recorder.menu_open() || movie_recorder.session_active())
+        return;
     if (key == 144 || key == 142) {
         movie_recorder.change_deck(key == 144 ? 1 : -1);
         status(movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir) ? "DECK EXISTS" : "DECK FREE", 100);
@@ -2426,7 +2543,8 @@ void handle_movie_extended_key(std::int16_t key) {
 }
 
 bool handle_movie_key(std::int16_t key, bool label_entry) {
-    if (label_entry) return false;
+    if (label_entry)
+        return false;
     if (key == 'p' && movie_recorder.session_active()) {
         movie_recorder.pause_or_resume();
         status(movie_recorder.paused() ? "PAUSE REC" : "RESUME REC", 100);
@@ -2439,13 +2557,18 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
             return true;
         }
         const auto result = movie_recorder.start_or_resume(noctis::runtime_paths().movies_dir);
-        if (result == noctis::MovieStartResult::started) status("RECORDING", 100);
-        else if (result == noctis::MovieStartResult::resumed) status("RESUME REC", 100);
-        else if (result == noctis::MovieStartResult::occupied) status("DECK EXISTS", 100);
-        else status("MOVIE ERROR", 100);
+        if (result == noctis::MovieStartResult::started)
+            status("RECORDING", 100);
+        else if (result == noctis::MovieStartResult::resumed)
+            status("RESUME REC", 100);
+        else if (result == noctis::MovieStartResult::occupied)
+            status("DECK EXISTS", 100);
+        else
+            status("MOVIE ERROR", 100);
         return true;
     }
-    if (!movie_recorder.menu_open() || movie_recorder.session_active()) return false;
+    if (!movie_recorder.menu_open() || movie_recorder.session_active())
+        return false;
     if (key == '+' || key == '-') {
         movie_recorder.change_cadence(key == '+' ? 1 : -1);
         status("MOVIE RATE", 100);
@@ -2472,7 +2595,8 @@ void advance_movie_capture(bool ascending_from_surface) {
             std::fill(adapted + 198 * adapted_width, adapted + adapted_width * adapted_height, 127);
         }
     }
-    if (decision.stopped) status("ASCENT CUT", 100);
+    if (decision.stopped)
+        status("ASCENT CUT", 100);
 }
 
 namespace {
@@ -2509,22 +2633,22 @@ const SurfaceFixtureCase *find_surface_fixture(std::string_view name) {
 }
 
 void select_surface_fixture(const SurfaceFixtureCase &fixture) {
-    const bool seeded_felysia = fixture.star_x == -18928.0 && fixture.star_y == -29680.0
-        && fixture.star_z == -67336.0 && fixture.star_class == 0 && fixture.star_radius == 5.021F;
+    const bool seeded_felysia = fixture.star_x == -18928.0 && fixture.star_y == -29680.0 &&
+                                fixture.star_z == -67336.0 && fixture.star_class == 0 && fixture.star_radius == 5.021F;
     if (!seeded_felysia) {
-        ap_target_x = fixture.star_x;
-        ap_target_y = fixture.star_y;
-        ap_target_z = fixture.star_z;
+        ap_target_x     = fixture.star_x;
+        ap_target_y     = fixture.star_y;
+        ap_target_z     = fixture.star_z;
         ap_target_class = fixture.star_class;
-        ap_target_ray = fixture.star_radius;
-        ap_target_spin = fixture.star_class == 11 ? 1 : 0;
-        ap_target_r = fixture.star_class == 11 ? 0 : 63;
-        ap_target_g = fixture.star_class == 11 ? 63 : 58;
-        ap_target_b = fixture.star_class == 11 ? 63 : 40;
-        _delay = 0;
+        ap_target_ray   = fixture.star_radius;
+        ap_target_spin  = fixture.star_class == 11 ? 1 : 0;
+        ap_target_r     = fixture.star_class == 11 ? 0 : 63;
+        ap_target_g     = fixture.star_class == 11 ? 63 : 58;
+        ap_target_b     = fixture.star_class == 11 ? 63 : 40;
+        _delay          = 0;
         prepare_nearstar();
     }
-    ip_targetted = fixture.body_index;
+    ip_targetted   = fixture.body_index;
     landing_pt_lon = fixture.longitude;
     landing_pt_lat = fixture.latitude;
 }
@@ -2535,21 +2659,21 @@ enum class LandingFixturePhase {
     walking_back,
 };
 
-LandingFixturePhase landing_fixture_phase = LandingFixturePhase::descending;
-std::uint32_t landing_fixture_frames = 0;
+LandingFixturePhase landing_fixture_phase     = LandingFixturePhase::descending;
+std::uint32_t landing_fixture_frames          = 0;
 std::uint32_t landing_fixture_touchdown_frame = 0;
-std::uint32_t landing_fixture_return_frame = 0;
-std::uint64_t journey_orbit_hash = 0;
-std::uint64_t journey_touchdown_hash = 0;
-std::uint64_t journey_outbound_hash = 0;
-std::uint64_t journey_return_hash = 0;
-std::uint32_t journey_rendered_frames = 0;
-std::uint64_t environment_fixture_hash = 0;
-std::uint32_t environment_fixture_frames = 0;
-int16_t environment_fixture_longitude = 1;
-int16_t environment_fixture_latitude = 60;
-bool graphical_smoke_mode = false;
-std::uint32_t graphical_smoke_frames = 0;
+std::uint32_t landing_fixture_return_frame    = 0;
+std::uint64_t journey_orbit_hash              = 0;
+std::uint64_t journey_touchdown_hash          = 0;
+std::uint64_t journey_outbound_hash           = 0;
+std::uint64_t journey_return_hash             = 0;
+std::uint32_t journey_rendered_frames         = 0;
+std::uint64_t environment_fixture_hash        = 0;
+std::uint32_t environment_fixture_frames      = 0;
+int16_t environment_fixture_longitude         = 1;
+int16_t environment_fixture_latitude          = 60;
+bool graphical_smoke_mode                     = false;
+std::uint32_t graphical_smoke_frames          = 0;
 
 std::uint64_t indexed_frame_hash() {
     std::uint64_t hash = UINT64_C(14695981039346656037);
@@ -2573,9 +2697,9 @@ noctis::InputFrame scripted_landing_input() {
 
     const float capsule_x = static_cast<float>((atl_x << 14) + atl_x2);
     const float capsule_z = static_cast<float>((atl_z << 14) + atl_z2);
-    const float distance = std::hypot(pos_x - capsule_x, pos_z - capsule_z);
+    const float distance  = std::hypot(pos_x - capsule_x, pos_z - capsule_z);
     if (landing_fixture_phase == LandingFixturePhase::descending) {
-        landing_fixture_phase = LandingFixturePhase::walking_out;
+        landing_fixture_phase           = LandingFixturePhase::walking_out;
         landing_fixture_touchdown_frame = landing_fixture_frames;
     }
     if (landing_fixture_phase == LandingFixturePhase::walking_out) {
@@ -2605,14 +2729,15 @@ noctis::InputFrame scripted_surface_frame_input() {
 void loop();
 
 int main(int argc, char **argv) {
-    bool diagnostics_only = false;
-    bool prepare_user_data_only = false;
-    bool native_save_fixture_mode = false;
-    bool ship_interface_fixture_mode = false;
-    bool goesnet_fixture_mode = false;
-    bool persistence_fixture_mode = false;
-    bool movie_fixture_mode = false;
-    int drive_override = 0;
+    bool diagnostics_only                 = false;
+    bool prepare_user_data_only           = false;
+    bool native_save_fixture_mode         = false;
+    bool ship_interface_fixture_mode      = false;
+    bool goesnet_fixture_mode             = false;
+    bool persistence_fixture_mode         = false;
+    bool movie_fixture_mode               = false;
+    bool no_audio_mode                    = false;
+    int drive_override                    = 0;
     const char *persistence_fixture_phase = nullptr;
     std::optional<std::filesystem::path> user_data_override;
     std::optional<std::filesystem::path> migration_source;
@@ -2624,6 +2749,8 @@ int main(int argc, char **argv) {
             prepare_user_data_only = true;
         } else if (std::string_view(argv[arg]) == "--graphical-smoke") {
             graphical_smoke_mode = true;
+        } else if (std::string_view(argv[arg]) == "--no-audio") {
+            no_audio_mode = true;
         } else if (std::string_view(argv[arg]) == "--portable") {
             portable_mode_override = true;
         } else if (std::string_view(argv[arg]) == "--system-user-data") {
@@ -2654,7 +2781,7 @@ int main(int argc, char **argv) {
         } else if (std::string_view(argv[arg]) == "--goesnet-fixture") {
             goesnet_fixture_mode = true;
         } else if (std::string_view(argv[arg]) == "--persistence-fixture" && arg + 1 < argc) {
-            persistence_fixture_mode = true;
+            persistence_fixture_mode  = true;
             persistence_fixture_phase = argv[++arg];
         } else if (std::string_view(argv[arg]) == "--movie-fixture") {
             movie_fixture_mode = true;
@@ -2665,7 +2792,7 @@ int main(int argc, char **argv) {
             }
             if (arg + 2 < argc && argv[arg + 1][0] != '-' && argv[arg + 2][0] != '-') {
                 environment_fixture_longitude = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
-                environment_fixture_latitude = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
+                environment_fixture_latitude  = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
             }
         } else if (std::string_view(argv[arg]) == "--content-fixture") {
             content_fixture_mode = true;
@@ -2674,18 +2801,20 @@ int main(int argc, char **argv) {
             }
             if (arg + 2 < argc && argv[arg + 1][0] != '-' && argv[arg + 2][0] != '-') {
                 environment_fixture_longitude = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
-                environment_fixture_latitude = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
+                environment_fixture_latitude  = static_cast<int16_t>(std::strtol(argv[++arg], nullptr, 10));
             }
         } else {
-            noctis::log_event("error", "arguments",
-                              "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data] [--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] [--omega-drive|--standard-drive]");
+            noctis::log_event(
+                "error", "arguments",
+                "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data] [--user-data-dir DIRECTORY] "
+                "[--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] [--omega-drive|--standard-drive]");
             return 2;
         }
     }
-    const bool fixture_mode = native_save_fixture_mode || ship_interface_fixture_mode
-        || goesnet_fixture_mode || persistence_fixture_mode || movie_fixture_mode
-        || surface_fixture_mode || landing_fixture_mode || orbit_surface_fixture_mode
-        || environment_fixture_mode || content_fixture_mode || oakenshield_fixture_mode;
+    const bool fixture_mode = native_save_fixture_mode || ship_interface_fixture_mode || goesnet_fixture_mode ||
+                              persistence_fixture_mode || movie_fixture_mode || surface_fixture_mode ||
+                              landing_fixture_mode || orbit_surface_fixture_mode || environment_fixture_mode ||
+                              content_fixture_mode || oakenshield_fixture_mode;
     if (fixture_mode && !user_data_override) {
         std::error_code error;
         user_data_override = std::filesystem::current_path(error);
@@ -2694,17 +2823,18 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
-    if (fixture_mode && !migration_source) migration_source = user_data_override;
+    if (fixture_mode && !migration_source)
+        migration_source = user_data_override;
     if (migration_source) {
         std::error_code error;
         if (!std::filesystem::is_directory(*migration_source, error) || error) {
-            noctis::log_event("error", "migration",
-                              "--migrate-from must name an accessible extracted game directory");
+            noctis::log_event("error", "migration", "--migrate-from must name an accessible extracted game directory");
             return 2;
         }
     }
     std::string path_error;
-    if (!noctis::initialize_runtime_paths(argv[0], user_data_override, migration_source, &path_error, portable_mode_override)) {
+    if (!noctis::initialize_runtime_paths(argv[0], user_data_override, migration_source, &path_error,
+                                          portable_mode_override)) {
         noctis::log_event("error", "runtime_paths", path_error);
         return 1;
     }
@@ -2725,11 +2855,14 @@ int main(int argc, char **argv) {
     }
     configure_runtime_file_paths();
     noctis::log_event("info", "runtime_storage",
-                      "ready; copied=" + std::to_string(storage.copied_files)
-                          + "; preserved=" + std::to_string(storage.preserved_files));
-    if (prepare_user_data_only) return 0;
-    if (!native_save_fixture_mode && !ship_interface_fixture_mode && !goesnet_fixture_mode && !persistence_fixture_mode && !movie_fixture_mode && !surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode
-        && !environment_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
+                      "ready; copied=" + std::to_string(storage.copied_files) +
+                          "; preserved=" + std::to_string(storage.preserved_files));
+    if (prepare_user_data_only)
+        return 0;
+    if (!native_save_fixture_mode && !ship_interface_fixture_mode && !goesnet_fixture_mode &&
+        !persistence_fixture_mode && !movie_fixture_mode && !surface_fixture_mode && !landing_fixture_mode &&
+        !orbit_surface_fixture_mode && !environment_fixture_mode && !content_fixture_mode &&
+        !oakenshield_fixture_mode) {
         noctis::log_event("info", "graphics", "initializing Raylib window 1280x720");
         InitWindow(1280, 720, "Noctis IV LR");
         if (!IsWindowReady()) {
@@ -2740,6 +2873,15 @@ int main(int argc, char **argv) {
         auto image     = GenImageColor(adapted_width, adapted_height, {});
         screen_texture = LoadTextureFromImage(image);
         UnloadImage(image);
+
+        if (!no_audio_mode) {
+            noctis::initialize_audio();
+            std::atexit(noctis::shutdown_audio);
+        }
+        noctis::set_audio_toggle_handler([]() {
+            noctis::toggle_audio_mute();
+            status(noctis::is_audio_muted() ? "AUDIO MUTED" : "AUDIO ACTIVE", 50);
+        });
     }
 
     for (ir = 0; ir < 200; ir++) {
@@ -2760,9 +2902,8 @@ int main(int argc, char **argv) {
     ruinschart   = (uint8_t *) objectschart; // oc alias
     pvfile       = (uint8_t *) malloc(pv_bytes);
     adapted      = (uint8_t *) malloc(sc_bytes);
-    txtr         = (uint8_t *) p_background;                                // txtr alias
-    digimap2     = reinterpret_cast<uint8_t *>(&n_globes_map[gl_bytes]);     // font alias
-
+    txtr         = (uint8_t *) p_background;                             // txtr alias
+    digimap2     = reinterpret_cast<uint8_t *>(&n_globes_map[gl_bytes]); // font alias
 
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background && s_background && p_surfacemap &&
         objectschart && lens_flares_init()) {
@@ -2785,11 +2926,13 @@ int main(int argc, char **argv) {
     if (!unfreeze()) {
         return 1;
     }
-    if (drive_override < 0) charge = -1;
-    else if (drive_override > 0) noctis::restore_standard_drive(pwr, charge);
+    if (drive_override < 0)
+        charge = -1;
+    else if (drive_override > 0)
+        noctis::restore_standard_drive(pwr, charge);
     if (movie_fixture_mode) {
         const auto &movie_root = noctis::runtime_paths().movies_dir;
-        const auto file_hash = [](const std::filesystem::path &path) {
+        const auto file_hash   = [](const std::filesystem::path &path) {
             std::ifstream input(path, std::ios::binary);
             std::uint64_t hash = UINT64_C(14695981039346656037);
             char value;
@@ -2804,7 +2947,8 @@ int main(int argc, char **argv) {
                 adapted[index] = static_cast<std::uint8_t>(index + phase);
             }
         };
-        for (std::size_t index = 0; index < 768; ++index) tmppal[index] = static_cast<std::uint8_t>(index % 64);
+        for (std::size_t index = 0; index < 768; ++index)
+            tmppal[index] = static_cast<std::uint8_t>(index % 64);
 
         movie_recorder.reset();
         handle_movie_extended_key(0x3D);
@@ -2814,7 +2958,8 @@ int main(int argc, char **argv) {
         handle_movie_key('+', false);
         handle_movie_key('+', false);
         handle_movie_key('f', false);
-        if (!handle_movie_key(13, false) || !movie_recorder.recording()) return 1;
+        if (!handle_movie_key(13, false) || !movie_recorder.recording())
+            return 1;
         bool black_flash_seen = false;
         for (std::uint8_t frame = 0; frame < 7; ++frame) {
             fill_frame(frame);
@@ -2826,13 +2971,16 @@ int main(int argc, char **argv) {
         }
         handle_movie_key('p', false);
         const auto paused_ticks = movie_recorder.elapsed_ticks();
-        for (int frame = 0; frame < 5; ++frame) advance_movie_capture(false);
+        for (int frame = 0; frame < 5; ++frame)
+            advance_movie_capture(false);
         handle_movie_key('p', false);
         handle_movie_key(13, false);
-        if (!black_flash_seen || movie_recorder.captured_frames() != 3 || movie_recorder.elapsed_ticks() != paused_ticks
-            || !std::filesystem::exists(movie_root / "001/00000001.BMP")
-            || !std::filesystem::exists(movie_root / "001/00000003.BMP")
-            || std::filesystem::exists(movie_root / "001/00000004.BMP")) return 1;
+        if (!black_flash_seen || movie_recorder.captured_frames() != 3 ||
+            movie_recorder.elapsed_ticks() != paused_ticks ||
+            !std::filesystem::exists(movie_root / "001/00000001.BMP") ||
+            !std::filesystem::exists(movie_root / "001/00000003.BMP") ||
+            std::filesystem::exists(movie_root / "001/00000004.BMP"))
+            return 1;
 
         std::filesystem::create_directories(movie_root / "002");
         std::ofstream(movie_root / "002/keep.txt") << "preserve";
@@ -2842,17 +2990,18 @@ int main(int argc, char **argv) {
         std::ifstream sentinel_input(movie_root / "002/keep.txt");
         std::string sentinel;
         sentinel_input >> sentinel;
-        if (movie_recorder.recording() || sentinel != "preserve") return 1;
+        if (movie_recorder.recording() || sentinel != "preserve")
+            return 1;
         handle_movie_extended_key(144);
         handle_movie_key(13, false);
-        if (!movie_recorder.recording() || movie_recorder.deck() != 3) return 1;
+        if (!movie_recorder.recording() || movie_recorder.deck() != 3)
+            return 1;
         bool indicator_seen = false;
         for (std::uint8_t frame = 0; frame < 2; ++frame) {
             fill_frame(static_cast<std::uint8_t>(20 + frame));
             advance_movie_capture(false);
             if (frame == 0) {
-                indicator_seen = std::all_of(adapted + 198 * adapted_width,
-                                             adapted + adapted_width * adapted_height,
+                indicator_seen = std::all_of(adapted + 198 * adapted_width, adapted + adapted_width * adapted_height,
                                              [](std::uint8_t pixel) { return pixel == 127; });
             }
         }
@@ -2867,10 +3016,13 @@ int main(int argc, char **argv) {
         for (std::uint32_t frame = 1; frame <= 34; ++frame) {
             char filename[16];
             std::snprintf(filename, sizeof(filename), "%08u.BMP", frame);
-            if (!std::filesystem::exists(movie_root / "003" / filename)) return 1;
+            if (!std::filesystem::exists(movie_root / "003" / filename))
+                return 1;
         }
-        if (!indicator_seen || movie_recorder.session_active() || movie_recorder.deck() != 4 || ascent_files != 34) return 1;
-        std::printf("movie_fixture menu=%016llx space_first=%016llx surface_last=%016llx space_frames=3 pause=frozen flashes=both occupied=preserved surface_frames=%zu ascent=cutoff\n",
+        if (!indicator_seen || movie_recorder.session_active() || movie_recorder.deck() != 4 || ascent_files != 34)
+            return 1;
+        std::printf("movie_fixture menu=%016llx space_first=%016llx surface_last=%016llx space_frames=3 pause=frozen "
+                    "flashes=both occupied=preserved surface_frames=%zu ascent=cutoff\n",
                     static_cast<unsigned long long>(menu_hash),
                     static_cast<unsigned long long>(file_hash(movie_root / "001/00000001.BMP")),
                     static_cast<unsigned long long>(file_hash(movie_root / "003/00000034.BMP")), ascent_files);
@@ -2880,7 +3032,7 @@ int main(int argc, char **argv) {
         const auto execute = [](const char *command) {
             std::strncpy(goesnet_command, command, sizeof(goesnet_command) - 1);
             goesnet_command[sizeof(goesnet_command) - 1] = 0;
-            gnc_pos = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
+            gnc_pos                                      = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
             run_goesnet_module();
         };
         if (std::string_view(persistence_fixture_phase) == "advance") {
@@ -2896,42 +3048,44 @@ int main(int argc, char **argv) {
                 return 1;
             }
             autoscreenoff = revcontrols = menusalwayson = depolarize = 0;
-            sys = 3;
-            for (s_command = 1; s_command <= 4; ++s_command) pfs_commands();
-            sys = 2;
-            dev_page = 2;
-            data = 0;
+            sys                                                      = 3;
+            for (s_command = 1; s_command <= 4; ++s_command)
+                pfs_commands();
+            sys       = 2;
+            dev_page  = 2;
+            data      = 0;
             s_command = 4;
             dev_commands();
-            last_snapshot = 76'543'210;
+            last_snapshot     = 76'543'210;
             option_mouse_look = 2;
-            roof_speed = 1;
+            roof_speed        = 1;
             freeze();
-            std::printf("persistence_fixture phase=advance remote=balas local=felysia preferences=4 panel=3 omega=on plus=restored\n");
+            std::printf("persistence_fixture phase=advance remote=balas local=felysia preferences=4 panel=3 omega=on "
+                        "plus=restored\n");
             return 0;
         }
         if (std::string_view(persistence_fixture_phase) == "verify") {
-            if (ap_target_x != -18928 || ap_target_y != -29680 || ap_target_z != -67336
-                || ip_targetted != 3 || !autoscreenoff || !revcontrols || !menusalwayson || !depolarize
-                || dev_page != 2 || data != 3 || charge != -1 || last_snapshot != 76'543'210
-                || option_mouse_look != 2 || roof_speed != 1) {
+            if (ap_target_x != -18928 || ap_target_y != -29680 || ap_target_z != -67336 || ip_targetted != 3 ||
+                !autoscreenoff || !revcontrols || !menusalwayson || !depolarize || dev_page != 2 || data != 3 ||
+                charge != -1 || last_snapshot != 76'543'210 || option_mouse_look != 2 || roof_speed != 1) {
                 noctis::log_event("error", "persistence_fixture", "saved gameplay state was not restored");
                 return 1;
             }
             freeze();
             noctis::NativeSaveState continued;
             const auto loaded = noctis::load_native_save(native_situation_file, continued);
-            if (loaded.status != noctis::NativeSaveStatus::ok || continued.charge != -1
-                || continued.last_snapshot != 76'543'210 || continued.option_mouse_look != 2
-                || continued.roof_speed != 1) {
+            if (loaded.status != noctis::NativeSaveStatus::ok || continued.charge != -1 ||
+                continued.last_snapshot != 76'543'210 || continued.option_mouse_look != 2 ||
+                continued.roof_speed != 1) {
                 noctis::log_event("error", "persistence_fixture", "continued state did not resave");
                 return 1;
             }
-            std::printf("persistence_fixture phase=verify remote=balas local=felysia preferences=4 panel=3 omega=on plus=restored\n");
+            std::printf("persistence_fixture phase=verify remote=balas local=felysia preferences=4 panel=3 omega=on "
+                        "plus=restored\n");
             return 0;
         }
         if (std::string_view(persistence_fixture_phase) == "deplete") {
-            pwr = 15000;
+            pwr    = 15000;
             charge = 0;
             freeze();
             std::printf("persistence_fixture phase=deplete power=15000 lithium=0 save=stored\n");
@@ -2945,8 +3099,7 @@ int main(int argc, char **argv) {
             freeze();
             noctis::NativeSaveState continued;
             const auto loaded = noctis::load_native_save(native_situation_file, continued);
-            if (loaded.status != noctis::NativeSaveStatus::ok
-                || continued.pwr != 20000 || continued.charge != 120) {
+            if (loaded.status != noctis::NativeSaveStatus::ok || continued.pwr != 20000 || continued.charge != 120) {
                 noctis::log_event("error", "persistence_fixture", "standard drive recovery did not persist");
                 return 1;
             }
@@ -2988,7 +3141,7 @@ int main(int argc, char **argv) {
         const auto execute = [](const char *command) {
             std::strncpy(goesnet_command, command, sizeof(goesnet_command) - 1);
             goesnet_command[sizeof(goesnet_command) - 1] = 0;
-            gnc_pos = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
+            gnc_pos                                      = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
             run_goesnet_module();
         };
         execute("HELP_");
@@ -3021,8 +3174,8 @@ int main(int argc, char **argv) {
         dzat_y = -4352112;
         dzat_z = -925018;
         execute("PAR MIRACLE_");
-        if (goes_output_cells.find("NAME: MIRACLE") == std::string::npos
-            || goes_output_cells.find("X=3979984") == std::string::npos) {
+        if (goes_output_cells.find("NAME: MIRACLE") == std::string::npos ||
+            goes_output_cells.find("X=3979984") == std::string::npos) {
             noctis::log_event("error", "goesnet_fixture", "DOS-confirmed MIRACLE text fields mismatch");
             return 1;
         }
@@ -3030,14 +3183,14 @@ int main(int argc, char **argv) {
         dzat_y = saved_dzat_y;
         dzat_z = saved_dzat_z;
         execute("PAR FELYSIA_");
-        if (goes_output_cells.find("NAME: FELYSIA") == std::string::npos
-            || goes_output_cells.find("X=-18928") == std::string::npos) {
+        if (goes_output_cells.find("NAME: FELYSIA") == std::string::npos ||
+            goes_output_cells.find("X=-18928") == std::string::npos) {
             noctis::log_event("error", "goesnet_fixture", "native PAR did not reach the application output");
             return 1;
         }
         execute("DL FELYSIA_");
-        if (goes_output_cells.find("FELYSIA") == std::string::npos
-            || goes_output_cells.find("(238 NOTES)") == std::string::npos) {
+        if (goes_output_cells.find("FELYSIA") == std::string::npos ||
+            goes_output_cells.find("(238 NOTES)") == std::string::npos) {
             noctis::log_event("error", "goesnet_fixture", "P15 planet note count mismatch");
             return 1;
         }
@@ -3055,22 +3208,21 @@ int main(int argc, char **argv) {
 
         // Drive normal cartography commands, not a fixture-only label writer.
         execute("ST MIRACLE_");
-        ap_targetted = 1;
-        ap_targetting = 0;
-        labplanet = 0;
+        ap_targetted     = 1;
+        ap_targetting    = 0;
+        labplanet        = 0;
         ap_target_previd = 12345;
         update_star_label();
         star_label_pos = -1;
-        dev_page = 3;
-        s_command = 1;
+        dev_page       = 3;
+        s_command      = 1;
         dev_commands();
         std::memcpy(star_label, "WORKFLOW STAR", 13);
         labstar_char = 13;
         dev_commands();
         const auto workflow_star_pos = star_label_pos;
         execute("PAR WORKFLOW_STAR_");
-        if (workflow_star_pos < sm_consolidated
-            || goes_output_cells.find("NAME: WORKFLOW STAR") == std::string::npos) {
+        if (workflow_star_pos < sm_consolidated || goes_output_cells.find("NAME: WORKFLOW STAR") == std::string::npos) {
             noctis::log_event("error", "goesnet_fixture", "normal star label did not resolve through PAR");
             return 1;
         }
@@ -3080,21 +3232,21 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        ip_targetted = 0;
-        labstar = 0;
+        ip_targetted   = 0;
+        labstar        = 0;
         prev_planet_id = 12345;
         update_planet_label();
         planet_label_pos = -1;
-        dev_page = 3;
-        s_command = 2;
+        dev_page         = 3;
+        s_command        = 2;
         dev_commands();
         std::memcpy(planet_label, "WORKFLOW PLANET", 15);
         labplanet_char = 15;
         dev_commands();
         const auto workflow_planet_pos = planet_label_pos;
         execute("PAR WORKFLOW_PLANET_");
-        if (workflow_planet_pos < sm_consolidated
-            || goes_output_cells.find("NAME: WORKFLOW PLANET") == std::string::npos) {
+        if (workflow_planet_pos < sm_consolidated ||
+            goes_output_cells.find("NAME: WORKFLOW PLANET") == std::string::npos) {
             noctis::log_event("error", "goesnet_fixture", "normal planet label did not resolve through PAR");
             return 1;
         }
@@ -3135,18 +3287,18 @@ int main(int argc, char **argv) {
         }
 
         star_label_pos = workflow_star_pos;
-        labstar = 0;
-        labplanet = 0;
-        ap_targetted = 1;
-        ap_targetting = 0;
-        dev_page = 3;
-        s_command = 1;
+        labstar        = 0;
+        labplanet      = 0;
+        ap_targetted   = 1;
+        ap_targetting  = 0;
+        dev_page       = 3;
+        s_command      = 1;
         dev_commands();
         planet_label_pos = workflow_planet_pos;
-        labplanet = 0;
-        labstar = 0;
-        ip_targetted = 0;
-        s_command = 2;
+        labplanet        = 0;
+        labstar          = 0;
+        ip_targetted     = 0;
+        s_command        = 2;
         dev_commands();
         execute("PAR WORKFLOW_STAR_");
         if (goes_output_cells.find("OBJECT NOT FOUND") == std::string::npos) {
@@ -3168,20 +3320,22 @@ int main(int argc, char **argv) {
         }
         for (const char *name : {"comm.bin", "GOESfile.txt"}) {
             const auto obsolete = noctis::runtime_paths().data_dir / name;
-            FILE *file = fopen(obsolete.string().c_str(), "rb");
+            FILE *file          = fopen(obsolete.string().c_str(), "rb");
             if (file != nullptr) {
                 fclose(file);
                 noctis::log_event("error", "goesnet_fixture", "legacy GOESnet interchange file was created");
                 return 1;
             }
         }
-        std::printf("goesnet_fixture help=p14 dl=p15 data=p22 target=remote+local labels=roundtrip catalog=roundtrip shell=absent interchange=absent legacy_save=absent\n");
+        std::printf("goesnet_fixture help=p14 dl=p15 data=p22 target=remote+local labels=roundtrip catalog=roundtrip "
+                    "shell=absent interchange=absent legacy_save=absent\n");
         return 0;
     }
     if (ship_interface_fixture_mode) {
         const auto all_commands_present = [] {
             for (int slot = 0; slot < 4; ++slot) {
-                if (ctb[20 + 27 * slot] == 0) return false;
+                if (ctb[20 + 27 * slot] == 0)
+                    return false;
             }
             return true;
         };
@@ -3189,9 +3343,8 @@ int main(int argc, char **argv) {
         autoscreenoff = revcontrols = menusalwayson = depolarize = 0;
         clear_onboard_screen();
         prefs();
-        if (!all_commands_present()
-            || std::string_view(&ctb[20]) != "auto screen sleep off"
-            || std::string_view(&ctb[20 + 27]) != "normal pitch controls") {
+        if (!all_commands_present() || std::string_view(&ctb[20]) != "auto screen sleep off" ||
+            std::string_view(&ctb[20 + 27]) != "normal pitch controls") {
             noctis::log_event("error", "ship_interface_fixture", "preference menu did not render its disabled state");
             return 1;
         }
@@ -3201,10 +3354,11 @@ int main(int argc, char **argv) {
         }
         clear_onboard_screen();
         prefs();
-        if (!autoscreenoff || !revcontrols || !menusalwayson || !depolarize || !all_commands_present()
-            || std::string_view(&ctb[20]) != "auto screen sleep on"
-            || std::string_view(&ctb[20 + 27]) != "reverse pitch controls") {
-            noctis::log_event("error", "ship_interface_fixture", "preference commands did not render their enabled state");
+        if (!autoscreenoff || !revcontrols || !menusalwayson || !depolarize || !all_commands_present() ||
+            std::string_view(&ctb[20]) != "auto screen sleep on" ||
+            std::string_view(&ctb[20 + 27]) != "reverse pitch controls") {
+            noctis::log_event("error", "ship_interface_fixture",
+                              "preference commands did not render their enabled state");
             return 1;
         }
 
@@ -3225,7 +3379,7 @@ int main(int argc, char **argv) {
         }
 
         dev_page = 2;
-        data = 0;
+        data     = 0;
         for (int panel = 1; panel <= 3; ++panel) {
             s_command = panel + 1;
             dev_commands();
@@ -3235,23 +3389,23 @@ int main(int argc, char **argv) {
             }
         }
 
-        draw_hud = 0;
+        draw_hud        = 0;
         lens_flare_mode = -1;
         seamless_border = 1;
         status("MOUSELOOK ENABLED", 100);
-        if (std::string_view(reinterpret_cast<char *>(fcs_status)) != "MOUSELOOK "
-            || std::string_view(reinterpret_cast<char *>(fcs_status_extended)) != "MOUSELOOK ENABLED") {
+        if (std::string_view(reinterpret_cast<char *>(fcs_status)) != "MOUSELOOK " ||
+            std::string_view(reinterpret_cast<char *>(fcs_status_extended)) != "MOUSELOOK ENABLED") {
             noctis::log_event("error", "ship_interface_fixture", "extended surface status was not retained");
             return 1;
         }
         std::memset(adapted, 0, adapted_width * adapted_height);
         about = 1;
         draw_plus_overlay(false);
-        const auto help_hash = indexed_frame_hash();
+        const auto help_hash    = indexed_frame_hash();
         const bool help_nonzero = std::any_of(adapted, adapted + adapted_width * adapted_height,
                                               [](std::uint8_t pixel) { return pixel != 0; });
-        about = 0;
-        graphics_menu_status = 1;
+        about                   = 0;
+        graphics_menu_status    = 1;
         draw_plus_overlay(false);
         const auto menu_hash = indexed_frame_hash();
         graphics_menu_status = 0;
@@ -3263,16 +3417,14 @@ int main(int argc, char **argv) {
         const auto save_result = noctis::save_native_save(native_situation_file, capture_native_state());
         noctis::NativeSaveState reloaded;
         const auto load_result = noctis::load_native_save(native_situation_file, reloaded);
-        if (save_result.status != noctis::NativeSaveStatus::ok
-            || load_result.status != noctis::NativeSaveStatus::ok
-            || !reloaded.autoscreenoff || !reloaded.revcontrols
-            || !reloaded.menusalwayson || !reloaded.depolarize
-            || reloaded.draw_hud != 0 || reloaded.lens_flare_mode != -1
-            || reloaded.seamless_border != 1) {
+        if (save_result.status != noctis::NativeSaveStatus::ok || load_result.status != noctis::NativeSaveStatus::ok ||
+            !reloaded.autoscreenoff || !reloaded.revcontrols || !reloaded.menusalwayson || !reloaded.depolarize ||
+            reloaded.draw_hud != 0 || reloaded.lens_flare_mode != -1 || reloaded.seamless_border != 1) {
             noctis::log_event("error", "ship_interface_fixture", "preferences did not survive native persistence");
             return 1;
         }
-        std::printf("ship_interface_fixture screens=3 menus=4 device_pages=5 hud_panels=3 preferences=7 overlays=2 status=extended save=restored\n");
+        std::printf("ship_interface_fixture screens=3 menus=4 device_pages=5 hud_panels=3 preferences=7 overlays=2 "
+                    "status=extended save=restored\n");
         return 0;
     }
     if (native_save_fixture_mode) {
@@ -3280,23 +3432,24 @@ int main(int argc, char **argv) {
         freeze();
         noctis::NativeSaveState reloaded;
         const auto load_result = noctis::load_native_save(native_situation_file, reloaded);
-        if (load_result.status != noctis::NativeSaveStatus::ok
-            || noctis::encode_native_save(reloaded) != expected) {
+        if (load_result.status != noctis::NativeSaveStatus::ok || noctis::encode_native_save(reloaded) != expected) {
             noctis::log_event("error", "native_save_fixture", "application state did not round-trip exactly");
             return 1;
         }
         noctis::SurfaceRestore restored_surface;
-        const auto surface_result = noctis::load_or_migrate_surface(native_surface_file, surface_file, restored_surface);
-        if (surface_result.status != noctis::NativeSaveStatus::ok
-            && surface_result.status != noctis::NativeSaveStatus::not_found) {
+        const auto surface_result =
+            noctis::load_or_migrate_surface(native_surface_file, surface_file, restored_surface);
+        if (surface_result.status != noctis::NativeSaveStatus::ok &&
+            surface_result.status != noctis::NativeSaveStatus::not_found) {
             noctis::log_event("error", "surface_save", surface_result.message);
             return 1;
         }
         if (surface_result.status == noctis::NativeSaveStatus::ok) {
             const auto surface_bytes = noctis::encode_surface_save(restored_surface.state);
-            const std::string surface_label = restored_surface.migrated
-                ? "migrated-" + std::string(noctis::legacy_layout_name(restored_surface.legacy_layout))
-                : "native-v1";
+            const std::string surface_label =
+                restored_surface.migrated
+                    ? "migrated-" + std::string(noctis::legacy_layout_name(restored_surface.legacy_layout))
+                    : "native-v1";
             printf("native_save_fixture version=%u bytes=%zu state=restored surface=%s bytes=%zu\n",
                    noctis::native_save_version, expected.size(), surface_label.c_str(), surface_bytes.size());
         } else {
@@ -3308,8 +3461,8 @@ int main(int argc, char **argv) {
     memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
-    if (!surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode
-        && !environment_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
+    if (!surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode && !environment_fixture_mode &&
+        !content_fixture_mode && !oakenshield_fixture_mode) {
         handle_input();
     }
     mpul = 0;
@@ -3346,29 +3499,29 @@ int main(int argc, char **argv) {
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dxx    = dzat_x - nearstar_x;
+        dyy    = dzat_y - nearstar_y;
+        dzz    = dzat_z - nearstar_z;
+        dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         proj_from_vehicle();
         landing_point = 1;
         draw_planets();
         landing_point = 0;
-        entryflag = 0;
+        entryflag     = 0;
         planetary_main();
         return 0;
     }
     if (oakenshield_fixture_mode) {
-        ap_target_x = 3321776.0;
-        ap_target_y = -4323134.0;
-        ap_target_z = -1004416.0;
+        ap_target_x     = 3321776.0;
+        ap_target_y     = -4323134.0;
+        ap_target_z     = -1004416.0;
         ap_target_class = 5;
-        ap_target_ray = 1.086F;
-        ap_target_spin = 0;
-        ap_target_r = 63;
-        ap_target_g = 58;
-        ap_target_b = 40;
-        _delay = 0;
+        ap_target_ray   = 1.086F;
+        ap_target_spin  = 0;
+        ap_target_r     = 63;
+        ap_target_g     = 58;
+        ap_target_b     = 40;
+        _delay          = 0;
         prepare_nearstar();
         ip_targetted = 0;
 
@@ -3379,21 +3532,21 @@ int main(int argc, char **argv) {
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dxx    = dzat_x - nearstar_x;
+        dyy    = dzat_y - nearstar_y;
+        dzz    = dzat_z - nearstar_z;
+        dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         proj_from_vehicle();
         landing_point = 1;
         draw_planets();
         landing_point = 0;
-        entryflag = 0;
+        entryflag     = 0;
 
         // Part 1: Descent, touchdown, and ESC surface save
         static std::uint32_t oak_touchdown_frame = 0;
-        static int oak_frame_count = 0;
-        oak_touchdown_frame = 0;
-        oak_frame_count = 0;
+        static int oak_frame_count               = 0;
+        oak_touchdown_frame                      = 0;
+        oak_frame_count                          = 0;
         noctis::reset_input_state();
         noctis::set_input_provider([]() {
             noctis::InputFrame frame;
@@ -3411,16 +3564,16 @@ int main(int argc, char **argv) {
 
         // Verify starfield and terrain palette on dim star after create_sky has run
         const bool sky_stars_visible = surface_palette[127 * 3 + 0] >= 40;
-        const bool terrain_defined = surface_palette[0] >= 0 && surface_palette[44 * 3 + 0] >= 4;
-        const bool landing_ok = exitflag == 1 && landed && oak_touchdown_frame > 0 && oak_touchdown_frame < 550;
+        const bool terrain_defined   = surface_palette[0] >= 0 && surface_palette[44 * 3 + 0] >= 4;
+        const bool landing_ok        = exitflag == 1 && landed && oak_touchdown_frame > 0 && oak_touchdown_frame < 550;
 
         // Part 2: Surface resume with corrupted ip_targetted (simulating power loss)
         noctis::SurfaceRestore surface_restore;
         const auto surface_result = noctis::load_or_migrate_surface(native_surface_file, surface_file, surface_restore);
-        bool resume_ok = false;
+        bool resume_ok            = false;
         bool oak_resume_palette_valid = false;
-        static int oak_resume_count = 0;
-        oak_resume_count = 0;
+        static int oak_resume_count   = 0;
+        oak_resume_count              = 0;
         if (surface_result.status == noctis::NativeSaveStatus::ok) {
             landing_pt_lon = surface_restore.state.landing_longitude;
             landing_pt_lat = surface_restore.state.landing_latitude;
@@ -3428,15 +3581,15 @@ int main(int argc, char **argv) {
             ip_targetted = -1;
             if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
                 int16_t best_body = 0;
-                double min_d2 = -1.0;
+                double min_d2     = -1.0;
                 for (int16_t n = 0; n < nearstar_nob; ++n) {
                     planet_xyz(n);
                     const double dpx = plx - dzat_x;
                     const double dpy = ply - dzat_y;
                     const double dpz = plz - dzat_z;
-                    const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
+                    const double d2  = dpx * dpx + dpy * dpy + dpz * dpz;
                     if (min_d2 < 0.0 || d2 < min_d2) {
-                        min_d2 = d2;
+                        min_d2    = d2;
                         best_body = n;
                     }
                 }
@@ -3449,15 +3602,15 @@ int main(int argc, char **argv) {
             dzat_x = plx;
             dzat_y = ply;
             dzat_z = plz;
-            dxx = dzat_x - nearstar_x;
-            dyy = dzat_y - nearstar_y;
-            dzz = dzat_z - nearstar_z;
-            dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+            dxx    = dzat_x - nearstar_x;
+            dyy    = dzat_y - nearstar_y;
+            dzz    = dzat_z - nearstar_z;
+            dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
             proj_from_vehicle();
             landing_point = 1;
             draw_planets();
             landing_point = 0;
-            entryflag = 1;
+            entryflag     = 1;
 
             noctis::reset_input_state();
             noctis::set_input_provider([]() {
@@ -3470,7 +3623,7 @@ int main(int argc, char **argv) {
             });
             planetary_main();
             noctis::reset_input_provider();
-            resume_ok = (exitflag == 1 && landed && ip_targetted == 0);
+            resume_ok                = (exitflag == 1 && landed && ip_targetted == 0);
             oak_resume_palette_valid = (surface_palette[127 * 3 + 0] >= 40 && surface_palette[44 * 3 + 0] >= 4);
         }
 
@@ -3479,18 +3632,18 @@ int main(int argc, char **argv) {
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dxx    = dzat_x - nearstar_x;
+        dyy    = dzat_y - nearstar_y;
+        dzz    = dzat_z - nearstar_z;
+        dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         proj_from_vehicle();
         landing_point = 1;
         draw_planets();
-        landing_point = 0;
-        entryflag = 0;
-        landed = 0;
+        landing_point                       = 0;
+        entryflag                           = 0;
+        landed                              = 0;
         static int oak_descent_abort_frames = 0;
-        oak_descent_abort_frames = 0;
+        oak_descent_abort_frames            = 0;
         noctis::reset_input_state();
         noctis::set_input_provider([]() {
             noctis::InputFrame frame;
@@ -3504,9 +3657,13 @@ int main(int argc, char **argv) {
         noctis::reset_input_provider();
         const bool abort_ok = (exitflag == 0 && !landed && oak_descent_abort_frames == 10);
 
-        if (!landing_ok || !sky_stars_visible || !terrain_defined || !resume_ok || !oak_resume_palette_valid || !abort_ok) {
-            fprintf(stderr, "oakenshield_fixture failed: landing_ok=%d (touchdown=%u) sky_stars=%d terrain=%d resume_ok=%d resume_palette=%d abort_ok=%d\n",
-                    landing_ok, oak_touchdown_frame, sky_stars_visible, terrain_defined, resume_ok, oak_resume_palette_valid, abort_ok);
+        if (!landing_ok || !sky_stars_visible || !terrain_defined || !resume_ok || !oak_resume_palette_valid ||
+            !abort_ok) {
+            fprintf(stderr,
+                    "oakenshield_fixture failed: landing_ok=%d (touchdown=%u) sky_stars=%d terrain=%d resume_ok=%d "
+                    "resume_palette=%d abort_ok=%d\n",
+                    landing_ok, oak_touchdown_frame, sky_stars_visible, terrain_defined, resume_ok,
+                    oak_resume_palette_valid, abort_ok);
             return 1;
         }
 
@@ -3526,16 +3683,16 @@ int main(int argc, char **argv) {
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dxx    = dzat_x - nearstar_x;
+        dyy    = dzat_y - nearstar_y;
+        dzz    = dzat_z - nearstar_z;
+        dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         proj_from_vehicle();
 
-        ip_reaching = 0;
-        ip_reached = 1;
+        ip_reaching   = 0;
+        ip_reached    = 1;
         landing_point = 0;
-        s_command = 4;
+        s_command     = 4;
         fcs_commands();
         if (!landing_point || landing_pt_lon != 0 || landing_pt_lat != 60) {
             noctis::log_event("error", "landing_fixture", "FCS did not enter landing selection");
@@ -3558,42 +3715,47 @@ int main(int argc, char **argv) {
         planetary_main();
         noctis::reset_input_provider();
 
-        const bool returned_normally = exitflag == 0 && !landed && landing_fixture_return_frame > 0
-            && landing_fixture_frames < 10000 && dzat_x == ship_x && dzat_y == ship_y && dzat_z == ship_z
-            && pos_x == 0 && pos_y == 0 && pos_z == -3100;
+        const bool returned_normally = exitflag == 0 && !landed && landing_fixture_return_frame > 0 &&
+                                       landing_fixture_frames < 10000 && dzat_x == ship_x && dzat_y == ship_y &&
+                                       dzat_z == ship_z && pos_x == 0 && pos_y == 0 && pos_z == -3100;
         if (!returned_normally) {
             fprintf(stderr,
-                    "landing_fixture_debug exit=%d landed=%d touchdown=%u returned=%u frames=%u pos=%.3f,%.3f,%.3f ship=%.17g,%.17g,%.17g expected=%.17g,%.17g,%.17g\n",
+                    "landing_fixture_debug exit=%d landed=%d touchdown=%u returned=%u frames=%u pos=%.3f,%.3f,%.3f "
+                    "ship=%.17g,%.17g,%.17g expected=%.17g,%.17g,%.17g\n",
                     exitflag, landed, landing_fixture_touchdown_frame, landing_fixture_return_frame,
                     landing_fixture_frames, pos_x, pos_y, pos_z, dzat_x, dzat_y, dzat_z, ship_x, ship_y, ship_z);
             noctis::log_event("error", "landing_fixture", "surface capsule did not return cleanly to the ship");
             return 1;
         }
         if (orbit_surface_fixture_mode) {
-            if (journey_orbit_hash == 0 || journey_touchdown_hash == 0 || journey_outbound_hash == 0
-                || journey_return_hash == 0 || fixture_tree_draws == 0 || fixture_animal_draws == 0
-                || fixture_ruin_draws == 0 || fixture_capsule_draws == 0) {
+            if (journey_orbit_hash == 0 || journey_touchdown_hash == 0 || journey_outbound_hash == 0 ||
+                journey_return_hash == 0 || fixture_tree_draws == 0 || fixture_animal_draws == 0 ||
+                fixture_ruin_draws == 0 || fixture_capsule_draws == 0) {
                 fprintf(stderr,
-                        "orbit_surface_debug orbit=%016llx ground=%016llx outbound=%016llx capsule=%016llx trees=%u animals=%u ruins=%u capsule_draws=%u rendered=%u\n",
+                        "orbit_surface_debug orbit=%016llx ground=%016llx outbound=%016llx capsule=%016llx trees=%u "
+                        "animals=%u ruins=%u capsule_draws=%u rendered=%u\n",
                         static_cast<unsigned long long>(journey_orbit_hash),
                         static_cast<unsigned long long>(journey_touchdown_hash),
                         static_cast<unsigned long long>(journey_outbound_hash),
-                        static_cast<unsigned long long>(journey_return_hash), fixture_tree_draws,
-                        fixture_animal_draws, fixture_ruin_draws, fixture_capsule_draws, journey_rendered_frames);
-                noctis::log_event("error", "orbit_surface_fixture", "journey missed a required visual/content checkpoint");
+                        static_cast<unsigned long long>(journey_return_hash), fixture_tree_draws, fixture_animal_draws,
+                        fixture_ruin_draws, fixture_capsule_draws, journey_rendered_frames);
+                noctis::log_event("error", "orbit_surface_fixture",
+                                  "journey missed a required visual/content checkpoint");
                 return 1;
             }
-            printf("orbit_surface_fixture longitude=%d latitude=%d touchdown=%u returned=%u frames=%u rendered=%u orbit=%016llx ground=%016llx outbound=%016llx capsule=%016llx trees=%u animals=%u ruins=%u capsule_draws=%u ship_position=restored\n",
+            printf("orbit_surface_fixture longitude=%d latitude=%d touchdown=%u returned=%u frames=%u rendered=%u "
+                   "orbit=%016llx ground=%016llx outbound=%016llx capsule=%016llx trees=%u animals=%u ruins=%u "
+                   "capsule_draws=%u ship_position=restored\n",
                    landing_pt_lon, landing_pt_lat, landing_fixture_touchdown_frame, landing_fixture_return_frame,
-                   landing_fixture_frames, journey_rendered_frames,
-                   static_cast<unsigned long long>(journey_orbit_hash),
+                   landing_fixture_frames, journey_rendered_frames, static_cast<unsigned long long>(journey_orbit_hash),
                    static_cast<unsigned long long>(journey_touchdown_hash),
                    static_cast<unsigned long long>(journey_outbound_hash),
-                   static_cast<unsigned long long>(journey_return_hash), fixture_tree_draws,
-                   fixture_animal_draws, fixture_ruin_draws, fixture_capsule_draws);
+                   static_cast<unsigned long long>(journey_return_hash), fixture_tree_draws, fixture_animal_draws,
+                   fixture_ruin_draws, fixture_capsule_draws);
             return 0;
         }
-        printf("landing_fixture request=1 longitude=%d latitude=%d touchdown=%u returned=%u frames=%u ship_position=restored\n",
+        printf("landing_fixture request=1 longitude=%d latitude=%d touchdown=%u returned=%u frames=%u "
+               "ship_position=restored\n",
                landing_pt_lon, landing_pt_lat, landing_fixture_touchdown_frame, landing_fixture_return_frame,
                landing_fixture_frames);
         return 0;
@@ -3612,10 +3774,10 @@ int main(int argc, char **argv) {
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dxx    = dzat_x - nearstar_x;
+        dyy    = dzat_y - nearstar_y;
+        dzz    = dzat_z - nearstar_z;
+        dsd    = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         proj_from_vehicle();
         landing_point = 1;
         draw_planets();
@@ -3631,22 +3793,24 @@ int main(int argc, char **argv) {
             return 1;
         }
         if (content_fixture_mode) {
-            printf("content_fixture case=%s longitude=%d latitude=%d frames=%u trees=%u rocks=%u animals=%u ruins=%u capsule=%u frame=%016llx\n",
-                   environment_fixture_name, landing_pt_lon, landing_pt_lat, environment_fixture_frames, fixture_tree_draws,
-                   fixture_rock_draws, fixture_animal_draws, fixture_ruin_draws, fixture_capsule_draws,
-                   static_cast<unsigned long long>(environment_fixture_hash));
+            printf("content_fixture case=%s longitude=%d latitude=%d frames=%u trees=%u rocks=%u animals=%u ruins=%u "
+                   "capsule=%u frame=%016llx\n",
+                   environment_fixture_name, landing_pt_lon, landing_pt_lat, environment_fixture_frames,
+                   fixture_tree_draws, fixture_rock_draws, fixture_animal_draws, fixture_ruin_draws,
+                   fixture_capsule_draws, static_cast<unsigned long long>(environment_fixture_hash));
             return 0;
         }
-        printf("environment_fixture case=%s longitude=%d latitude=%d scenario=%d rainy=%.3f waves=%d/%d frame=%016llx\n",
-               environment_fixture_name, landing_pt_lon, landing_pt_lat, sctype, rainy, waves_in, waves_out,
-               static_cast<unsigned long long>(environment_fixture_hash));
+        printf(
+            "environment_fixture case=%s longitude=%d latitude=%d scenario=%d rainy=%.3f waves=%d/%d frame=%016llx\n",
+            environment_fixture_name, landing_pt_lon, landing_pt_lat, sctype, rainy, waves_in, waves_out,
+            static_cast<unsigned long long>(environment_fixture_hash));
         return 0;
     }
     // recupero della situazione di superficie
     noctis::SurfaceRestore surface_restore;
     const auto surface_result = noctis::load_or_migrate_surface(native_surface_file, surface_file, surface_restore);
-    if (surface_result.status != noctis::NativeSaveStatus::ok
-        && surface_result.status != noctis::NativeSaveStatus::not_found) {
+    if (surface_result.status != noctis::NativeSaveStatus::ok &&
+        surface_result.status != noctis::NativeSaveStatus::not_found) {
         noctis::log_event("error", "surface_save", surface_result.message);
         return 1;
     }
@@ -3661,22 +3825,22 @@ int main(int argc, char **argv) {
             landing_pt_lat = surface_restore.state.landing_latitude;
             if (surface_restore.migrated) {
                 noctis::log_event("info", "legacy_migration",
-                                  std::string("migrated ")
-                                      + std::string(noctis::legacy_layout_name(surface_restore.legacy_layout))
-                                      + " surface checkpoint to native v1");
+                                  std::string("migrated ") +
+                                      std::string(noctis::legacy_layout_name(surface_restore.legacy_layout)) +
+                                      " surface checkpoint to native v1");
             }
             // recupero labels del pianeta e della stella-bersaglio
             if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
                 int16_t best_body = 0;
-                double min_d2 = -1.0;
+                double min_d2     = -1.0;
                 for (int16_t n = 0; n < nearstar_nob; ++n) {
                     planet_xyz(n);
                     const double dpx = plx - dzat_x;
                     const double dpy = ply - dzat_y;
                     const double dpz = plz - dzat_z;
-                    const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
+                    const double d2  = dpx * dpx + dpy * dpy + dpz * dpz;
                     if (min_d2 < 0.0 || d2 < min_d2) {
-                        min_d2 = d2;
+                        min_d2    = d2;
                         best_body = n;
                     }
                 }
@@ -3725,10 +3889,10 @@ int main(int argc, char **argv) {
     do {
         loop();
         if (graphical_smoke_mode && ++graphical_smoke_frames >= 3) {
-            mc = 27;
-            stspeed = 0;
+            mc          = 27;
+            stspeed     = 0;
             ip_reaching = 0;
-            lifter = 0;
+            lifter      = 0;
         }
     } while ((mc != 27) || stspeed || ip_reaching || lifter);
 #endif
@@ -3736,6 +3900,7 @@ int main(int argc, char **argv) {
     remove(native_surface_file);
 
     freeze();
+    noctis::shutdown_audio();
     if (graphical_smoke_mode) {
         noctis::log_event("info", "graphical_smoke", "window opened, resources loaded, and three frames presented");
         UnloadTexture(screen_texture);
@@ -3750,8 +3915,8 @@ void swapBuffers() {
         if (landing_fixture_touchdown_frame != 0 && journey_touchdown_hash == 0) {
             journey_touchdown_hash = hash;
         }
-        if (landing_fixture_phase == LandingFixturePhase::walking_back && landing_fixture_return_frame == 0
-            && journey_outbound_hash == 0) {
+        if (landing_fixture_phase == LandingFixturePhase::walking_back && landing_fixture_return_frame == 0 &&
+            journey_outbound_hash == 0) {
             journey_outbound_hash = hash;
         }
         if (landing_fixture_return_frame != 0 && journey_return_hash == 0) {
@@ -3783,12 +3948,13 @@ void swapBuffers() {
                       {.x = 0, .y = 0, .width = 1280, .height = 720}, {}, 0.0f, WHITE);
     // Frame limiter (18 FPS)
     static constexpr auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
-    static auto next_frame = std::chrono::steady_clock::now() + goal;
+    static auto next_frame     = std::chrono::steady_clock::now() + goal;
     if (noctis::should_wait_for_frame(ontheroof != 0, roof_speed != 0)) {
         std::this_thread::sleep_until(next_frame);
         const auto now = std::chrono::steady_clock::now();
         next_frame += goal;
-        if (next_frame < now) next_frame = now + goal;
+        if (next_frame < now)
+            next_frame = now + goal;
     } else {
         next_frame = std::chrono::steady_clock::now() + goal;
     }
@@ -3981,8 +4147,8 @@ void loop() {
         dlt_beta -= (float)mdltx / 3;
     }*/
 
-    const auto mouse_control = noctis::space_mouse_control(
-        option_mouse_look, (mpul & 2U) != 0, mdltx, mdlty, user_alfa);
+    const auto mouse_control =
+        noctis::space_mouse_control(option_mouse_look, (mpul & 2U) != 0, mdltx, mdlty, user_alfa);
     shift += mouse_control.shift;
     step += mouse_control.step;
     dlt_alfa += mouse_control.pitch;
@@ -4253,8 +4419,8 @@ nop:
             globe(gl_start, adapted, s_background, (uint8_t *) n_globes_map, gl_bytes, nearstar_x, nearstar_y,
                   nearstar_z, nearstar_ray, 64, (int8_t) satur);
         } else {
-            globe((simulation_ticks() / 360) % 360, adapted, s_background, (uint8_t *) n_globes_map, gl_bytes, nearstar_x,
-                  nearstar_y, nearstar_z, nearstar_ray, 64, (int8_t) satur);
+            globe((simulation_ticks() / 360) % 360, adapted, s_background, (uint8_t *) n_globes_map, gl_bytes,
+                  nearstar_x, nearstar_y, nearstar_z, nearstar_ray, 64, (int8_t) satur);
         }
     } else {
         farstar = 1;
@@ -5104,20 +5270,20 @@ ext_1: //
 
             noctis::TravelPosition position{dzat_x, dzat_y, dzat_z};
             noctis::TravelGuidance guidance{ap_target_initial_d, requested_vimana_coefficient,
-                                             current_vimana_coefficient, vimana_reaction_time};
-            const auto travel = noctis::advance_remote_travel(
-                position, {ap_target_x, ap_target_y, ap_target_z}, ras, guidance);
-            dzat_x = position.x;
-            dzat_y = position.y;
-            dzat_z = position.z;
+                                            current_vimana_coefficient, vimana_reaction_time};
+            const auto travel =
+                noctis::advance_remote_travel(position, {ap_target_x, ap_target_y, ap_target_z}, ras, guidance);
+            dzat_x                       = position.x;
+            dzat_y                       = position.y;
+            dzat_z                       = position.z;
             requested_vimana_coefficient = guidance.requested_coefficient;
-            current_vimana_coefficient = guidance.current_coefficient;
-            vimana_reaction_time = guidance.reaction_time;
+            current_vimana_coefficient   = guidance.current_coefficient;
+            vimana_reaction_time         = guidance.reaction_time;
 
             if (travel.arrived) {
                 status("CALIBRATED", 50);
                 ap_reached = 1;
-                stspeed = 0;
+                stspeed    = 0;
             } else {
                 status(noctis::travel_phase_status(travel.phase), 0);
                 pwr -= travel.power_cost;
@@ -5182,22 +5348,22 @@ resynctoplanet:
         if (ip_reaching) {
             noctis::TravelPosition position{dzat_x, dzat_y, dzat_z};
             noctis::TravelGuidance guidance{ip_target_initial_d, requested_approach_coefficient,
-                                             current_approach_coefficient, reaction_time};
-            const auto travel = noctis::advance_local_travel(
-                position, {plx, ply, plz}, nearstar_p_ray[ip_targetted], guidance);
-            dzat_x = position.x;
-            dzat_y = position.y;
-            dzat_z = position.z;
+                                            current_approach_coefficient, reaction_time};
+            const auto travel =
+                noctis::advance_local_travel(position, {plx, ply, plz}, nearstar_p_ray[ip_targetted], guidance);
+            dzat_x                         = position.x;
+            dzat_y                         = position.y;
+            dzat_z                         = position.z;
             requested_approach_coefficient = guidance.requested_coefficient;
-            current_approach_coefficient = guidance.current_coefficient;
-            reaction_time = guidance.reaction_time;
+            current_approach_coefficient   = guidance.current_coefficient;
+            reaction_time                  = guidance.reaction_time;
             pwr -= travel.power_cost;
             status(noctis::travel_phase_status(travel.phase), 0);
 
             if (travel.arrived) {
                 status("STANDBY", 0);
                 ip_reaching = 0;
-                ip_reached = 1;
+                ip_reached  = 1;
             }
         }
     }
@@ -5581,6 +5747,18 @@ resynctoplanet:
     }
 
     if (!_delay) {
+        noctis::AudioTelemetry telemetry{};
+        telemetry.scene              = ontheroof ? noctis::AudioScene::roof : noctis::AudioScene::cabin;
+        telemetry.travel_active      = (stspeed == 1) || (ip_reaching == 1);
+        telemetry.travel_phase       = (stspeed == 1) ? 16 : ((ip_reaching == 1) ? 20 : 0);
+        telemetry.travel_speed       = (stspeed == 1) ? static_cast<float>(current_vimana_coefficient)
+                                                      : static_cast<float>(current_approach_coefficient);
+        telemetry.atmosphere_density = 0.0f;
+        telemetry.weather_rain       = 0.0f;
+        telemetry.player_walking     = false;
+        telemetry.jetpack_active     = false;
+        noctis::update_audio_telemetry(telemetry);
+
         advance_movie_capture(false);
         swapBuffers();
     } else if (_delay > 0 && _delay < 10) {
@@ -5831,12 +6009,12 @@ resynctoplanet:
             if (!mc && is_key()) {
                 mc = get_key();
                 if (mc == 0x3B) {
-                    about = !about;
+                    about                = !about;
                     graphics_menu_status = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3C) {
                     graphics_menu_status = !graphics_menu_status;
-                    about = 0;
+                    about                = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3D || mc == 142 || mc == 144) {
                     handle_movie_extended_key(mc);
@@ -5850,8 +6028,10 @@ resynctoplanet:
                     lifter = -100;
                 } else if (mc == 80) {
                     option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0 ? "MOUSELOOK OFF"
-                           : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                    status(option_mouse_look == 0   ? "MOUSELOOK OFF"
+                           : option_mouse_look == 1 ? "MOUSELOOK ON"
+                                                    : "INV. Y AXIS",
+                           50);
                 }
             } else if (handle_movie_key(mc, false)) {
             } else if (noctis::snapshot_action(mc, false, false, false) == noctis::SnapshotAction::normal) {
@@ -5887,7 +6067,7 @@ resynctoplanet:
             goesk_e_reentry:
 
                 if (mc == 0x3B) {
-                    about = !about;
+                    about                = !about;
                     graphics_menu_status = 0;
                     movie_recorder.close_menu();
                     goto endmain;
@@ -5895,7 +6075,7 @@ resynctoplanet:
 
                 if (mc == 0x3C) {
                     graphics_menu_status = !graphics_menu_status;
-                    about = 0;
+                    about                = 0;
                     movie_recorder.close_menu();
                     goto endmain;
                 }
@@ -5949,13 +6129,16 @@ resynctoplanet:
 
                 if (mc == 80) {
                     option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0 ? "MOUSELOOK OFF"
-                           : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                    status(option_mouse_look == 0   ? "MOUSELOOK OFF"
+                           : option_mouse_look == 1 ? "MOUSELOOK ON"
+                                                    : "INV. Y AXIS",
+                           50);
                 }
             } else {
             goesk_a_reentry:
 
-                if (handle_movie_key(mc, labstar || labplanet)) goto endmain;
+                if (handle_movie_key(mc, labstar || labplanet))
+                    goto endmain;
 
                 if (graphics_menu_status) {
                     if (mc == 't') {
@@ -5965,8 +6148,10 @@ resynctoplanet:
                     }
                     if (mc == 'f') {
                         lens_flare_mode = noctis::cycle_lens_flare_mode(lens_flare_mode);
-                        status(lens_flare_mode == 1 ? "FLARES ON"
-                               : lens_flare_mode == -1 ? "FLARES OFF" : "VISOR FLARES", 100);
+                        status(lens_flare_mode == 1    ? "FLARES ON"
+                               : lens_flare_mode == -1 ? "FLARES OFF"
+                                                       : "VISOR FLARES",
+                               100);
                         goto endmain;
                     }
                     if (mc == 'b' || mc == noctis::delete_snapshot_key) {
@@ -5976,8 +6161,7 @@ resynctoplanet:
                     }
                 }
 
-                const auto snapshot_command = noctis::snapshot_action(
-                    mc, false, labstar || labplanet, false);
+                const auto snapshot_command = noctis::snapshot_action(mc, false, labstar || labplanet, false);
                 if (snapshot_command == noctis::SnapshotAction::normal) {
                     snapshot(0, 1);
                     goto endmain;
@@ -6293,10 +6477,10 @@ resynctoplanet:
                 }
 
                 if (!ap_targetting && !ip_targetting) {
-                    aso_countdown = 100;
+                    aso_countdown     = 100;
                     const auto action = noctis::cockpit_action_for_key(mc, labstar || labplanet);
                     if (action.kind == noctis::CockpitActionKind::select_menu) {
-                        sys = action.value;
+                        sys      = action.value;
                         dev_page = 0;
                     } else if (action.kind == noctis::CockpitActionKind::run_command) {
                         s_command = action.value;

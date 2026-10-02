@@ -61,9 +61,16 @@ sudo apt-get install -y libasound2t64 libx11-6 libxext6 libxrandr2 libxi6 \
 These are runtime libraries. The separate `-dev` packages are needed only when
 building the game from source.
 
+## Controls and Audio
+
+- **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
+- **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
+- **Audio Mute:** Press `F9` or `Ctrl+M` to toggle procedural audio mute.
+- **Jetpack:** Press `Space` to burst thrusters while airborne on low-gravity worlds.
+
 ## Release status
 
-This is the 1.0 General Availability release. Please keep the JSON Lines
+This is the 1.2.0 Celestial Resonance release with built-in procedural ambient audio and exploration Foley. Please keep the JSON Lines
 output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery
