@@ -104,7 +104,7 @@ path-dependent finding rather than a resolved claim.
 | Compiler selection | Unix CMake overwrites requested compiler paths with `/usr/bin/clang` and `/usr/bin/clang++`; GCC 16 succeeds only after removing that override in a temporary test copy | Root CMake and generated build commands |
 | Linux CI | One Ubuntu build and tar artifact job on pushes to `master`; no test invocation | [`.github/workflows/main.yml`](https://github.com/dgcole/noctis-iv-lr/blob/e1b0817da580e23062b3d2a64b7b6947bc0cb419/.github/workflows/main.yml) |
 | Windows | README says it builds under MSYS2 but is especially buggy; no Windows CI at this commit | [`README.md`](https://github.com/dgcole/noctis-iv-lr/blob/e1b0817da580e23062b3d2a64b7b6947bc0cb419/README.md) and workflow |
-| Web | A checked-in semi-functional Emscripten demo exists; the current CMake web branch uses developer-specific include and library paths | `web/` and root CMake |
+| Web | A checked-in semi-functional Emscripten demo exists; the current CMake web branch uses developer-specific include and library paths (superseded: the `web-release` preset now builds the full game; see BUILDING.md) | `web/` and root CMake |
 | Platform headers | Active source includes POSIX headers such as `unistd.h`; Windows support needs direct verification | `src/noctis-d.h` |
 
 The Linux configure detected X11 and built Raylib's bundled GLFW. The project's

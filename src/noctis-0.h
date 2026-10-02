@@ -242,6 +242,11 @@ extern float wdirsin;
 extern float wdircos;
 extern int8_t landed;
 extern int8_t surface_active;
+// Browser build: set by swapBuffers when an autosave falls due during surface
+// play; planetary_main services it because the surface state lives there.
+extern bool surface_autosave_due;
+// Flushes /persistent to IndexedDB in the browser build; no-op elsewhere.
+void persist_browser_storage();
 extern int32_t atl_x, atl_z, atl_x2, atl_z2;
 extern double qid;
 extern int16_t in;

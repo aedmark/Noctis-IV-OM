@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noctis IV OM</title>
+  <style>
+    :root {
+      --bg: #04070b;
+      --panel: rgba(6, 10, 16, 0.92);
+      --border: rgba(0, 185, 220, 0.75);
+      --accent: #00e6c3;
+      --text: #ebf5ff;
+      --muted: #96aabe;
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      overflow: hidden;
+    }
+    #canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      outline: none;
+      background: #000;
+      image-rendering: pixelated;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 4, 8, 0.86);
+      z-index: 10;
+    }
+    .overlay[hidden] { display: none; }
+    .card {
+      max-width: 34rem;
+      margin: 16px;
+      padding: 28px 32px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+    .card h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+    .card p { margin: 10px 0; color: var(--muted); }
+    .card kbd {
+      padding: 0 5px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font: inherit;
+    }
+    .bar {
+      height: 3px;
+      margin-top: 18px;
+      background: rgba(0, 185, 220, 0.2);
+    }
+    .bar > div {
+      width: 0;
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.2s;
+    }
+    button {
+      margin-top: 18px;
+      padding: 8px 20px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--accent);
+      font: inherit;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+    }
+    button:hover, button:focus-visible { background: rgba(0, 230, 195, 0.12); outline: none; }
+    button[disabled] { opacity: 0.4; cursor: default; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <div class="overlay" id="launch">
+    <div class="card">
+      <h1>NOCTIS IV OM</h1>
+      <p id="status">Loading the Stardrifter…</p>
+      <div class="bar"><div id="progress"></div></div>
+      <p>Explore with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and the mouse. <kbd>F1</kbd> lists shortcuts,
+        <kbd>F4</kbd> opens your image archive, and <kbd>F10</kbd> captures the mouse for mouselook.
+        Your progress autosaves in this browser; just close the tab when you are done.</p>
+      <button id="start" disabled>LAUNCH</button>
+    </div>
+  </div>
+
+  <script>
+    var canvas = document.getElementById('canvas');
+    var launch = document.getElementById('launch');
+    var startButton = document.getElementById('start');
+    var statusText = document.getElementById('status');
+    var progressBar = document.getElementById('progress');
+
+    // Keep browser shortcuts (help, find, caret browsing, scrolling) away from
+    // the game, but leave reload (F5) and developer tools (F12) alone.
+    var gameKeys = new Set(['F1', 'F2', 'F3', 'F4', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11',
+      'Tab', 'Backspace', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+      'PageUp', 'PageDown', 'Home', 'End', 'Slash', 'Quote']);
+    window.addEventListener('keydown', function (event) {
+      if (launch.hidden && gameKeys.has(event.code)) event.preventDefault();
+    }, { capture: true });
+
+    var Module = {
+      canvas: canvas,
+      print: function (text) { console.log(text); },
+      printErr: function (text) { console.warn(text); },
+      setStatus: function (text) {
+        var match = text && text.match(/\(([\d.]+)\/(\d+)\)/);
+        if (match) progressBar.style.width = (100 * match[1] / match[2]) + '%';
+        if (text) statusText.textContent = text.replace(/\(.*\)/, '').trim() || 'Loading…';
+      },
+      onRuntimeInitialized: function () {
+        progressBar.style.width = '100%';
+        statusText.textContent = 'Systems nominal.';
+        startButton.disabled = false;
+        startButton.focus();
+      }
+    };
+
+    startButton.addEventListener('click', function () {
+      launch.hidden = true;
+      canvas.focus();
+    });
+    window.addEventListener('error', function () {
+      statusText.textContent = 'The game stopped unexpectedly. See the browser console for details.';
+    });
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

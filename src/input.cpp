@@ -26,38 +26,49 @@ noctis::InputFrame poll_raylib_input() {
     while ((key = GetCharPressed()) != 0) {
         frame.text.push_back(key);
     }
+    // IsKeyPressed misses a tap that is pressed and released between two polls
+    // (common in the browser, where the frame yields for ~55 ms). The press
+    // queue keeps every press, so a key counts if either source saw it.
+    std::vector<std::int32_t> pressed_queue;
+    while ((key = GetKeyPressed()) != 0) {
+        pressed_queue.push_back(key);
+    }
+    const auto pressed = [&pressed_queue](std::int32_t code) {
+        return IsKeyPressed(code)
+            || std::find(pressed_queue.begin(), pressed_queue.end(), code) != pressed_queue.end();
+    };
 
-    frame.arrow_up_pressed    = IsKeyPressed(KEY_UP);
-    frame.arrow_down_pressed  = IsKeyPressed(KEY_DOWN);
-    frame.arrow_left_pressed  = IsKeyPressed(KEY_LEFT);
-    frame.arrow_right_pressed = IsKeyPressed(KEY_RIGHT);
-    frame.backspace_pressed   = IsKeyPressed(KEY_BACKSPACE);
-    frame.enter_pressed       = IsKeyPressed(KEY_ENTER);
-    frame.apostrophe_pressed  = IsKeyPressed(KEY_APOSTROPHE);
-    frame.space_pressed       = IsKeyPressed(KEY_SPACE);
-    frame.delete_pressed      = IsKeyPressed(KEY_DELETE);
-    frame.minus_pressed       = IsKeyPressed(KEY_MINUS) || IsKeyPressed(KEY_KP_SUBTRACT);
-    frame.comma_pressed       = IsKeyPressed(KEY_COMMA);
-    frame.slash_pressed       = IsKeyPressed(KEY_SLASH);
-    frame.semicolon_pressed   = IsKeyPressed(KEY_SEMICOLON);
-    frame.plus_pressed      = (IsKeyPressed(KEY_EQUAL) && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))) ||
-                              IsKeyPressed(KEY_KP_ADD);
+    frame.arrow_up_pressed    = pressed(KEY_UP);
+    frame.arrow_down_pressed  = pressed(KEY_DOWN);
+    frame.arrow_left_pressed  = pressed(KEY_LEFT);
+    frame.arrow_right_pressed = pressed(KEY_RIGHT);
+    frame.backspace_pressed   = pressed(KEY_BACKSPACE);
+    frame.enter_pressed       = pressed(KEY_ENTER);
+    frame.apostrophe_pressed  = pressed(KEY_APOSTROPHE);
+    frame.space_pressed       = pressed(KEY_SPACE);
+    frame.delete_pressed      = pressed(KEY_DELETE);
+    frame.minus_pressed       = pressed(KEY_MINUS) || pressed(KEY_KP_SUBTRACT);
+    frame.comma_pressed       = pressed(KEY_COMMA);
+    frame.slash_pressed       = pressed(KEY_SLASH);
+    frame.semicolon_pressed   = pressed(KEY_SEMICOLON);
+    frame.plus_pressed      = (pressed(KEY_EQUAL) && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))) ||
+                              pressed(KEY_KP_ADD);
     frame.control_down      = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
-    frame.f1_pressed        = IsKeyPressed(KEY_F1);
-    frame.f2_pressed        = IsKeyPressed(KEY_F2);
-    frame.f3_pressed        = IsKeyPressed(KEY_F3);
-    frame.f4_pressed        = IsKeyPressed(KEY_F4);
-    frame.page_up_pressed   = IsKeyPressed(KEY_PAGE_UP);
-    frame.page_down_pressed = IsKeyPressed(KEY_PAGE_DOWN);
-    frame.home_pressed      = IsKeyPressed(KEY_HOME);
-    frame.end_pressed       = IsKeyPressed(KEY_END);
-    frame.toggle_cursor_pressed = IsKeyPressed(KEY_F10);
-    frame.toggle_audio_pressed  = IsKeyPressed(KEY_F9) || (frame.control_down && IsKeyPressed(KEY_M));
+    frame.f1_pressed        = pressed(KEY_F1);
+    frame.f2_pressed        = pressed(KEY_F2);
+    frame.f3_pressed        = pressed(KEY_F3);
+    frame.f4_pressed        = pressed(KEY_F4);
+    frame.page_up_pressed   = pressed(KEY_PAGE_UP);
+    frame.page_down_pressed = pressed(KEY_PAGE_DOWN);
+    frame.home_pressed      = pressed(KEY_HOME);
+    frame.end_pressed       = pressed(KEY_END);
+    frame.toggle_cursor_pressed = pressed(KEY_F10);
+    frame.toggle_audio_pressed  = pressed(KEY_F9) || (frame.control_down && pressed(KEY_M));
     frame.toggle_fullscreen_pressed =
-        IsKeyPressed(KEY_F11) || ((IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)) && IsKeyPressed(KEY_ENTER));
-    frame.toggle_aspect_pressed  = IsKeyPressed(KEY_F8);
-    frame.toggle_upscale_pressed = IsKeyPressed(KEY_F7);
-    frame.toggle_crt_pressed     = IsKeyPressed(KEY_F6);
+        pressed(KEY_F11) || ((IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)) && pressed(KEY_ENTER));
+    frame.toggle_aspect_pressed  = pressed(KEY_F8);
+    frame.toggle_upscale_pressed = pressed(KEY_F7);
+    frame.toggle_crt_pressed     = pressed(KEY_F6);
     return frame;
 }
 

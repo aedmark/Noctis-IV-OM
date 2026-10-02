@@ -108,27 +108,27 @@ float hpoint(int32_t px, int32_t pz) {
 /*
 
     -----------------------------------------------------------------
-    Collezione di funzioni interdipendenti per il tracciamento degli
-    oggetti che si possono trovare sulla superficie dei vari pianeti.
+    Collection of interdependent functions for rendering the
+    objects that can be found on the surface of various planets.
     -----------------------------------------------------------------
 
 */
 
-int8_t groundflares = 0;    // tipo di tracciamento del suolo.
-int32_t mushscaling = 8191; // range variabilit? (in bitmask) "greenmush"
-float treescaling   = 4096; // scalatura alberi, di solito mushscaling/2
-float treespreads   = 0.75; // scalatura rami ad ogni ricorsione
-float treepeaking   = 1.25; // passa come "distance_from_perfection"
-float branchwidth   = 0.15; // larghezza dei rami rispetto alla lunghezza
-float rootheight    = 0.50; // altezza del tronco rispetto a "treescaling"
-int8_t rootshade    = 0x00; // colore di base del tronco
-int8_t treeflares   = 0x00; // tipo di tracciamento rami.
-int8_t leafflares   = 0x00; // tipo di tracciamento foglie.
+int8_t groundflares = 0;    // ground rendering type.
+int32_t mushscaling = 8191; // variability range (in bitmask) "greenmush"
+float treescaling   = 4096; // tree scaling, usually mushscaling/2
+float treespreads   = 0.75; // branch scaling at each recursion
+float treepeaking   = 1.25; // passed as "distance_from_perfection"
+float branchwidth   = 0.15; // branch width relative to length
+float rootheight    = 0.50; // trunk height relative to "treescaling"
+int8_t rootshade    = 0x00; // base color of the trunk
+int8_t treeflares   = 0x00; // branch rendering type.
+int8_t leafflares   = 0x00; // leaf rendering type.
 
-float rockscaling   = 500; // dimensioni delle rocce.
-float rockpeaking   = 250; // altezza delle rocce.
-int16_t rockdensity = 15;  // densit? gruppi di rocce (bitmask).
-int8_t quartz       = 0;   // traccia quarzi trasparenti, se impostato.
+float rockscaling   = 500; // rock size.
+float rockpeaking   = 250; // rock height.
+int16_t rockdensity = 15;  // rock cluster density (bitmask).
+int8_t quartz       = 0;   // renders transparent quartz, if set.
 
 int16_t detail_seed = 12345;
 
@@ -4006,6 +4006,23 @@ void planetary_main() {
     int16_t openhudcount    = 180;
     int16_t openhuddelta    = 0;
     int8_t hud_rtl_closed   = 1;
+
+    // Records the landed position so a later session resumes on this surface.
+    const auto save_surface = [&]() {
+        if (surface_scope.cached_body >= 0) {
+            ip_targetted = surface_scope.cached_body;
+        }
+        const noctis::SurfaceSaveState state{landing_pt_lon, landing_pt_lat, atl_x,     atl_z,
+                                             atl_x2,         atl_z2,         pos_x,     pos_y,
+                                             pos_z,          user_alfa,      user_beta, openhuddelta,
+                                             openhudcount,   hud_rtl_closed};
+        const auto save_result = noctis::save_surface_save(native_surface_file, state);
+        if (save_result.status != noctis::NativeSaveStatus::ok) {
+            noctis::log_event("error", "surface_save", save_result.message);
+            return false;
+        }
+        return true;
+    };
     int8_t widesnapping     = 0;
     int8_t raw_widesnap     = 0;
     bool jumping            = false;
@@ -5558,6 +5575,11 @@ nosecondarysun:
             swapBuffers();
         }
 
+        if (surface_autosave_due) {
+            surface_autosave_due = false;
+            if (landed && save_surface()) persist_browser_storage();
+        }
+
         QUADWORDS = pqw;
 
     capsule_transitions:
@@ -5917,19 +5939,19 @@ nosecondarysun:
 
                 if (w == 27) {
                     if (landed) {
-                        if (surface_scope.cached_body >= 0) {
-                            ip_targetted = surface_scope.cached_body;
+#ifdef __EMSCRIPTEN__
+                        // Escape also releases pointer lock in a browser, so it
+                        // saves in place rather than ending the session.
+                        if (save_surface()) {
+                            persist_browser_storage();
+                            status("SAVED", 50);
                         }
-                        const noctis::SurfaceSaveState state{landing_pt_lon, landing_pt_lat, atl_x,     atl_z,
-                                                             atl_x2,         atl_z2,         pos_x,     pos_y,
-                                                             pos_z,          user_alfa,      user_beta, openhuddelta,
-                                                             openhudcount,   hud_rtl_closed};
-                        const auto save_result = noctis::save_surface_save(native_surface_file, state);
-                        if (save_result.status == noctis::NativeSaveStatus::ok) {
+#else
+                        if (save_surface()) {
                             exitflag = 1;
                             goto nodissolve;
                         }
-                        noctis::log_event("error", "surface_save", save_result.message);
+#endif
                     } else {
                         exitflag = 0;
                         goto nodissolve;

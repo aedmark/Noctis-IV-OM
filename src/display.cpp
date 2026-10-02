@@ -302,8 +302,14 @@ bool g_shader_loaded      = false;
 int g_loc_resolution      = -1;
 int g_loc_time            = -1;
 
-const char *kCrtFragmentShader = R"(#version 330
+#if defined(__EMSCRIPTEN__)
+// WebGL2 (GLSL ES 3.00) shares the GLSL 3.30 in/out syntax; only the header differs.
+#define NIVLR_GLSL_HEADER "#version 300 es\nprecision highp float;\n"
+#else
+#define NIVLR_GLSL_HEADER "#version 330\n"
+#endif
 
+const char *kCrtFragmentShader = NIVLR_GLSL_HEADER R"(
 in vec2 fragTexCoord;
 in vec4 fragColor;
 

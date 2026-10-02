@@ -1,0 +1,49 @@
+name: Web build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with the version documented in BUILDING.md.
+  EMSDK_VERSION: 6.0.10
+
+jobs:
+  wasm:
+    name: Emscripten WebAssembly release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Install Emscripten ${{ env.EMSDK_VERSION }}
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install "$EMSDK_VERSION"
+          "$RUNNER_TEMP/emsdk/emsdk" activate "$EMSDK_VERSION"
+      - name: Configure and build
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          cmake --preset web-release
+          cmake --build --preset web-release --parallel 2
+      - name: Verify web bundle
+        run: |
+          for file in nivlr.html nivlr.js nivlr.wasm nivlr.data; do
+            test -s "build/web-release/$file" || { echo "missing $file"; exit 1; }
+          done
+      - name: Upload web bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: noctis-iv-om-web
+          path: |
+            build/web-release/nivlr.html
+            build/web-release/nivlr.js
+            build/web-release/nivlr.wasm
+            build/web-release/nivlr.data
+          if-no-files-found: error

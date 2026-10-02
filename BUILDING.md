@@ -151,6 +151,45 @@ See [`WINDOWS_PACKAGING.md`](docs/porting/WINDOWS_PACKAGING.md) for package
 evidence and [`WINDOWS_MSVC.md`](docs/porting/WINDOWS_MSVC.md) for the
 remaining compatibility boundary.
 
+## Web build (WebAssembly)
+
+The browser build uses Emscripten 6.0.10, the same version CI pins in
+`.github/workflows/web.yml`. Install it once with the official SDK:
+
+```sh
+git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
+~/emsdk/emsdk install 6.0.10
+~/emsdk/emsdk activate 6.0.10
+```
+
+Then, in each shell that builds the web target:
+
+```sh
+source ~/emsdk/emsdk_env.sh
+cmake --preset web-release
+cmake --build --preset web-release
+python3 -m http.server 8090 --directory build/web-release
+```
+
+Open `http://localhost:8090/nivlr.html`. The page must be served over HTTP;
+opening the file directly does not work. Deploy the four files `nivlr.html`,
+`nivlr.js`, `nivlr.wasm`, and `nivlr.data` together.
+
+How the browser build differs from the desktop one:
+
+- **Main loop:** it links with ASYNCIFY, so the inherited blocking space and
+  surface loops yield to the browser once per frame in `swapBuffers`.
+- **Graphics:** it targets WebGL2, and the CRT shader compiles as GLSL ES 3.00.
+- **Assets:** `res/` and the default catalogs are preloaded into the same
+  `/res` and `/defaults` layout the desktop packages use.
+- **Player data:** saves, catalogs, the gallery, movies, and settings live in
+  `/persistent`, which `web/pre.js` backs with IndexedDB. Data stays in that
+  browser profile, and clearing site data erases it.
+- **Saving:** the game autosaves about every 30 seconds and when the tab is
+  hidden or closed, including the surface position while landed. Escape never
+  ends the session, because browsers also use it to release mouse capture and
+  leave fullscreen; on a planet it saves in place.
+
 ## Portable mode
 
 Release presets (`linux-clang-release`, `windows-mingw-release`, and

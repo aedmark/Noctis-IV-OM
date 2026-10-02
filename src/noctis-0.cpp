@@ -641,6 +641,7 @@ float wdircos = 1;  // Optimization value.
 
 int8_t landed; // Flag set at the time of landing.
 int8_t surface_active = 0;
+bool surface_autosave_due = false;
 // Coded position quotiento of the lander (quotient:remainder).
 int32_t atl_x, atl_z, atl_x2, atl_z2;
 

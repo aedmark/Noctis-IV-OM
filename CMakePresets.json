@@ -55,6 +55,18 @@
       }
     },
     {
+      "name": "web-release",
+      "displayName": "Browser (Emscripten, WebAssembly)",
+      "description": "Requires an activated emsdk (source ~/emsdk/emsdk_env.sh).",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
       "name": "windows-msvc-debug",
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
@@ -128,6 +140,10 @@
     {
       "name": "windows-mingw-release",
       "configurePreset": "windows-mingw-release"
+    },
+    {
+      "name": "web-release",
+      "configurePreset": "web-release"
     }
   ],
   "testPresets": [

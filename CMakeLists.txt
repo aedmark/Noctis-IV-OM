@@ -28,6 +28,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT EMSCRIPTEN)
     set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "Native Wayland is not yet a supported backend" FORCE)
 endif()
 
+# The browser build targets WebGL2 so the CRT shader can use GLSL ES 3.00.
+if(EMSCRIPTEN)
+    set(PLATFORM "Web" CACHE STRING "raylib platform" FORCE)
+    set(GRAPHICS "GRAPHICS_API_OPENGL_ES3" CACHE STRING "raylib graphics API" FORCE)
+endif()
+
 # CPM-provided packages (built from source)
 include(cmake/CPM.cmake)
 CPMAddPackage(
@@ -41,10 +47,6 @@ CPMAddPackage(
     GIT_TAG 8d1fd52e5ab5590e2c81768ace50c72bae28f2ed # GLM 1.0.3
 )
 
-if (EMSCRIPTEN)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 --emrun --preload-file res/supports.nct --preload-file data/GUIDE.BIN --preload-file data/STARMAP.BIN")
-    set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so that you can directly open it.
-endif()
 
 set(SOURCE_FILES
     src/atomic_file.cpp
@@ -87,6 +89,33 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib glm::glm)
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE shell32 ole32)
+endif()
+
+if(EMSCRIPTEN)
+    # ASYNCIFY lets the inherited blocking game loops yield to the browser from
+    # swapBuffers. Immutable resources and default catalogs are preloaded into
+    # the same /res and /defaults layout the desktop packages use; player data
+    # lives in an IndexedDB-backed /persistent mount set up by web/pre.js.
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+    target_link_options(${PROJECT_NAME} PRIVATE
+        -sUSE_GLFW=3
+        -sMIN_WEBGL_VERSION=2
+        -sMAX_WEBGL_VERSION=2
+        -sASYNCIFY
+        -sASYNCIFY_STACK_SIZE=65536
+        -sSTACK_SIZE=1048576
+        -sALLOW_MEMORY_GROWTH
+        -sINITIAL_MEMORY=134217728
+        -sFORCE_FILESYSTEM
+        -sEXIT_RUNTIME=0
+        -lidbfs.js
+        "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/web/pre.js"
+        "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html"
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/res@/res"
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/data/STARMAP.BIN@/defaults/STARMAP.BIN"
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/data/GUIDE.BIN@/defaults/GUIDE.BIN")
+    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY LINK_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/web/pre.js ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html)
 endif()
 
 option(NIVLR_PORTABLE_DEFAULT "Default to portable user data beside executable" OFF)

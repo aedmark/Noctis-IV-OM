@@ -616,6 +616,14 @@ void freeze() {
     }
 }
 
+void persist_browser_storage() {
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        if (Module.nivlrPersist) Module.nivlrPersist();
+    });
+#endif
+}
+
 // Opens the cockpit image viewer (F4 or the GOES VIEW command).
 void open_cockpit_gallery(std::string_view key) {
     if (!noctis::open_gallery_viewer(noctis::runtime_paths().gallery_dir, key)) {
@@ -2866,6 +2874,10 @@ int main(int argc, char **argv) {
             return 2;
         }
     }
+#ifdef __EMSCRIPTEN__
+    // web/pre.js mounts browser storage (IndexedDB) here before main runs.
+    if (!user_data_override) user_data_override = std::filesystem::path("/persistent");
+#endif
     std::string path_error;
     if (!noctis::initialize_runtime_paths(argv[0], user_data_override, migration_source, &path_error,
                                           portable_mode_override)) {
@@ -3957,9 +3969,15 @@ int main(int argc, char **argv) {
         }
     }
 
+    // The browser build compiles with ASYNCIFY, so this loop (and the nested
+    // surface loop in planetary_main) yields to the browser in swapBuffers.
+    // A browser session never ends from Escape (it also releases pointer lock
+    // and fullscreen); it autosaves instead and the tab can simply be closed.
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(loop, 24, 1);
+    constexpr bool session_can_end = false;
 #else
+    constexpr bool session_can_end = true;
+#endif
     do {
         loop();
         if (graphical_smoke_mode && ++graphical_smoke_frames >= 3) {
@@ -3968,8 +3986,7 @@ int main(int argc, char **argv) {
             ip_reaching = 0;
             lifter      = 0;
         }
-    } while ((mc != 27) || stspeed || ip_reaching || lifter);
-#endif
+    } while (!session_can_end || (mc != 27) || stspeed || ip_reaching || lifter);
     remove(surface_file);
     remove(native_surface_file);
 
@@ -4065,12 +4082,47 @@ void swapBuffers() {
     const auto goal = std::chrono::milliseconds(
         ((ontheroof != 0 && roof_speed != 0) || noctis::is_timewarp_active()) ? 16 : FRAME_TIME_MILLIS);
     static auto next_frame     = std::chrono::steady_clock::now() + goal;
+#ifdef __EMSCRIPTEN__
+    // Finish the frame, then hand control back to the browser (ASYNCIFY) so it
+    // can present the canvas and deliver input before the next tick.
+    EndDrawing();
+    const auto remaining =
+        std::chrono::duration_cast<std::chrono::milliseconds>(next_frame - std::chrono::steady_clock::now());
+    emscripten_sleep(static_cast<unsigned int>(std::max<std::int64_t>(0, remaining.count())));
+
+    // Autosave about every 30 s of play, and whenever web/pre.js asks because
+    // the tab is being hidden or closed; then flush storage to IndexedDB.
+    static int autosave_frames = 0;
+    const bool save_requested = EM_ASM_INT({
+        const requested = Module.nivlrSaveRequested ? 1 : 0;
+        Module.nivlrSaveRequested = false;
+        return requested;
+    });
+    if (save_requested || ++autosave_frames >= 30 * 1000 / FRAME_TIME_MILLIS) {
+        autosave_frames = 0;
+        if (surface_active) {
+            // The surface loop reuses the ship coordinates, so the ship state was
+            // saved on landing and only the surface position is recorded now.
+            surface_autosave_due = true;
+        } else {
+            freeze();
+            remove(surface_file);
+            remove(native_surface_file);
+        }
+        persist_browser_storage();
+    }
+    const auto now = std::chrono::steady_clock::now();
+    next_frame += goal;
+    if (next_frame < now)
+        next_frame = now + goal;
+#else
     std::this_thread::sleep_until(next_frame);
     const auto now = std::chrono::steady_clock::now();
     next_frame += goal;
     if (next_frame < now)
         next_frame = now + goal;
     EndDrawing();
+#endif
 }
 
 void loop() {
@@ -5851,6 +5903,9 @@ resynctoplanet:
 
         if (opencapcount >= 85) {
             entryflag = 0;
+#ifdef __EMSCRIPTEN__
+            freeze(); // Ship state for resuming if the tab closes on the surface.
+#endif
             planetary_main();
 
             if (exitflag) {
