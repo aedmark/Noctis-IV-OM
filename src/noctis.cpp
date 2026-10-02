@@ -2275,6 +2275,7 @@ bool unfreeze() {
 
     /* Reconstruction of the current star system. */
     npcs = -12345;
+    _delay = 0;
     prepare_nearstar();
 
     if (lithium_collector) {
@@ -3650,63 +3651,71 @@ int main(int argc, char **argv) {
         return 1;
     }
     if (surface_result.status == noctis::NativeSaveStatus::ok) {
-        landing_pt_lon = surface_restore.state.landing_longitude;
-        landing_pt_lat = surface_restore.state.landing_latitude;
-        if (surface_restore.migrated) {
-            noctis::log_event("info", "legacy_migration",
-                              std::string("migrated ")
-                                  + std::string(noctis::legacy_layout_name(surface_restore.legacy_layout))
-                                  + " surface checkpoint to native v1");
-        }
-        // recupero labels del pianeta e della stella-bersaglio
-        if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
-            int16_t best_body = 0;
-            double min_d2 = -1.0;
-            for (int16_t n = 0; n < nearstar_nob; ++n) {
-                planet_xyz(n);
-                const double dpx = plx - dzat_x;
-                const double dpy = ply - dzat_y;
-                const double dpz = plz - dzat_z;
-                const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
-                if (min_d2 < 0.0 || d2 < min_d2) {
-                    min_d2 = d2;
-                    best_body = n;
-                }
+        if (nearstar_nob <= 0) {
+            noctis::log_event("warn", "surface_save",
+                              "ignoring orphaned surface save: current system has no celestial bodies");
+            std::filesystem::remove(native_surface_file);
+            std::filesystem::remove(surface_file);
+        } else {
+            landing_pt_lon = surface_restore.state.landing_longitude;
+            landing_pt_lat = surface_restore.state.landing_latitude;
+            if (surface_restore.migrated) {
+                noctis::log_event("info", "legacy_migration",
+                                  std::string("migrated ")
+                                      + std::string(noctis::legacy_layout_name(surface_restore.legacy_layout))
+                                      + " surface checkpoint to native v1");
             }
-            ip_targetted = best_body;
-        }
-        update_star_label();
-        update_planet_label();
-        // risincronizzazione istantanea della posizione della navicella
-        getsecs();
-        planet_xyz(ip_targetted);
-        dzat_x = plx;
-        dzat_y = ply;
-        dzat_z = plz;
-        // calcolo della distanza dalla stella primaria
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
-        // rielaborazione superficie planetaria
-        proj_from_vehicle();
-        landing_point = 1;
-        draw_planets();
-        landing_point = 0;
-        // ripresa del ciclo di esplorazione planetaria
-        entryflag = 1;
-        planetary_main();
-        // termine esplorazione
-        opencapcount = 86;
-        opencapdelta = -2;
-        holdtomiddle = 1;
-        pp_gravity   = 1;
-        QUADWORDS    = 16000;
-        memset(adapted, 0, adapted_width * adapted_height);
-        QUADWORDS = pqw;
+            // recupero labels del pianeta e della stella-bersaglio
+            if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
+                int16_t best_body = 0;
+                double min_d2 = -1.0;
+                for (int16_t n = 0; n < nearstar_nob; ++n) {
+                    planet_xyz(n);
+                    const double dpx = plx - dzat_x;
+                    const double dpy = ply - dzat_y;
+                    const double dpz = plz - dzat_z;
+                    const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
+                    if (min_d2 < 0.0 || d2 < min_d2) {
+                        min_d2 = d2;
+                        best_body = n;
+                    }
+                }
+                ip_targetted = best_body;
+            }
+            update_star_label();
+            update_planet_label();
+            // risincronizzazione istantanea della posizione della navicella
+            getsecs();
+            planet_xyz(ip_targetted);
+            dzat_x = plx;
+            dzat_y = ply;
+            dzat_z = plz;
+            // calcolo della distanza dalla stella primaria
+            dxx = dzat_x - nearstar_x;
+            dyy = dzat_y - nearstar_y;
+            dzz = dzat_z - nearstar_z;
+            dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+            // rielaborazione superficie planetaria
+            proj_from_vehicle();
+            landing_point = 1;
+            draw_planets();
+            landing_point = 0;
+            // ripresa del ciclo di esplorazione planetaria
+            entryflag = 1;
+            planetary_main();
+            // termine esplorazione
+            opencapcount = 86;
+            opencapdelta = -2;
+            holdtomiddle = 1;
+            pp_gravity   = 1;
+            QUADWORDS    = 16000;
+            memset(adapted, 0, adapted_width * adapted_height);
+            QUADWORDS = pqw;
 
-        if (exitflag) {
-            freeze();
+            if (exitflag) {
+                freeze();
+                return 0;
+            }
         }
     }
 
@@ -5551,6 +5560,7 @@ resynctoplanet:
             planetary_main();
 
             if (exitflag) {
+                freeze();
                 exit(0);
             }
 

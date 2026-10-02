@@ -33,6 +33,8 @@
 
 */
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <raylib.h>
@@ -850,6 +852,12 @@ void p_forward(float delta) {
 // radius and orientation of major axis), and returns i values in plx, ply, plz.
 double mox, moy, moz;
 void moonorigin(int16_t n) {
+    if (n < 0 || n >= nearstar_nob || nearstar_p_orb_ray[n] <= 0.0) {
+        mox = 0;
+        moy = 0;
+        moz = 0;
+        return;
+    }
     double xx;
     double p_riv, ors;
     double alfa, beta;
@@ -867,6 +875,12 @@ void moonorigin(int16_t n) {
 }
 
 void planet_xyz(int16_t n) {
+    if (n < 0 || n >= nearstar_nob || nearstar_p_orb_ray[n] <= 0.0) {
+        plx = nearstar_x;
+        ply = nearstar_y;
+        plz = nearstar_z;
+        return;
+    }
     double xx;
     double alfa, beta;
     double p_m, p_riv, ors;
@@ -906,6 +920,9 @@ void planet_xyz(int16_t n) {
 // For moons: Around the planet.
 // .01e-7 is the equivalent, in the virtual cosmos of Noctis.
 float rtp(int16_t n) {
+    if (n < 0 || n >= nearstar_nob || nearstar_p_orb_ray[n] <= 0.0) {
+        return 0.0f;
+    }
     double p_m, p_riv, ors, xx;
     ors = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
 
@@ -5497,25 +5514,35 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
     spot = y * adapted_width + x;
 
     while (text[n] && n < l) {
-        j = (text[n] - 32) * 5;
+        char ch = text[n];
+        if (ch >= 'a' && ch <= 'z') {
+            ch = static_cast<char>(ch - 'a' + 'A');
+        }
+        if (ch < 32 || ch > 96) {
+            ch = ' ';
+        }
+        j = (ch - 32) * 5;
 
-        for (i = 0; i < 5; i++) {
-            if (digimap[j + i] & 1) {
-                adapted[spot + 0] = 191 - adapted[spot + 0];
+        if (spot + 2 + adapted_width * 4 < adapted_width * adapted_height) {
+            for (i = 0; i < 5; i++) {
+                if (digimap[j + i] & 1) {
+                    adapted[spot + 0] = 191 - adapted[spot + 0];
+                }
+
+                if (digimap[j + i] & 2) {
+                    adapted[spot + 1] = 191 - adapted[spot + 1];
+                }
+
+                if (digimap[j + i] & 4) {
+                    adapted[spot + 2] = 191 - adapted[spot + 2];
+                }
+
+                spot += adapted_width;
             }
 
-            if (digimap[j + i] & 2) {
-                adapted[spot + 1] = 191 - adapted[spot + 1];
-            }
-
-            if (digimap[j + i] & 4) {
-                adapted[spot + 2] = 191 - adapted[spot + 2];
-            }
-
-            spot += adapted_width;
+            spot -= adapted_width * 5;
         }
 
-        spot -= adapted_width * 5;
         spot += 4;
         n++;
     }
@@ -5652,10 +5679,14 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     // sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C &
     // PRESSURE %2.3f ATM & PULSE %3.0f PPS", tp_gravity, tp_temp, tp_pressure,
     // (float)albedo);
-    sprintf((char *) outhudbuffer,
-            "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE "
-            "%3.0f PPS",
-            tp_gravity, tp_temp, tp_pressure, tp_pulse);
+    if (!std::isfinite(tp_gravity)) tp_gravity = 1.0f;
+    if (!std::isfinite(tp_temp)) tp_temp = 20.0f;
+    if (!std::isfinite(tp_pressure)) tp_pressure = 1.0f;
+    if (!std::isfinite(tp_pulse)) tp_pulse = 118.0f;
+    snprintf((char *) outhudbuffer, sizeof(outhudbuffer),
+             "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE "
+             "%3.0f PPS",
+             tp_gravity, tp_temp, tp_pressure, tp_pulse);
     wrouthud(2, adapted_height - 8, 0, (char *) outhudbuffer);
 }
 

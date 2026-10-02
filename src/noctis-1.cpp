@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "brtl.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
@@ -4395,8 +4396,10 @@ nosecondarysun:
     /*  selezione della tabella pseudo valida per tutto il pianeta
         (cambia solo con la latitudine, ma ? previsto che sia cos?, dato
         che bisogna differenziare gli ambienti caldi da quelli freddi). */
-    global_surface_seed =
-        (nearstar_p_ray[ip_targetted] + nearstar_p_orb_ray[ip_targetted] + nearstar_p_orb_orient[ip_targetted]) * 4112;
+    const double target_ray = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_ray[ip_targetted] : 0.0;
+    const double target_orb_ray = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_ray[ip_targetted] : 0.0;
+    const double target_orb_orient = (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_orb_orient[ip_targetted] : 0.0;
+    global_surface_seed = (target_ray + target_orb_ray + target_orb_orient) * 4112;
 
     if (surface_body_type == 3) {
         brtl_srand(global_surface_seed + landing_pt_lon);
@@ -4477,7 +4480,7 @@ nosecondarysun:
             user_alfa = restored.state.user_alfa;
             user_beta = restored.state.user_beta;
             openhuddelta = restored.state.openhuddelta;
-            openhudcount = restored.state.openhudcount;
+            openhudcount = std::clamp<int16_t>(restored.state.openhudcount, 0, 180);
             hud_rtl_closed = restored.state.hud_rtl_closed;
             landed       = 1;
             opencapdelta = 0;
