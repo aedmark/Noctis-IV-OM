@@ -37,6 +37,19 @@ jobs:
           for file in nivlr.html nivlr.js nivlr.wasm nivlr.data; do
             test -s "build/web-release/$file" || { echo "missing $file"; exit 1; }
           done
+      - name: Assemble site
+        run: |
+          mkdir -p _site/play _site/doc
+          cp index.html devlog.html site.css _site/
+          cp -r doc/img _site/doc/img
+          cp build/web-release/nivlr.js build/web-release/nivlr.wasm build/web-release/nivlr.data _site/play/
+          cp build/web-release/nivlr.html _site/play/index.html
+          touch _site/.nojekyll
+      - name: Upload Pages site
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
       - name: Upload web bundle
         uses: actions/upload-artifact@v7
         with:
@@ -47,3 +60,21 @@ jobs:
             build/web-release/nivlr.wasm
             build/web-release/nivlr.data
           if-no-files-found: error
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: wasm
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}play/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
