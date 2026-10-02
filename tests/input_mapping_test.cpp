@@ -58,6 +58,16 @@ int main() {
     for (const auto value : expected_function_keys) ok &= get_key() == value;
     ok &= !is_key();
 
+    noctis::InputFrame nav_keys;
+    nav_keys.page_up_pressed = true;
+    nav_keys.page_down_pressed = true;
+    nav_keys.home_pressed = true;
+    nav_keys.end_pressed = true;
+    noctis::apply_input_frame(nav_keys);
+    constexpr std::array<std::int16_t, 8> expected_nav_keys{0, 0x4F, 0, 0x47, 0, 0x51, 0, 0x49};
+    for (const auto value : expected_nav_keys) ok &= get_key() == value;
+    ok &= !is_key();
+
     noctis::InputFrame movie_decks;
     movie_decks.control_down = true;
     movie_decks.minus_pressed = true;

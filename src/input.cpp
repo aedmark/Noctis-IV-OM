@@ -46,6 +46,10 @@ noctis::InputFrame poll_raylib_input() {
     frame.f1_pressed = IsKeyPressed(KEY_F1);
     frame.f2_pressed = IsKeyPressed(KEY_F2);
     frame.f3_pressed = IsKeyPressed(KEY_F3);
+    frame.page_up_pressed = IsKeyPressed(KEY_PAGE_UP);
+    frame.page_down_pressed = IsKeyPressed(KEY_PAGE_DOWN);
+    frame.home_pressed = IsKeyPressed(KEY_HOME);
+    frame.end_pressed = IsKeyPressed(KEY_END);
     frame.toggle_cursor_pressed = IsKeyPressed(KEY_F10);
     return frame;
 }
@@ -105,6 +109,10 @@ void apply_input_frame(const InputFrame &frame) {
     if (frame.arrow_down_pressed) push_extended_key(80);
     if (frame.arrow_left_pressed) push_extended_key(75);
     if (frame.arrow_right_pressed) push_extended_key(77);
+    if (frame.page_up_pressed) push_extended_key(0x49);
+    if (frame.page_down_pressed) push_extended_key(0x51);
+    if (frame.home_pressed) push_extended_key(0x47);
+    if (frame.end_pressed) push_extended_key(0x4F);
     if (frame.backspace_pressed) keys.push(8);
     if (frame.enter_pressed) keys.push(13);
     if (frame.apostrophe_pressed && !has_text('\'')) keys.push(39);

@@ -28,6 +28,8 @@ same provider boundary for its tick-indexed scripted journey.
 | Escape held | Exit/cancel | Key code 27 each sampled frame |
 | Printable ASCII text | Text/legacy command | Character code |
 | Arrow keys | Navigation | DOS extended sequence: 0 then scan code 72/80/75/77 when popped |
+| Page Up / Page Down | Navigation / suit visor | DOS extended sequence: 0 then scan code 0x49/0x51 when popped |
+| Home / End | Navigation / boundary | DOS extended sequence: 0 then scan code 0x47/0x4F when popped |
 | Backspace / Enter | Editing/confirm | 8 / 13 |
 | Delete | Snapshot command | `*` |
 | F1 | Toggle cursor capture | Existing Raylib cursor toggle behavior |

@@ -36,6 +36,10 @@ struct InputFrame {
     bool f1_pressed = false;
     bool f2_pressed = false;
     bool f3_pressed = false;
+    bool page_up_pressed = false;
+    bool page_down_pressed = false;
+    bool home_pressed = false;
+    bool end_pressed = false;
     bool toggle_cursor_pressed = false;
 };
 
