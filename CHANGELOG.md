@@ -5,6 +5,15 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## Unreleased
+
+### Cockpit Image Archive (<kbd>F4</kbd>)
+* **In-Cockpit Viewer:** Browse every snapshot and panorama in the player gallery without leaving the game. Press <kbd>F4</kbd> aboard the Stardrifter to open the newest image; <kbd>Left</kbd>/<kbd>Right</kbd> (or <kbd>Page Up</kbd>/<kbd>Page Down</kbd>) browse, <kbd>Home</kbd>/<kbd>End</kbd> jump to the oldest/newest, and <kbd>Esc</kbd>, <kbd>Enter</kbd>, or <kbd>F4</kbd> closes.
+* **GOES Console Commands:** `GALLERY` lists the archive newest-first on the GOES output screen; `VIEW` opens the newest image and `VIEW n` opens a specific number (`VIEW 42`, `VIEW 00000042`, or legacy `VIEW SNAP0003`).
+* **Panorama Panning:** <kbd>Z</kbd> or <kbd>Space</kbd> zooms an image to the full viewer height; while zoomed, <kbd>Left</kbd>/<kbd>Right</kbd> pan across 916-pixel panoramas with a position indicator.
+* **Capture Confirmation:** Snapshots and panoramas now show a brief `SNAPSHOT 00000042 SAVED` notice (or a failure message). It is drawn only in the high-resolution overlay, so it never appears in the next snapshot or in Moviemaker frames.
+* **Faithful Colors:** Each image is decoded with the palette saved inside its own BMP and shown at the same pixel aspect as the live view, drawn at full window resolution above the retro canvas so the game palette is never disturbed.
+
 ## 1.5.0 (2026-10-02) — The Visual Fidelity & Post-Processing Update
 
 Noctis IV OM 1.5.0 introduces modern post-processing and visual fidelity enhancements,

@@ -5638,8 +5638,10 @@ nosecondarysun:
                 const auto slot     = noctis::next_snapshot_slot(gallery, last_snapshot);
                 if (slot) {
                     last_snapshot = slot->number;
-                    noctis::compose_panorama(
+                    const auto composed = noctis::compose_panorama(
                         {gallery / "WIDE9997.BMP", gallery / "WIDE9998.BMP", gallery / "WIDE9999.BMP"}, slot->path);
+                    const auto notice = (composed.ok ? "PANORAMA " : "PANORAMA FAILED ") + slot->path.stem().string();
+                    noctis::show_overlay_notice(composed.ok ? (notice + " SAVED").c_str() : notice.c_str());
                 }
                 std::error_code ignored;
                 std::filesystem::remove(gallery / "WIDE9997.BMP", ignored);

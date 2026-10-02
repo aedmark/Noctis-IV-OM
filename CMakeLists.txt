@@ -69,6 +69,8 @@ set(SOURCE_FILES
     src/goesnet_protocol.cpp
     src/goesnet_data.cpp
     src/goesnet_commands.cpp
+    src/gallery.cpp
+    src/gallery_viewer.cpp
     src/noctis.cpp
     src/noctis-1.cpp
     src/noctis-0.cpp
@@ -197,6 +199,11 @@ if(BUILD_TESTING)
     target_compile_features(panorama_tests PRIVATE cxx_std_20)
     set_target_properties(panorama_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
     add_test(NAME panorama_regression COMMAND panorama_tests)
+    add_executable(gallery_tests tests/gallery_test.cpp src/gallery.cpp)
+    target_include_directories(gallery_tests PRIVATE src)
+    target_compile_features(gallery_tests PRIVATE cxx_std_20)
+    set_target_properties(gallery_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME gallery COMMAND gallery_tests ${CMAKE_CURRENT_BINARY_DIR}/gallery-test)
     add_executable(plus_controls_tests tests/plus_controls_test.cpp src/plus_controls.cpp)
     target_include_directories(plus_controls_tests PRIVATE src)
     target_compile_features(plus_controls_tests PRIVATE cxx_std_20)
@@ -263,7 +270,7 @@ if(BUILD_TESTING)
 
     add_executable(goesnet_command_tests tests/goesnet_commands_test.cpp
         src/goesnet_commands.cpp src/goesnet_protocol.cpp src/goesnet_data.cpp
-        src/atomic_file.cpp
+        src/gallery.cpp src/atomic_file.cpp
         src/galaxy_sector.cpp src/star_properties.cpp src/system_properties.cpp
         src/legacy_numeric.cpp src/brtl.cpp)
     nivlr_require_strict_fp(goesnet_command_tests)

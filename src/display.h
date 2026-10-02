@@ -52,6 +52,12 @@ void set_setting_seamless_border(std::int8_t val);
 void render_high_dpi_hud(const char *status_text, int delay, int render_width, int render_height,
                          const DisplayViewport &viewport);
 
+// Transient high-DPI notice that never enters the indexed framebuffer, so it
+// cannot appear in snapshots or Moviemaker frames.
+void show_overlay_notice(const char *text, int frames = 60);
+// Draws the active notice; returns false when none is showing.
+bool render_overlay_notice(int render_width, int render_height, const DisplayViewport &viewport);
+
 // High-DPI Timewarp slider widget rendering and mouse interaction
 void render_timewarp_slider(int render_width, int render_height, const DisplayViewport &viewport,
                             int status_delay = 0);

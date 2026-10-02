@@ -46,6 +46,7 @@ noctis::InputFrame poll_raylib_input() {
     frame.f1_pressed        = IsKeyPressed(KEY_F1);
     frame.f2_pressed        = IsKeyPressed(KEY_F2);
     frame.f3_pressed        = IsKeyPressed(KEY_F3);
+    frame.f4_pressed        = IsKeyPressed(KEY_F4);
     frame.page_up_pressed   = IsKeyPressed(KEY_PAGE_UP);
     frame.page_down_pressed = IsKeyPressed(KEY_PAGE_DOWN);
     frame.home_pressed      = IsKeyPressed(KEY_HOME);
@@ -66,6 +67,7 @@ noctis::DisplayToggleHandler fullscreen_toggle_handler = nullptr;
 noctis::DisplayToggleHandler aspect_toggle_handler     = nullptr;
 noctis::DisplayToggleHandler upscale_toggle_handler    = nullptr;
 noctis::DisplayToggleHandler crt_toggle_handler        = nullptr;
+noctis::OverlayInputHandler overlay_input_handler      = nullptr;
 bool cursor_captured                                   = false;
 
 void push_extended_key(std::int16_t scan_code) {
@@ -162,6 +164,8 @@ void apply_input_frame(const InputFrame &frame) {
         push_extended_key(0x3C);
     if (frame.f3_pressed)
         push_extended_key(0x3D);
+    if (frame.f4_pressed)
+        push_extended_key(0x3E);
 }
 
 void set_input_provider(InputProvider provider) { input_provider = provider ? provider : poll_raylib_input; }
@@ -181,12 +185,17 @@ void set_fullscreen_toggle_handler(DisplayToggleHandler handler) { fullscreen_to
 void set_aspect_toggle_handler(DisplayToggleHandler handler) { aspect_toggle_handler = handler; }
 void set_upscale_toggle_handler(DisplayToggleHandler handler) { upscale_toggle_handler = handler; }
 void set_crt_toggle_handler(DisplayToggleHandler handler) { crt_toggle_handler = handler; }
+void set_overlay_input_handler(OverlayInputHandler handler) { overlay_input_handler = handler; }
 
 } // namespace noctis
 
 void handle_input() {
     const auto frame = input_provider();
-    noctis::apply_input_frame(frame);
+    if (overlay_input_handler && overlay_input_handler(frame)) {
+        noctis::apply_input_frame({});
+    } else {
+        noctis::apply_input_frame(frame);
+    }
     if (frame.toggle_cursor_pressed) {
         cursor_captured = !cursor_captured;
         if (cursor_captured) {

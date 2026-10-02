@@ -17,6 +17,7 @@ struct GoesCommandContext {
     double local_star_x{};
     double local_star_y{};
     double local_star_z{};
+    std::filesystem::path gallery_path;
 };
 
 GoesResult execute_goes_command(std::string_view console_line, const GoesCommandContext &context);

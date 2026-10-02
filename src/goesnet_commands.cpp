@@ -1,6 +1,7 @@
 #include "goesnet_commands.h"
 
 #include "galaxy_sector.h"
+#include "gallery.h"
 #include "goesnet_data.h"
 #include "star_properties.h"
 #include "system_properties.h"
@@ -166,7 +167,7 @@ GoesResult help(std::string_view topic) {
         return result(GoesResultStatus::ok, {std::string(entry->name), "SEE COMMAND REFERENCE"});
     }
     return result(GoesResultStatus::ok, {" GOES COMMAND HELP ", std::string(divider),
-        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", std::string(divider),
+        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW", std::string(divider),
         "USE HELP COMMAND"});
 }
 
@@ -197,6 +198,33 @@ GoesResult catalog(const StarmapData &map, const GuideData &guide, const ObjectA
     }
     return result(GoesResultStatus::ok, std::move(rows));
 }
+GoesResult gallery_listing(const std::filesystem::path &directory) {
+    const auto entries = scan_gallery(directory);
+    std::vector<std::string> rows{" GOES IMAGE ARCHIVE ", std::string(divider)};
+    if (entries.empty()) {
+        rows.insert(rows.end(), {"NO IMAGES ON FILE.", "PRESS M TO CAPTURE", "A SNAPSHOT."});
+        return result(GoesResultStatus::ok, std::move(rows));
+    }
+    for (auto entry = entries.rbegin(); entry != entries.rend(); ++entry)
+        rows.push_back(entry->id + " " + gallery_kind_name(entry->kind));
+    rows.push_back(std::string(divider));
+    rows.push_back(std::to_string(entries.size()) + (entries.size() == 1 ? " IMAGE ON FILE." : " IMAGES ON FILE."));
+    rows.push_back("VIEW N TO DISPLAY.");
+    return result(GoesResultStatus::ok, std::move(rows));
+}
+
+GoesResult view_image(const std::filesystem::path &directory, std::string_view key) {
+    const auto entries = scan_gallery(directory);
+    if (entries.empty()) return result(GoesResultStatus::not_found, {"NO IMAGES ON FILE."});
+    const auto index = find_gallery_entry(entries, key);
+    if (!index) return result(GoesResultStatus::not_found, {"IMAGE NOT ON FILE.", "TYPE GALLERY FOR A", "LISTING."});
+    const auto &entry = entries[*index];
+    auto answer = result(GoesResultStatus::ok, {"DISPLAYING IMAGE", entry.id + " " + gallery_kind_name(entry.kind),
+        std::to_string(entry.width) + "X" + std::to_string(entry.height), "ESC TO CLOSE VIEWER."},
+        GoesResultAction::open_image);
+    answer.image_id = entry.id;
+    return answer;
+}
 } // namespace
 
 GoesResult execute_goes_command(std::string_view console_line, const GoesCommandContext &context) {
@@ -204,6 +232,8 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.status != GoesParseStatus::ok) return parse_failure(request);
     if (request.command == GoesCommand::clear) return {GoesResultStatus::ok, GoesResultAction::clear_output, {}, std::nullopt};
     if (request.command == GoesCommand::help) return help(request.argument);
+    if (request.command == GoesCommand::gallery) return gallery_listing(context.gallery_path);
+    if (request.command == GoesCommand::view_image) return view_image(context.gallery_path, request.argument);
     if (request.command == GoesCommand::clean || request.command == GoesCommand::inbox || request.command == GoesCommand::outbox)
         return result(GoesResultStatus::unsupported, {"LEGACY TOOL RETIRED", "NATIVE DATA NEEDS NO", "DOS MAINTENANCE"});
 

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <sstream>
@@ -162,6 +163,19 @@ void render_high_dpi_hud(const char *status_text, int delay, int render_width, i
 
 namespace {
 int g_timewarp_slider_cooldown = 0;
+char g_notice_text[48]{};
+int g_notice_frames = 0;
+}
+
+void show_overlay_notice(const char *text, int frames) {
+    std::snprintf(g_notice_text, sizeof(g_notice_text), "%s", text ? text : "");
+    g_notice_frames = frames;
+}
+
+bool render_overlay_notice(int render_width, int render_height, const DisplayViewport &viewport) {
+    if (g_notice_frames <= 0) return false;
+    render_high_dpi_hud(g_notice_text, g_notice_frames--, render_width, render_height, viewport);
+    return true;
 }
 
 void touch_timewarp_slider() {

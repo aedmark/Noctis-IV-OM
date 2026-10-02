@@ -7,6 +7,7 @@
 #include "audio.h"
 #include "brtl.h"
 #include "display.h"
+#include "gallery_viewer.h"
 #include "upscale.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
@@ -615,6 +616,13 @@ void freeze() {
     }
 }
 
+// Opens the cockpit image viewer (F4 or the GOES VIEW command).
+void open_cockpit_gallery(std::string_view key) {
+    if (!noctis::open_gallery_viewer(noctis::runtime_paths().gallery_dir, key)) {
+        status("NO IMAGES ON FILE", 75);
+    }
+}
+
 // Native GOESnet dispatch. No process, shell, or interchange file is involved.
 void run_goesnet_module() {
     const auto &paths = noctis::runtime_paths();
@@ -626,7 +634,8 @@ void run_goesnet_module() {
                                              dzat_z,
                                              nearstar_x,
                                              nearstar_y,
-                                             nearstar_z};
+                                             nearstar_z,
+                                             paths.gallery_dir};
     auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
     goes_output_cells = std::move(answer.cells);
 
@@ -645,6 +654,8 @@ void run_goesnet_module() {
             ip_reached   = 0;
             ip_targetted = -1;
         }
+    } else if (answer.action == noctis::GoesResultAction::open_image) {
+        open_cockpit_gallery(answer.image_id);
     } else if (answer.target && answer.action == noctis::GoesResultAction::set_local_target) {
         if (!ap_reached) {
             status("NEED RECAL", 75);
@@ -2944,6 +2955,7 @@ int main(int argc, char **argv) {
             status(active ? "CRT SHADER: ACTIVE" : "CRT SHADER: DISABLED", 50);
             save_display_settings_current();
         });
+        noctis::set_overlay_input_handler(noctis::gallery_viewer_input);
     }
 
     for (ir = 0; ir < 200; ir++) {
@@ -3965,6 +3977,7 @@ int main(int argc, char **argv) {
     noctis::shutdown_audio();
     if (graphical_smoke_mode) {
         noctis::log_event("info", "graphical_smoke", "window opened, resources loaded, and three frames presented");
+        noctis::shutdown_gallery_viewer();
         UnloadTexture(screen_texture);
         UnloadTexture(screen_texture_2x);
         noctis::cleanup_display_shaders();
@@ -4040,11 +4053,12 @@ void swapBuffers() {
 
     noctis::end_crt_shader();
 
-    if (fcs_status_delay > 0) {
+    if (!noctis::render_overlay_notice(render_w, render_h, viewport) && fcs_status_delay > 0) {
         noctis::render_high_dpi_hud(reinterpret_cast<const char *>(fcs_status_extended),
                                     fcs_status_delay, render_w, render_h, viewport);
     }
     noctis::render_timewarp_slider(render_w, render_h, viewport, fcs_status_delay);
+    noctis::render_gallery_viewer(render_w, render_h, viewport);
 
     // Frame limiter: 18.2 FPS canonical simulation tick (55 ms);
     // 62.5 FPS (~16 ms) during timewarp or on observation deck when ROOFSPEED is enabled.
@@ -6135,6 +6149,8 @@ resynctoplanet:
                     movie_recorder.close_menu();
                 } else if (mc == 0x3D || mc == 142 || mc == 144) {
                     handle_movie_extended_key(mc);
+                } else if (mc == 0x3E) {
+                    open_cockpit_gallery({});
                 } else if (mc == 75) {
                     dlt_nav_beta += 1.5;
                     status("PITCH - R", 25);
@@ -6244,6 +6260,11 @@ resynctoplanet:
 
                 if (mc == 0x3D || mc == 142 || mc == 144) {
                     handle_movie_extended_key(mc);
+                    goto endmain;
+                }
+
+                if (mc == 0x3E) {
+                    open_cockpit_gallery({});
                     goto endmain;
                 }
 
