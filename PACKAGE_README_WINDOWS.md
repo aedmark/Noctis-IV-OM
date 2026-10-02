@@ -73,8 +73,10 @@ output from `--diagnostics` with any startup report.
 When this build is assigned to a focused test, follow the short route in
 `COMMUNITY_TESTING.md` and use its linked compatibility-report form. Read
 `KNOWN_ISSUES.md` for the accepted Linux/Windows surface-presentation
-difference and current preview limits.
+difference and current preview limits, and consult `TROUBLESHOOTING.md` for
+solutions to common display, controls, and recovery issues.
 
 Noctis IV was created by Alessandro Ghignola. This project preserves work from
 Noctis IV Plus, Noctis IV LR, and their contributors. See `CONTRIBUTORS.md`,
-`LICENSE`, `WTOF-LICENSE.md`, and `THIRD_PARTY_NOTICES.md` in this archive.
+`LICENSE`, `WTOF-LICENSE.md`, `THIRD_PARTY_NOTICES.md`, and `TROUBLESHOOTING.md` in
+this archive.

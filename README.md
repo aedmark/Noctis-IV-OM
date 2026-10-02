@@ -117,15 +117,16 @@ the exact locations and recovery override.
 - [Provenance and permissions](docs/porting/PROVENANCE.md)
 - [Noctis IV Plus feature ledger](docs/porting/NIVPLUS_FEATURE_LEDGER.md)
 - [Native build guide](BUILDING.md)
+- [Troubleshooting guide](TROUBLESHOOTING.md)
 - [Community compatibility-test guide](COMMUNITY_TESTING.md)
+- [Contributor guidelines](CONTRIBUTING.md)
 
 ## Contributing
 
 Contributions should preserve deterministic universe behavior and include
 focused tests or compatibility evidence where appropriate. Start with the
 earliest incomplete roadmap item, follow the decisions recorded under
-`docs/porting/`, and avoid treating a visual impression as proof of procedural
-compatibility.
+`docs/porting/`, and refer to the full [Contributor Guidelines](CONTRIBUTING.md).
 
 Before submitting a change, run at least one complete native lane:
 

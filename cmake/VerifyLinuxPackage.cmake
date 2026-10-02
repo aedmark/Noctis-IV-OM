@@ -21,6 +21,7 @@ set(required_files
     README.md
     COMMUNITY_TESTING.md
     KNOWN_ISSUES.md
+    TROUBLESHOOTING.md
     LICENSE
     WTOF-LICENSE.md
     CONTRIBUTORS.md
@@ -47,6 +48,7 @@ set(expected_top_level
     CONTRIBUTORS.md
     COMMUNITY_TESTING.md
     KNOWN_ISSUES.md
+    TROUBLESHOOTING.md
     LICENSE
     README.md
     THIRD_PARTY_NOTICES.md

@@ -243,3 +243,7 @@ than under `build/`. Older builds used colocated `data/`, `gallery/`, and
 `movies/` directories; preserve them before removing an old build and import
 them with `--migrate-from`. Run `./nivlr --diagnostics` to see the resolved
 locations.
+
+For runtime issues, graphics problems, cockpit power recovery, and control
+guidance, consult [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md). For contributor
+standards and pull-request procedures, see [`CONTRIBUTING.md`](CONTRIBUTING.md).

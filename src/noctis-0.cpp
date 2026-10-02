@@ -2886,6 +2886,9 @@ uint8_t multicolourmask  = 0xC0;
 
 // TODO; Might be offset from proper position. Verify against vanilla.
 void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color) {
+    if (offset >= adapted_width * adapted_height) {
+        return;
+    }
     // Add ptr shift to the offset.
     uint8_t *shifted = adapted + offset;
     uint8_t alow     = shifted[0];

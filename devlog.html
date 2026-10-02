@@ -81,6 +81,12 @@
     <h2>[UPDATE] Windows Calls In</h2>
     <p>The required Windows lane now builds cleanly and passes 34 automated tests. The deterministic stars and systems still agree, old saves still migrate, new saves survive restarts, GOESnet still edits its catalogs, Moviemaker still protects existing footage, and the scripted flights and landing state still arrive where expected.</p>
   </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] Hardening, Documentation, and 1.0 Readiness</h2>
+    <p>Following the release of v0.0.1-preview and verification of the lithium persistence fix, Milestone 8 turned its focus toward comprehensive stabilization. We audited the software rasterizer to eliminate off-screen flare buffer overflows, corrected flare blending arithmetic, eliminated font glyph underflows, and added defensive bounds checks across the rendering pipeline.</p>
+    <p>Empirical profiling established strict performance budgets: the software rasterizer completes in under 2 milliseconds per frame, preserving over 96% headroom under the 55 ms DOS simulation tick. We expanded documentation with a comprehensive troubleshooting guide, contributor guidelines, and release runbooks. Release and rollback rehearsals passed cleanly for both Linux and Windows packages, preparing Noctis IV OM for 1.0 General Availability.</p>
+  </section>
 </article>
 </body>
 </html>
