@@ -1,11 +1,9 @@
-# Noctis IV OM — Windows compatibility preview
+# Noctis IV OM — Windows 1.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This unsigned
-preview is built for 64-bit Windows with Visual Studio 2022. Hosted Windows CI
-verifies compilation, packaging, diagnostics, and the platform-independent test
-suite. The packaged game has also completed its short graphics check on native
-Windows and under Wine. Its complete Release fixture suite enforces the
-published Windows presentation baselines.
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.0 release is
+built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
+package runs out-of-the-box without requiring separate Visual C++ Redistributable
+installations.
 
 ## Run
 
@@ -16,7 +14,7 @@ extracted directory and run:
 .\nivlr.exe
 ```
 
-This release preview runs in **portable mode by default**. Player files,
+This release runs in **portable mode by default**. Player files,
 saves, mutable catalogs, screenshots, and Moviemaker decks are kept
 self-contained within the extracted game directory:
 
@@ -64,17 +62,14 @@ For a deliberately portable or test profile, `--user-data-dir DIRECTORY`
 selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 `config\`.
 
-## Preview status
+## Release status
 
-This is a compatibility-test build, not the finished 1.0 release. The Microsoft
-C/C++ runtime is linked into the executable, so the ZIP does not require a
-separate Visual C++ Redistributable installation. Please keep the JSON Lines
-output from `--diagnostics` with any startup report.
-When this build is assigned to a focused test, follow the short route in
-`COMMUNITY_TESTING.md` and use its linked compatibility-report form. Read
-`KNOWN_ISSUES.md` for the accepted Linux/Windows surface-presentation
-difference and current preview limits, and consult `TROUBLESHOOTING.md` for
-solutions to common display, controls, and recovery issues.
+This is the 1.0 General Availability release. The Microsoft C/C++ runtime is
+statically linked into the executable, so the ZIP does not require a separate
+Visual C++ Redistributable installation. Please keep the JSON Lines output from
+`--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for
+compiler-specific presentation details, and consult `TROUBLESHOOTING.md` for
+solutions to common display, controls, and recovery questions.
 
 Noctis IV was created by Alessandro Ghignola. This project preserves work from
 Noctis IV Plus, Noctis IV LR, and their contributors. See `CONTRIBUTORS.md`,

@@ -1,4 +1,4 @@
-name: Windows preview package
+name: Windows package
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
       - name: Verify archive checksum
         shell: pwsh
         run: |
-          $archive = "build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip"
+          $archive = "build/windows-msvc-release/Noctis-IV-OM-windows-x86_64.zip"
           $expected = ((Get-Content "$archive.sha256") -split '\s+')[0]
           $actual = (Get-FileHash -Algorithm SHA256 $archive).Hash
           if ($actual -ne $expected) {
@@ -36,7 +36,7 @@ jobs:
       - name: Verify extracted archive
         run: >-
           cmake
-          -DPACKAGE=${{ github.workspace }}/build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip
+          -DPACKAGE=${{ github.workspace }}/build/windows-msvc-release/Noctis-IV-OM-windows-x86_64.zip
           -P cmake/VerifyWindowsPackage.cmake
       - name: Verify self-contained Microsoft runtime
         shell: pwsh
@@ -51,18 +51,18 @@ jobs:
           if (-not $dumpbin) {
             throw "Could not locate dumpbin.exe"
           }
-          $exe = "build/windows-msvc-release/windows-package-verification/Noctis-IV-OM-windows-x86_64-preview/nivlr.exe"
+          $exe = "build/windows-msvc-release/windows-package-verification/Noctis-IV-OM-windows-x86_64/nivlr.exe"
           $dependencies = (& $dumpbin.FullName /DEPENDENTS $exe | Out-String)
           if ($dependencies -match '(?i)\b(?:VCRUNTIME|MSVCP)\d') {
             throw "Packaged executable still depends on a Visual C++ Redistributable DLL`n$dependencies"
           }
-      - name: Upload verified Windows preview
+      - name: Upload verified Windows package
         uses: actions/upload-artifact@v7
         with:
-          name: Noctis-IV-OM-windows-x86_64-preview
+          name: Noctis-IV-OM-windows-x86_64
           path: |
-            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip
-            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip.sha256
+            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64.zip
+            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64.zip.sha256
           if-no-files-found: error
       - name: Upload CTest log on failure
         if: failure()

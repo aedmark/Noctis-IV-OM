@@ -204,7 +204,7 @@ containers, not substitutes for that ledger.
 | M8-W03 | Establish performance budgets and profile representative scenes | DONE — established performance and memory budgets in docs/porting/PERFORMANCE_BUDGETS.md; measured 1.98 ms/frame software rasterization (96.4% CPU headroom under 55 ms budget) and 7.2 MB headless / 92 MB graphical peak RSS |
 | M8-W04 | Verify license notices, provenance, and distribution contents | DONE — verified WTOF-LICENSE.md, LICENSE, CONTRIBUTORS.md, THIRD_PARTY_NOTICES.md, and licenses/; enforced exact distribution manifests via VerifyLinuxPackage.cmake and VerifyWindowsPackage.cmake |
 | M8-W05 | Rehearse release and rollback from a clean tag | DONE — created docs/porting/RELEASE_RUNBOOK.md; successfully executed complete packaging rehearsal, checksum verification, isolated archive extraction, preflight diagnostics, and graphical smoke testing |
-| M8-W06 | Tag and publish 1.0 with checksums and release notes | READY — all stabilization, documentation, performance, licensing, and rehearsal exit criteria are satisfied |
+| M8-W06 | Tag and publish 1.0 with checksums and release notes | DONE — tagged v1.0.0, built verified Linux and Windows 1.0 release packages, generated SHA-256 checksums, published public-builds/1.0.0/ and release notes |
 
 **Exit criteria**
 

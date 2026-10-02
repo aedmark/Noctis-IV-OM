@@ -7,7 +7,7 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-01.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
 - Branch: `master`; Milestone M8 (Stabilization and 1.0 GA) in progress.
-- Status: M8-W01 through M8-W05 are **DONE**; M8-W06 is **READY** for 1.0 tagging and publication.
+- Status: Milestone M8 (Stabilization and 1.0 GA) is **DONE**; 1.0 General Availability published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -17,7 +17,7 @@ Replace this document at the end of every session; Git holds older versions.
 3. `CONTRIBUTING.md` for architectural rules, coding standards, and quality gates.
 4. `TROUBLESHOOTING.md` for diagnostics, graphics fallbacks, and recovery workflows.
 5. `docs/porting/PERFORMANCE_BUDGETS.md` for timing and memory performance baselines.
-6. `docs/porting/RELEASE_RUNBOOK.md` for the step-by-step 1.0 release and rollback procedure.
+6. `docs/porting/RELEASE_RUNBOOK.md` for the step-by-step release and rollback procedure.
 
 ## Completed this session
 
@@ -52,13 +52,18 @@ Replace this document at the end of every session; Git holds older versions.
   - Authored [`docs/porting/RELEASE_RUNBOOK.md`](RELEASE_RUNBOOK.md) documenting release quality gates, artifact generation, checksum verification, isolated extraction testing, publication steps, and rollback procedures.
   - Executed a successful packaging rehearsal: generated Linux and Windows packages, verified checksums, extracted archives into a clean directory, and confirmed both headless diagnostics and graphical smoke tests passed with zero errors.
 
-- **Telemetry & Tracking:**
-  - Updated [`ROADMAP.md`](ROADMAP.md) marking M8-W01 through M8-W05 as `DONE`.
-  - Updated public dev diary [`devlog.html`](../../devlog.html) with the Milestone 8 stabilization and 1.0 readiness update.
+- **M8-W06 (Tag and Publish 1.0 General Availability):**
+  - Updated version to `1.0.0` in `CMakeLists.txt`, `CHANGELOG.md`, `README.md`, `PACKAGE_README.md`, and `PACKAGE_README_WINDOWS.md`.
+  - Built production release archives: `Noctis-IV-OM-linux-x86_64.tar.gz` and `Noctis-IV-OM-windows-x86_64.zip`.
+  - Generated and verified SHA-256 checksums.
+  - Staged release assets in `public-builds/1.0.0/`.
+  - Updated homepage [`index.html`](../../index.html) download links, specs, and release banner.
+  - Updated public dev diary [`devlog.html`](../../devlog.html).
+  - Tagged `v1.0.0` and pushed to `origin/master`.
 
 ## Test suite and package status
 
-- **Clang Release:** 40/40 passed (3.09s).
+- **Clang Release:** 40/40 passed (3.12s).
 - **Clang Debug:** 40/40 passed (3.10s).
 - **GCC Debug:** 40/40 passed (14.52s).
 - **Clang Sanitized (ASan + UBSan):** 40/40 passed (50.81s, zero leaks, zero UB).
@@ -67,10 +72,8 @@ Replace this document at the end of every session; Git holds older versions.
 - **Windows Package (`.zip`):** Built, checksummed, verified with `VerifyWindowsPackage.cmake`.
 - **Extracted Smoke Test:** Passed `--diagnostics` and `--graphical-smoke` with exit code 0.
 
-## Next steps (M8-W06)
+## Next steps
 
-1. Review and prepare final 1.0 version strings (e.g. `1.0.0` in `CMakeLists.txt`).
-2. Create annotated git tag `v1.0.0`.
-3. Build final release archives (`.tar.gz` and `.zip`) and checksums (`.sha256`).
-4. Push tag and commit to `origin/master`.
-5. Publish the GitHub Release for 1.0 General Availability.
+1. Conduct community outreach and announce 1.0 General Availability release.
+2. Monitor issue tracker for feedback on diverse hardware/distributions.
+3. Plan subsequent post-1.0 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).

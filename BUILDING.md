@@ -87,7 +87,7 @@ ASAN_OPTIONS=detect_leaks=0 ctest --preset linux-clang-sanitized --output-on-fai
 
 CI does not disable leak detection.
 
-## Create the Linux preview package
+## Create the Linux release package
 
 ```sh
 cmake --preset linux-clang-release
@@ -95,7 +95,7 @@ cmake --build --preset linux-clang-release --parallel
 ctest --preset linux-clang-release --output-on-failure
 cpack --config build/linux-clang-release/CPackConfig.cmake
 cmake \
-  -DPACKAGE="$PWD/build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz" \
+  -DPACKAGE="$PWD/build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz" \
   -P cmake/VerifyLinuxPackage.cmake
 ```
 
@@ -121,7 +121,7 @@ cmake --preset windows-mingw-release
 cmake --build --preset windows-mingw-release --parallel
 cpack --config build/windows-mingw-release/CPackConfig.cmake
 cmake \
-  -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64-preview.zip" \
+  -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64.zip" \
   -P cmake/VerifyWindowsPackage.cmake
 ```
 

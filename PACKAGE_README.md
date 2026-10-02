@@ -1,7 +1,7 @@
-# Noctis IV OM — Linux compatibility preview
+# Noctis IV OM — Linux 1.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This preview is
-verified on 64-bit Ubuntu 24.04 using the X11 display backend. It can run from a
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.0 release is
+verified on 64-bit Ubuntu 24.04+ using the X11 display backend. It can run from a
 Wayland desktop through XWayland; native Wayland support is not included.
 
 ## Run
@@ -12,7 +12,7 @@ Keep the archive contents together. Open a terminal in this directory and run:
 ./nivlr
 ```
 
-This release preview runs in **portable mode by default**. Player files,
+This release runs in **portable mode by default**. Player files,
 saves, mutable catalogs, screenshots, and Moviemaker decks are kept
 self-contained within the extracted game directory:
 
@@ -61,15 +61,13 @@ sudo apt-get install -y libasound2t64 libx11-6 libxext6 libxrandr2 libxi6 \
 These are runtime libraries. The separate `-dev` packages are needed only when
 building the game from source.
 
-## Preview status
+## Release status
 
-This is a compatibility-test build, not the finished 1.0 release. Please keep
-the JSON Lines output from `./nivlr --diagnostics` with any startup report.
-When this build is assigned to a focused test, follow the short route in
-`COMMUNITY_TESTING.md` and use its linked compatibility-report form. Read
-`KNOWN_ISSUES.md` for the accepted cross-platform surface-presentation
-difference and current preview limits, and consult `TROUBLESHOOTING.md` for
-solutions to common display, controls, and recovery issues.
+This is the 1.0 General Availability release. Please keep the JSON Lines
+output from `./nivlr --diagnostics` with any startup report. Read
+`KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
+`TROUBLESHOOTING.md` for solutions to common display, controls, and recovery
+questions.
 
 Noctis IV was created by Alessandro Ghignola. This project preserves work from
 Noctis IV Plus, Noctis IV LR, and their contributors. See `CONTRIBUTORS.md`,

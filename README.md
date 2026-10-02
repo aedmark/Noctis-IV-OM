@@ -11,31 +11,27 @@ The goal is to preserve the identity of the Noctis universe—its deterministic
 galaxy, worlds, atmosphere, and quiet exploration loop—without requiring DOSBox
 for the finished game.
 
-> [!IMPORTANT]
-> The native port is under active development and is not yet a complete game.
-> Linux is the verified development platform. The Windows preview package builds
-> in CI and has started successfully on native Windows and under Wine; its full
-> cross-platform compatibility review is not yet complete.
+> [!NOTE]
+> Noctis IV OM is now at **1.0 General Availability**. Stable, self-contained
+> 64-bit releases are available for both Linux and Windows.
 
 ![Noctis ringed world](doc/img/rings.png)
 
 ## Current status
 
-The Linux gameplay foundation and agreed Noctis IV Plus feature migration are
-complete. Development is moving into the cross-platform compatibility preview;
-the Windows preview now has hosted builds plus confirmed native and Wine
-startup, while four presentation-hash differences remain under review.
+Noctis IV OM has completed its initial porting and stabilization milestones,
+achieving 1.0 General Availability.
 
 | Area | Status |
 | --- | --- |
 | Provenance, scope, and baseline | Complete |
-| Reproducible Linux build, CI, tests, and preview package | Complete |
+| Reproducible multi-compiler build, CI, and packaging | Complete (Linux & Windows) |
 | Galaxy and system determinism | Complete |
 | Playable native space-flight loop | Complete |
 | Native landing and surface exploration | Complete |
 | Ship UI, saves, and GOESnet parity | Complete |
-| Noctis IV Plus feature migration | Complete on Linux, including Moviemaker |
-| Windows build, package, and graphical startup | Complete; presentation review pending |
+| Noctis IV Plus feature migration | Complete, including Moviemaker |
+| Cross-platform stability, performance, and memory budgets | Complete (1.0 GA) |
 
 Compatibility fixtures currently protect all twelve star classes, important
 galaxy-generation branches, known DOS-reference stars, FELYSIA's planetary

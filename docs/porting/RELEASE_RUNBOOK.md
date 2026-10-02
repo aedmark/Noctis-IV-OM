@@ -48,7 +48,7 @@ Before initiating a release, verify that all mandatory quality gates pass:
 
 ```sh
 cpack --config build/linux-clang-release/CPackConfig.cmake
-cmake -DPACKAGE="$PWD/build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz" \
+cmake -DPACKAGE="$PWD/build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz" \
   -P cmake/VerifyLinuxPackage.cmake
 ```
 
@@ -56,7 +56,7 @@ cmake -DPACKAGE="$PWD/build/linux-clang-release/Noctis-IV-OM-linux-x86_64-previe
 
 ```sh
 cpack --config build/windows-mingw-release/CPackConfig.cmake
-cmake -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64-preview.zip" \
+cmake -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64.zip" \
   -P cmake/VerifyWindowsPackage.cmake
 ```
 
@@ -64,10 +64,10 @@ cmake -DPACKAGE="$PWD/build/windows-mingw-release/Noctis-IV-OM-windows-x86_64-pr
 
 ```sh
 cd build/linux-clang-release
-sha256sum -c Noctis-IV-OM-linux-x86_64-preview.tar.gz.sha256
+sha256sum -c Noctis-IV-OM-linux-x86_64.tar.gz.sha256
 
 cd ../windows-mingw-release
-sha256sum -c Noctis-IV-OM-windows-x86_64-preview.zip.sha256
+sha256sum -c Noctis-IV-OM-windows-x86_64.zip.sha256
 ```
 
 ---
@@ -81,7 +81,7 @@ dependencies on the build tree:
 ```sh
 # Test extracted Linux package
 mkdir -p /tmp/noctis-release-check
-tar -xzf build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz -C /tmp/noctis-release-check
+tar -xzf build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz -C /tmp/noctis-release-check
 cd /tmp/noctis-release-check/*
 
 # Run headless diagnostics

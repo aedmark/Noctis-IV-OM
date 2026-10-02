@@ -1,4 +1,4 @@
-name: Linux preview package
+name: Linux package
 
 on:
   push:
@@ -32,22 +32,22 @@ jobs:
       - name: Verify archive checksum
         run: |
           cd build/linux-clang-release
-          sha256sum -c Noctis-IV-OM-linux-x86_64-preview.tar.gz.sha256
+          sha256sum -c Noctis-IV-OM-linux-x86_64.tar.gz.sha256
       - name: Verify extracted archive
         run: >-
           cmake
-          -DPACKAGE=${{ github.workspace }}/build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz
+          -DPACKAGE=${{ github.workspace }}/build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz
           -P cmake/VerifyLinuxPackage.cmake
       - name: Graphical smoke test extracted archive
         run: |
-          cd build/linux-clang-release/linux-package-verification/Noctis-IV-OM-linux-x86_64-preview
+          cd build/linux-clang-release/linux-package-verification/Noctis-IV-OM-linux-x86_64
           LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a ./nivlr --graphical-smoke \
             --user-data-dir "${RUNNER_TEMP}/noctis-iv-om-smoke"
-      - name: Upload verified Linux preview
+      - name: Upload verified Linux package
         uses: actions/upload-artifact@v7
         with:
-          name: Noctis-IV-OM-linux-x86_64-preview
+          name: Noctis-IV-OM-linux-x86_64
           path: |
-            build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz
-            build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz.sha256
+            build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz
+            build/linux-clang-release/Noctis-IV-OM-linux-x86_64.tar.gz.sha256
           if-no-files-found: error
