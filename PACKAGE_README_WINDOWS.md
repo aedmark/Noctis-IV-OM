@@ -73,6 +73,7 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 - **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
 - **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
+- **Image Archive:** Press `F4` in the Stardrifter (or type `GALLERY` / `VIEW n` on the GOES console) to browse past snapshots and panoramas. `Left`/`Right` browse, `Z` zooms and pans panoramas, `Esc` closes.
 - **Audio Mute:** Press `F9` or `Ctrl+M` to toggle procedural audio mute.
 - **Jetpack:** Press `Space` to burst thrusters while airborne on low-gravity worlds.
 

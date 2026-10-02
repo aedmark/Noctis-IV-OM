@@ -36,6 +36,7 @@ struct InputFrame {
     bool f1_pressed            = false;
     bool f2_pressed            = false;
     bool f3_pressed            = false;
+    bool f4_pressed            = false;
     bool page_up_pressed       = false;
     bool page_down_pressed     = false;
     bool home_pressed          = false;
@@ -51,6 +52,9 @@ struct InputFrame {
 using InputProvider        = InputFrame (*)();
 using AudioToggleHandler   = void (*)();
 using DisplayToggleHandler = void (*)();
+// A modal overlay that returns true has consumed the frame; the game then sees
+// no keys, mouse motion, or movement for it.
+using OverlayInputHandler  = bool (*)(const InputFrame &);
 
 void apply_input_frame(const InputFrame &frame);
 void set_input_provider(InputProvider provider);
@@ -61,6 +65,7 @@ void set_fullscreen_toggle_handler(DisplayToggleHandler handler);
 void set_aspect_toggle_handler(DisplayToggleHandler handler);
 void set_upscale_toggle_handler(DisplayToggleHandler handler);
 void set_crt_toggle_handler(DisplayToggleHandler handler);
+void set_overlay_input_handler(OverlayInputHandler handler);
 
 } // namespace noctis
 

@@ -6,7 +6,7 @@
 namespace noctis {
 namespace {
 
-constexpr std::array<GoesCommandDescriptor, 16> registry{{
+constexpr std::array<GoesCommandDescriptor, 18> registry{{
     {GoesCommand::clear, "CLR", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
     {GoesCommand::help, "HELP", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::parameters, "PAR", GoesArgumentShape::object_with_optional_range, GoesCommandDisposition::required_native, false},
@@ -22,6 +22,8 @@ constexpr std::array<GoesCommandDescriptor, 16> registry{{
     {GoesCommand::clean, "CLEAN", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, true},
     {GoesCommand::inbox, "INBOX", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, true},
     {GoesCommand::outbox, "OUTBOX", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, false},
+    {GoesCommand::gallery, "GALLERY", GoesArgumentShape::none, GoesCommandDisposition::required_native, false},
+    {GoesCommand::view_image, "VIEW", GoesArgumentShape::optional_image, GoesCommandDisposition::required_native, false},
     {GoesCommand::unknown, "", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
 }};
 
@@ -35,6 +37,7 @@ bool requires_argument(GoesArgumentShape shape) {
     case GoesArgumentShape::none:
     case GoesArgumentShape::optional_topic:
     case GoesArgumentShape::optional_range:
+    case GoesArgumentShape::optional_image:
         return false;
     }
     return false;

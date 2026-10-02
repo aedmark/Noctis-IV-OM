@@ -272,7 +272,7 @@ const std::vector<std::string_view> &plus_help_lines(bool surface) {
         "NOCTIS IV OM - SPACE SHORTCUTS",
         "M/* SNAPSHOT   B/DELETE RAW SNAPSHOT",
         "T/SHIFT+S ROOFSPEED   DOWN MOUSELOOK",
-        "F2 VISUAL EFFECTS   F3 MOVIEMAKER"};
+        "F2 EFFECTS   F3 MOVIE   F4 IMAGE ARCHIVE"};
     static const std::vector<std::string_view> ground{
         "NOCTIS IV OM - SURFACE SHORTCUTS",
         "J JUMP   SPACE JETPACK   C RELEASE",

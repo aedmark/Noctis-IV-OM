@@ -15,7 +15,7 @@ int main() {
     using namespace noctis;
     bool ok = true;
 
-    ok &= require(goes_command_registry().size() == 15, "registry size changed");
+    ok &= require(goes_command_registry().size() == 17, "registry size changed");
     const auto *target = find_goes_command("ST");
     ok &= require(target != nullptr && target->command == GoesCommand::set_target
                       && target->disposition == GoesCommandDisposition::required_native,

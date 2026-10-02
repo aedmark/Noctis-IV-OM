@@ -29,6 +29,8 @@ enum class GoesCommand : std::uint8_t {
     clean,
     inbox,
     outbox,
+    gallery,
+    view_image,
     unknown,
 };
 
@@ -40,6 +42,7 @@ enum class GoesArgumentShape : std::uint8_t {
     optional_range,
     object_and_note,
     object_record_and_note,
+    optional_image,
 };
 
 enum class GoesCommandDisposition : std::uint8_t {
@@ -97,6 +100,7 @@ enum class GoesResultAction : std::uint8_t {
     set_local_target,
     catalog_changed,
     export_created,
+    open_image,
 };
 
 struct GoesResult {
@@ -110,6 +114,7 @@ struct GoesResult {
         std::int16_t planet_index{-1};
     };
     std::optional<Target> target;
+    std::string image_id;
 };
 
 std::string format_goes_rows(const std::vector<std::string_view> &rows);

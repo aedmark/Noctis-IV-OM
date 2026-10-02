@@ -37,6 +37,35 @@ int main(int argc, char **argv) {
 
     auto answer = execute_goes_command("HELP_", context);
     ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "PAR WHERE ST DL SL"), "HELP mismatch");
+    ok &= require(contains(answer, "GALLERY VIEW"), "HELP omits gallery commands");
+
+    const auto gallery = std::filesystem::path(argv[4]).parent_path() / "goesnet-gallery";
+    std::filesystem::remove_all(gallery);
+    std::filesystem::create_directories(gallery);
+    context.gallery_path = gallery;
+    answer = execute_goes_command("GALLERY_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "NO IMAGES ON FILE."), "empty GALLERY mismatch");
+    answer = execute_goes_command("VIEW_", context);
+    ok &= require(answer.status == GoesResultStatus::not_found && answer.action == GoesResultAction::none, "empty VIEW opened");
+    for (const char *name : {"00000004.BMP", "00000009.BMP"}) {
+        std::vector<char> bmp(1078 + 320 * 200, 0);
+        bmp[0] = 'B'; bmp[1] = 'M'; bmp[10] = 0x36; bmp[11] = 0x04; bmp[14] = 40;
+        bmp[18] = 0x40; bmp[19] = 0x01; bmp[22] = 200; bmp[26] = 1; bmp[28] = 8;
+        std::ofstream(gallery / name, std::ios::binary).write(bmp.data(), static_cast<std::streamsize>(bmp.size()));
+    }
+    answer = execute_goes_command("GALLERY_", context);
+    ok &= require(answer.cells.find("00000009 SNAPSHOT") < answer.cells.find("00000004 SNAPSHOT")
+                      && contains(answer, "2 IMAGES ON FILE."), "GALLERY listing mismatch");
+    answer = execute_goes_command("GALLERY 4_", context);
+    ok &= require(answer.status == GoesResultStatus::usage_error, "GALLERY accepted an argument");
+    answer = execute_goes_command("VIEW_", context);
+    ok &= require(answer.action == GoesResultAction::open_image && answer.image_id == "00000009", "VIEW newest mismatch");
+    answer = execute_goes_command("view 4_", context);
+    ok &= require(answer.action == GoesResultAction::open_image && answer.image_id == "00000004"
+                      && contains(answer, "320X200"), "VIEW number mismatch");
+    answer = execute_goes_command("VIEW 5_", context);
+    ok &= require(answer.status == GoesResultStatus::not_found && contains(answer, "IMAGE NOT ON FILE."), "VIEW absent mismatch");
+    std::filesystem::remove_all(gallery);
     answer = execute_goes_command("PAR MIRACLE_", context);
     ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "SUBJECT: STAR;")
                       && contains(answer, "NAME: MIRACLE") && contains(answer, "X=3979984")

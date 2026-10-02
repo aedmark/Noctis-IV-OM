@@ -5839,7 +5839,10 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
 
     if (!forcenumber) {
         const auto slot = noctis::next_snapshot_slot(noctis::runtime_paths().gallery_dir, last_snapshot);
-        if (!slot) return;
+        if (!slot) {
+            noctis::show_overlay_notice("SNAPSHOT FAILED: GALLERY UNAVAILABLE");
+            return;
+        }
         last_snapshot = slot->number;
         snapfilename = slot->path;
     } else if (forcenumber >= 9997 && forcenumber <= 9999) {
@@ -5891,7 +5894,12 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         }
     }
 
-    write_indexed_bmp(snapfilename);
+    if (write_indexed_bmp(snapfilename) && !forcenumber) {
+        const auto notice = "SNAPSHOT " + snapfilename.stem().string() + " SAVED";
+        noctis::show_overlay_notice(notice.c_str());
+    } else if (!forcenumber) {
+        noctis::show_overlay_notice("SNAPSHOT FAILED");
+    }
 }
 
 /*
