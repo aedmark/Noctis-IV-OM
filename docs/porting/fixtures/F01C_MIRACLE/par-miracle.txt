@@ -1,0 +1,1 @@
+GOES STARMAP ANALYSIS&&&&&&&&&&&&&&&&&&&&&SUBJECT: STAR;       NAME: MIRACLE        X=3979984            Y=5143407            Z=-98451             

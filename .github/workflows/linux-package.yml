@@ -1,0 +1,53 @@
+name: Linux preview package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Ubuntu 24.04 x86-64 package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install build and runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build xvfb \
+            libasound2-dev libx11-dev libxrandr-dev libxi-dev \
+            libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
+            libxinerama-dev
+      - name: Configure release build
+        run: cmake --preset linux-clang-release
+      - name: Build
+        run: cmake --build --preset linux-clang-release --parallel 2
+      - name: Test source build
+        run: ctest --preset linux-clang-release --output-on-failure
+      - name: Create archive and checksum
+        run: cpack --config build/linux-clang-release/CPackConfig.cmake
+      - name: Verify archive checksum
+        run: |
+          cd build/linux-clang-release
+          sha256sum -c Noctis-IV-OM-linux-x86_64-preview.tar.gz.sha256
+      - name: Verify extracted archive
+        run: >-
+          cmake
+          -DPACKAGE=${{ github.workspace }}/build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz
+          -P cmake/VerifyLinuxPackage.cmake
+      - name: Graphical smoke test extracted archive
+        run: |
+          cd build/linux-clang-release/linux-package-verification/Noctis-IV-OM-linux-x86_64-preview
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a ./nivlr --graphical-smoke \
+            --user-data-dir "${RUNNER_TEMP}/noctis-iv-om-smoke"
+      - name: Upload verified Linux preview
+        uses: actions/upload-artifact@v7
+        with:
+          name: Noctis-IV-OM-linux-x86_64-preview
+          path: |
+            build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz
+            build/linux-clang-release/Noctis-IV-OM-linux-x86_64-preview.tar.gz.sha256
+          if-no-files-found: error

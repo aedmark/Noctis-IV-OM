@@ -1,0 +1,25 @@
+F02C FELYSIA landing and surface state
+
+Target: FELYSIA P04, type 3 (felisian / breathable)
+Landing coordinate: LQ 001:060
+Native global surface seed: 952631
+Native local landing seed: 60
+
+Decoded run 1 SURFACE.BIN (45 bytes):
+  atlas: 100,100 / 8192,8192
+  position: 2114335.0, -4096.0, 1605658.875
+  view: 5.3600283933530335e-12, -94.99988555908203
+  HUD: delta 0, count 180, right closed 1
+  hex: 01003c00640000006400000000200000002000007c0c014a000080c5d700c449d896bc2cf1ffbdc20000b40001
+
+Decoded replay SURFACE.BIN:
+  All fields above are identical except user_beta = -98.84144592285156.
+  hex: 01003c00640000006400000000200000002000007c0c014a000080c5d700c449d896bc2cd2aec5c20000b40001
+
+Visual evidence:
+  Both entries show the same dark green, vegetated surface class with bright
+  plant-like forms and occasional pale green/pink highlights. Pixel hashes are
+  not goldens: surface time, animation, exposure, and mouse-driven viewing
+  angle changed between frames. The first stable 640x480 host capture contains
+  105 RGB colors; representative dominant values are (36,65,44), (4,8,0),
+  (40,69,48), (4,16,4), (44,77,52), and (36,56,40).

@@ -1,0 +1,59 @@
+{
+  "id": "F02A_FELYSIA_PARENT",
+  "status": "accepted parent-star relationship and DOS PAR coordinates; F02 planet properties, orbit, landing, and surface remain open",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-26",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3",
+    "data/CURRENT.BIN": "0c04c9f5441646dd845c2a536fe8a31423e57050d980874edefe7c70d515bcd2"
+  },
+  "initial_state": "Each of three fresh disposable DOS roots received ../F01C_MIRACLE/seed-current.bin as data/CURRENT.BIN. This fixture reuses the hashed GOESnet console pose; it does not reuse an F01D target save.",
+  "steps": [
+    "For each query, copy the pinned data/, modules/, and dosbox.conf into a separate disposable root. Verify the reference and seed hashes, mount the root as N: in DOSBox-X, switch to N:, cd modules, run NOCTIS.EXE, and press Enter if the boot screen waits.",
+    "At the seeded GOESnet console, press Home and Backspace as needed to clear the input line. Enter PAR FELYSIA and press Enter. Preserve the 147-byte data/GOESFILE.TXT result as par-felysia.txt. Repeat PAR FELYSIA in a second fresh root; its raw output must be byte-identical.",
+    "In a third fresh root, enter PAR BALASTRACKONASTREYA. Preserve the 147-byte result as par-balastrackonastreya.txt. The 21-character GOESnet name field truncates the long star name, but its returned coordinates must match the FELYSIA result.",
+    "Exit each run normally. Read the pinned starmap's eight-byte ID and 24-byte label records at the offsets below. For P04, subtract planet number 4 from FELYSIA's ID and compare exactly to the BALASTRACKONASTREYA star ID. Do not infer a relationship from name similarity."
+  ],
+  "starmap_records": {
+    "parent_star": {
+      "label_offset": 4332,
+      "raw_id_le_hex": "a9966c87385ea3bf",
+      "id_double": -0.03782822278144,
+      "label": "BALASTRACKONASTREYA  S00"
+    },
+    "planet": {
+      "label_offset": 4364,
+      "raw_id_le_hex": "a54de21d87b20f40",
+      "id_double": 3.96217177721856,
+      "label": "FELYSIA              P04"
+    },
+    "id_relation": "FELYSIA planet ID - P04 number 4 = BALASTRACKONASTREYA star ID exactly in the pinned binary double values"
+  },
+  "goesnet_results": {
+    "planet_file": "par-felysia.txt",
+    "planet_bytes": 147,
+    "planet_sha256_both_runs": "8cde84b042d420c2b90e5715a75c72b6da2d7f94ee0ce0bb3b7516b938afa73f",
+    "planet_subject": "PLANET",
+    "parent_file": "par-balastrackonastreya.txt",
+    "parent_bytes": 147,
+    "parent_sha256": "478e3d71f929b7ae96439bcf7b6414f370ef7af208c6ca868345d5827992149a",
+    "parent_subject": "STAR",
+    "coordinates_displayed_both_queries": [-18928, 29680, -67336],
+    "coordinates_internal_parent_star": [-18928, -29680, -67336]
+  },
+  "output_sha256": {
+    "par-felysia.txt": "8cde84b042d420c2b90e5715a75c72b6da2d7f94ee0ce0bb3b7516b938afa73f",
+    "par-balastrackonastreya.txt": "478e3d71f929b7ae96439bcf7b6414f370ef7af208c6ca868345d5827992149a",
+    "planet_run_1/data/CURRENT.BIN": "6db34430fad1c8a784ce12c4cc973b4b99d3782138bafdbfcbf78fe5164427aa",
+    "planet_run_2/data/CURRENT.BIN": "914f4c5b79358f5b6cbc8ac5381d073f01eb7ad43030369f52a087359ae82cfa",
+    "parent_run/data/CURRENT.BIN": "cf665f2186351d8e3eddd8da5853892bc5b9eba730800ce0547889d973dd3f6a"
+  },
+  "comparison_level": "EXACT two raw planet-query outputs, serialized starmap ID relationship, and displayed integer coordinates from planet/parent queries; STRUCTURAL parent-star identity; no orbit/landing/surface claim",
+  "notes": "FELYSIA is P04 of BALASTRACKONASTREYA, not a planet of NEW FELYSIA. The planet and parent-star DOS PAR modules independently return the same coordinates. GOESnet displays Y positive by convention while the internal star Y is negative. Whole CURRENT.BIN files are time-dependent and are retained only by hash. The pinned STARMAP.BIN and GUIDE.BIN hashes remained unchanged after all three isolated runs."
+}

@@ -1,0 +1,49 @@
+name: Windows MSVC build and tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  msvc:
+    name: MSVC debug
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure
+        run: cmake --preset windows-msvc-debug
+      - name: Build
+        run: cmake --build --preset windows-msvc-debug --parallel 2
+      - name: Test platform-independent suite
+        run: ctest --preset windows-msvc-debug --output-on-failure -LE "cross_platform_review|requires_graphics"
+      - name: Probe cross-platform presentation suite
+        continue-on-error: true
+        run: ctest --preset windows-msvc-debug --output-on-failure -L cross_platform_review
+      - name: Upload presentation probe log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-windows-presentation-probe
+          path: build/windows-msvc-debug/Testing/Temporary/LastTest.log
+          if-no-files-found: error
+      - name: Upload CTest log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-windows-msvc
+          path: build/windows-msvc-debug/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+      - name: Upload provisional runtime
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: noctis-iv-om-windows-msvc-debug
+          path: |
+            build/windows-msvc-debug/Debug/nivlr.exe
+            build/windows-msvc-debug/res
+            build/windows-msvc-debug/data
+          if-no-files-found: error

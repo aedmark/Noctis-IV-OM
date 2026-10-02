@@ -1,0 +1,63 @@
+{
+  "id": "F02C_FELYSIA_SURFACE",
+  "status": "accepted DOS landing, palette, and replayed surface-sector reference with native seed match",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-27",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3",
+    "source_seed_current_bin": "0c04c9f5441646dd845c2a536fe8a31423e57050d980874edefe7c70d515bcd2",
+    "generated_map_pose_current_bin": "b7a084e3cb002a1306752479e171f0b5d786457b7d0663dd4a7c3387179477f2"
+  },
+  "initial_state": "A fresh disposable root used seed_felysia_system.py --planetary-map-pose to select FELYSIA P04 and place the player beside the far-right planetary-map screen. The replay used a fresh root plus the first run's 45-byte SURFACE.BIN.",
+  "steps": [
+    "Copy pinned data/, modules/, and dosbox.conf into a disposable root and verify their hashes.",
+    "Run python3 docs/porting/fixtures/seed_felysia_system.py --planetary-map-pose docs/porting/fixtures/F01C_MIRACLE/seed-current.bin DISPOSABLE/data/CURRENT.BIN and verify hash b7a084e3cb002a1306752479e171f0b5d786457b7d0663dd4a7c3387179477f2.",
+    "Launch the pinned DOS executable. Select Flight Control with 5 and deploy the surface capsule with 9. At the far-right map, move longitude once to LQ 001:060 and press Enter.",
+    "Wait until the capsule transition finishes and the surface HUD is stable. Record the green-dominant palette and vegetated terrain. Press Escape once to serialize data/SURFACE.BIN and exit normally.",
+    "Create a second fresh root from the unmodified system seed, copy run 1 SURFACE.BIN into data/, and launch. No landing input is required: Noctis regenerates and enters the same surface state. Capture the settled view and exit once to serialize the replay state."
+  ],
+  "surface_state": {
+    "landing_longitude_i16": 1,
+    "landing_latitude_i16": 60,
+    "atlas_x_i32": 100,
+    "atlas_z_i32": 100,
+    "atlas_x2_i32": 8192,
+    "atlas_z2_i32": 8192,
+    "position_f32": [2114335.0, -4096.0, 1605658.875],
+    "run_1_view_angles_f32": [5.3600283933530335e-12, -94.99988555908203],
+    "replay_view_angles_f32": [5.3600283933530335e-12, -98.84144592285156],
+    "hud_delta_i16": 0,
+    "hud_count_i16": 180,
+    "hud_right_closed_i8": 1
+  },
+  "native_result": {
+    "planet_type": 3,
+    "landing_longitude": 1,
+    "landing_latitude": 60,
+    "global_surface_seed": 952631,
+    "landing_seed_u16": 60
+  },
+  "palette_observation": {
+    "classification": "green-dominant surface palette with dark green terrain, bright green vegetation, and pale green/pink highlights",
+    "first_stable_frame_unique_rgb_colors": 105,
+    "first_stable_frame_rgb_set_sha256": "d6e19997cf39ff8a79f4107e9caa023239ba3c8f23e62cf61caf73bc63f98922",
+    "dominant_rgb_samples": [[36, 65, 44], [4, 8, 0], [40, 69, 48], [4, 16, 4], [44, 77, 52], [36, 56, 40]],
+    "stability": "Palette values and pixels vary with surface time, exposure, animation, and viewing angle; classification and representative colors are perceptual evidence, not an exact palette golden."
+  },
+  "output_sha256": {
+    "run_1/data/SURFACE.BIN": "9e123187795cbd3d48f0a6c4ce1e5e33ce99249e51e58686a93b426944a25d5f",
+    "run_1/first-stable-surface.png": "0e9bdfdc26992b13cf40dfe74dddac56d1ca43c436f8d9fcc001283959300cbf",
+    "run_1/settled-surface.png": "546721524387bad78240fdfac660d60ca812f04692ca042c1fae0ad3875162ca",
+    "replay/data/SURFACE.BIN": "cbc0122db561dda2aa050bfeb54f8aebfd90d039dc1745afaccee86c7d521368",
+    "replay/settled-surface.png": "cd1303d22fd42146da4855909c8cdef3cd348e3491089f237fbe05d56349997d"
+  },
+  "capture_retention": "Screenshots and SURFACE.BIN files remain outside Git. Their hashes, decoded fields, raw bytes, and exact regeneration procedure are retained here and in surface-state.txt.",
+  "comparison_level": "EXACT landing coordinates, atlas coordinates, position, HUD state, and native surface seeds; STRUCTURAL terrain/vegetation; PERCEPTUAL palette and frames; viewing angle and pixels are time/input dependent",
+  "notes": "The replay preserves every serialized field except user_beta, which changed with mouse input after entry. The landing and replay both show a dark green vegetated type-3 surface. This fixture protects seed selection and records the DOS appearance; full native terrain/render parity belongs to M4."
+}

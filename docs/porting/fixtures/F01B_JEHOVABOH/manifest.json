@@ -1,0 +1,65 @@
+{
+  "id": "F01B_JEHOVABOH",
+  "status": "accepted supplemental galaxy/star reference; F01 MIRACLE and NEW FELYSIA remain open",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-26",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3"
+  },
+  "initial_state": "data/CURRENT.BIN absent in each fresh disposable copy",
+  "steps": [
+    "Copy data/, modules/, and dosbox.conf to a new disposable directory and verify the pinned input/config hashes before launch. Other module utilities remain present but are not invoked.",
+    "Launch DOSBox-X with the disposable root mounted as N:, switch to N:, cd modules, run NOCTIS.EXE; press Enter if the DOSBox-X boot screen waits.",
+    "In the ship view press r (onboard devices), 8 (cartography), 8 (show targets in range). Wait until the list has JEHOVABOH S08, a second S06 row, and ADELPHE S02, with ADELPHE initially highlighted.",
+    "Press Up twice, verify JEHOVABOH is highlighted, then press Enter. Verify JEHOVABOH, S08, and TGT FIXED are displayed.",
+    "Press Escape to close the list and Escape again to exit normally. Repeat from another fresh copy.",
+    "Run python3 docs/porting/fixtures/extract_current_target.py on the two data/CURRENT.BIN files and compare the documented little-endian target fields; do not compare the entire time-dependent save byte-for-byte."
+  ],
+  "starmap_record": {
+    "label_offset": 49452,
+    "raw_id_le_hex": "3d9089c6e5e1d040",
+    "id_double": 17287.590242758615,
+    "label": "JEHOVABOH            S08"
+  },
+  "saved_fields": {
+    "ap_targetting_at_8": 0,
+    "ap_targetted_at_9": 1,
+    "ap_target_class_i16_at_31": 8,
+    "ap_target_spin_i8_at_14": 0,
+    "ap_target_rgb_i8_at_15_17": [63, 32, 16],
+    "ap_target_radius_f32_at_63": 5.185999870300293,
+    "ap_target_radius_bits_hex": "0x40a5f3b6",
+    "ap_target_xyz_f64_at_95_103_111": [3897488, -4324932, -1025582]
+  },
+  "native_sector_input": [3900000, -4300000, -1100000, 0],
+  "output_sha256": {
+    "direct_run_1/data/CURRENT.BIN": "81d5b3037e32efb39479193e848a4181dffaa07ad30eab6ba112d430692d850b",
+    "direct_run_2/data/CURRENT.BIN": "e1a2f1090370dcd84206396db086c215ee5dc973a827f5015885de36d77cdba4"
+  },
+  "captures": [
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "81d5b3037e32efb39479193e848a4181dffaa07ad30eab6ba112d430692d850b",
+      "screenshot": "selected-first.png",
+      "screenshot_sha256": "a26439b89efd1776519064b93630376c8d8fdb7e892cbf11b0efb12c25377e3b"
+    },
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "e1a2f1090370dcd84206396db086c215ee5dc973a827f5015885de36d77cdba4",
+      "screenshot": "selected-repeat.png",
+      "screenshot_sha256": "c3d75b87d825474ccf4356fb9b16a1bacf25e89a0bca350cb4bbeedb8885dbb3"
+    }
+  ],
+  "exploratory_run": {
+    "notes": "A separate fresh-copy attempt sent Up/Return before target collection finished; it was corrected after the list was stable. It yielded the same saved fields but is not one of the two direct-sequence repetitions.",
+    "current_bin_sha256": "f8393bf5e13aacbdb9dbf569310def7d8e8a2334131fa79740785f20fa3cb63e"
+  },
+  "comparison_level": "EXACT saved coordinates, class, RGB, spin, and radius f32 bits; TOLERANT starmap double ID; STRUCTURAL screen text",
+  "notes": "Both direct-sequence repetitions agree on every saved target field. Complete CURRENT.BIN hashes differ, so those whole files are not golden fixtures. The screenshots are evidence, not pixel-exact baselines. The sector input was found by matching DOS's saved coordinates to the native sector function; DOS does not serialize the sector origin."
+}

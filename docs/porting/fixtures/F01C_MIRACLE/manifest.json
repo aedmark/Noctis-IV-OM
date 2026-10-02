@@ -1,0 +1,70 @@
+{
+  "id": "F01C_MIRACLE",
+  "status": "accepted named F01 galaxy/star reference",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-26",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3",
+    "data/CURRENT.BIN": "0c04c9f5441646dd845c2a536fe8a31423e57050d980874edefe7c70d515bcd2"
+  },
+  "initial_state": "Copy the included 378-byte seed-current.bin to data/CURRENT.BIN in each fresh disposable DOS root. It derives from a normal-exit, no-target save (SHA-256 bca6c68b3fa4565e1832602a129fd80fe66968034f2a4897ac061e801d075009) using seed_goes_console.py: initial pwr=15000, pos_x=3000, pos_z=-2000, user_beta=-90. The seed starts the avatar facing the GOESnet console; ship coordinates and target are unchanged. Its lithium charge remains 3, so power can rise during play and the Vimana drive may start after ST.",
+  "steps": [
+    "Copy the pinned data/, modules/, and dosbox.conf into a new disposable directory and verify the reference hashes. Copy seed-current.bin to its data/CURRENT.BIN and verify the seed hash before launch. Do not run against the tracked checkout.",
+    "Launch DOSBox-X with that root mounted as N:, switch to N:, cd modules, run NOCTIS.EXE; press Enter if the boot screen waits. The seeded avatar is by the GOESnet input console. Press Home to clear its input line.",
+    "Enter PAR MIRACLE and press Enter. Wait for data/GOESFILE.TXT to contain the GOES STARMAP ANALYSIS result; preserve it before another command overwrites the file. The raw 147-byte result is par-miracle.txt.",
+    "Enter ST MIRACLE and press Enter. Wait for the LOOKING FOR TARGET result and for the game to consume data/COMM.BIN. The raw 147-byte result is st-miracle.txt. The module's STARTING VIMANA DRIVE text does not by itself establish ship state.",
+    "Allow the game to process the target, then press Escape for a normal save/exit. Run extract_current_target.py on data/CURRENT.BIN; require ap_targetted=1 and the saved target fields below. Repeat from a fresh copy using the identical seed. Do not accept a save with ap_targetted=0, even if ST returned success text."
+  ],
+  "starmap_record": {
+    "label_offset": 2732,
+    "raw_id_le_hex": "e40006496f7d9f40",
+    "id_double": 2015.3586769998592,
+    "label": "MIRACLE              S03"
+  },
+  "goesnet_results": {
+    "par_file": "par-miracle.txt",
+    "par_bytes": 147,
+    "par_sha256": "3e582619dabcf45b8955dd139beb9c46139b72b6b3976fc0a2387dae566f8846",
+    "par_coordinates_displayed": [3979984, 5143407, -98451],
+    "st_file": "st-miracle.txt",
+    "st_bytes": 147,
+    "st_sha256": "42f1736150fd9cc3751e2a661482a337e2b6e32ce78a567c688a4d36178e01ec"
+  },
+  "saved_fields": {
+    "ap_targetting_at_8": 0,
+    "ap_targetted_at_9": 1,
+    "ap_target_class_i16_at_31": 3,
+    "ap_target_spin_i8_at_14": 0,
+    "ap_target_rgb_i8_at_15_17": [63, 30, 20],
+    "ap_target_radius_f32_at_63": 31.233999252319336,
+    "ap_target_radius_bits_hex": "0x41f9df3b",
+    "ap_target_xyz_f64_at_95_103_111": [3979984, -5143407, -98451]
+  },
+  "native_sector_input": [3900000, -5100000, -100000, 0],
+  "output_sha256": {
+    "direct_run_1/data/CURRENT.BIN": "5881eefd7c638e740fcd03a7a301fe064df35e1e7bc28b972b812d522395bc84",
+    "direct_run_2/data/CURRENT.BIN": "9747415f48a11150bcfee607207fb789639ca3cc8da2b59bbf6941fe2c196ced"
+  },
+  "captures": [
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "5881eefd7c638e740fcd03a7a301fe064df35e1e7bc28b972b812d522395bc84"
+    },
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "9747415f48a11150bcfee607207fb789639ca3cc8da2b59bbf6941fe2c196ced"
+    }
+  ],
+  "exploratory_runs": [
+    "An earlier seeded PAR/ST attempt also produced identical target fields (CURRENT.BIN SHA-256 9e0167c6660e5586f4a3350faed16c8e9fdfbc9f8ef19e113ca449d29ffd781b) but was not counted among the two direct repetitions.",
+    "A separate ST-success run saved ap_targetted=0 (CURRENT.BIN SHA-256 3f1ed7c92db590d4c1f90e24a4fa63d182e703b859a4cbc28bd207125829a541), apparently because the game had not finished applying the target before exit. It is excluded."
+  ],
+  "comparison_level": "EXACT saved coordinates, class, RGB, spin, radius f32 bits, and raw GOESnet output; TOLERANT starmap double ID; STRUCTURAL on-screen presentation",
+  "notes": "Both accepted saves agree on every target field, and a third exploratory run agrees as well. Whole-save hashes differ because other state is time-dependent; they are evidence, not golden files. GOESnet PAR displays positive Y by convention while the saved internal Y is negative. The sector origin is inferred by matching DOS's saved coordinates to the native sector function; DOS does not serialize it. The GOESnet files consist of seven concatenated 21-byte fields, without line breaks."
+}

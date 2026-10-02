@@ -1,0 +1,1 @@
+GOES STARMAP ANALYSIS&&&&&&&&&&&&&&&&&&&&&SUBJECT: PLANET;     NAME: FELYSIA        X=-18928             Y=29680              Z=-67336             

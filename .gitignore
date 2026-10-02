@@ -1,0 +1,25 @@
+# Build directories
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# IDE and editor settings
+.idea/
+*.iml
+*.ipr
+*.iws
+.cache/
+.vscode/
+
+# Runtime mutable state (preserves pinned starmap, guide, manifest, and supports)
+data/CURRENT.BIN
+data/SURFACE.BIN
+data/GOESFILE.TXT
+data/*.niv
+gallery/*
+movies/*
+
+# Package archives and checksums
+*.zip
+*.tar.gz
+*.sha256

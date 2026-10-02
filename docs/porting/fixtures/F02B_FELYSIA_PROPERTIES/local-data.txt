@@ -1,0 +1,14 @@
+F02B FELYSIA local-target data, transcribed from two fresh DOSBox-X runs
+
+FELYSIA                 P04
+PERIOD OF ROTATION:
+TRIADS 000:100:000
+PERIOD OF REVOLUTION:
+0 EPOCS, 111:753:904
+RADIUS: FELISIAN
+0.0261 CENTIDYAMS
+LOCAL ENVIRONMENT:
+BREATHABLE
+
+Both runs displayed the same fields. See manifest.json for input, output, and
+screenshot hashes and the exact regeneration procedure.

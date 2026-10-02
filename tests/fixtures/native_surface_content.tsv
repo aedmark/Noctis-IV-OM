@@ -1,0 +1,6 @@
+# Exact native baselines for production surface content rendering. Counts are
+# draw-path calls accumulated across three frames, followed by the final full
+# indexed-frame hash. These are native fixtures, not DOS frame captures.
+# case longitude latitude frames trees rocks animals ruins capsule frame_hash
+felysia-habitable 1 60 3 12702 0 12 81 3 03adff46f1357ac1
+felysia-rocky 1 60 3 0 13104 0 0 3 aa97fe814652da4f

@@ -1,0 +1,10 @@
+# Exact native baselines for the production surface generator. These are
+# native compatibility fixtures, not buffers extracted from DOS.
+# case type seed scenario texture_scale height_hash texture_hash object_hash min max
+felysia-rocky 1 1813013 0 32 8ca4271db5cca9c1 bae8e81679673b95 4c03af8af434d8c9 0 85
+felysia-thick-atmosphere 2 71236 0 32 637612e67a2fdce2 7aed9d83ca374c97 0c552a9f21f135ff 0 126
+felysia-habitable 3 952631 2 128 da14eccf19e9fc07 eac1bb14fcf7df3f 5ea2525745b31bde 48 131
+felysia-corrugated 4 108682 0 32 623f895560cac806 ec72a6579bfd6354 bb98d45c18e8030d 0 61
+felysia-thin-atmosphere 5 32708 0 32 140d1e68916b5fb2 55ba9faaa6557869 6e7facc611e23df3 0 31
+class11-icy 7 59348 0 32 600f98ab98233825 7da5de438ed7ddc3 5f49a13a675505a6 0 0
+felysia-milky 8 242221 0 32 1a969224dbb6bcff 5415c4413955e471 0fd45327f0c39f4f 0 102

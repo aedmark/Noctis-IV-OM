@@ -1,0 +1,21 @@
+# Native regression baseline. DOS-confirmed objects are tested separately.
+# Collectively these rows exercise every star class (0-11), including the
+# class-specific spin branches for classes 2, 7, and 11.
+# id x y z class radius_milli red green blue spin
+home-offset 100000 100000000 100000 6 4287 32 28 24 0
+low-sector 100000 200000 300000 0 6942 63 58 40 0
+mid-sector 3700000 200000 9100000 2 438 63 63 63 1
+negative-x -700000 300000 500000 6 4143 32 28 24 0
+negative-y 400000 -900000 1100000 5 1296 32 16 10 0
+far-sector 19100000 700000 31300000 0 6461 63 58 40 0
+class-01 -1200000 -900000 -18000000 1 21329 30 50 63 0
+class-03 318928 100216574 -33444 3 30784 63 30 20 0
+class-04 -1200000 -1000000 -19100000 4 17681 63 55 32 0
+class-07 -50000 99950000 -50000 7 2185 10 20 63 6
+class-08 -250000 -100032086 422565 8 6322 63 32 16 0
+class-09 -1200000 -1100000 -20200000 9 3272 48 32 63 0
+class-10 -1200000 100000 -7000000 10 30482 40 10 10 0
+class-11 -1200000 -100000 -9200000 11 259 0 63 63 5
+# Left-associated identity evaluates to exactly 58129314820.0; regrouping the
+# products evaluates just below that integer and changes the 16-bit RNG seed.
+association-boundary 283122996 -611093771 -335979053 2 476 63 63 63 3

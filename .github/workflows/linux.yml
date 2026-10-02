@@ -1,0 +1,66 @@
+name: Linux build and tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.toolchain }} debug
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [clang, gcc]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build \
+            libasound2-dev libx11-dev libxrandr-dev libxi-dev \
+            libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
+            libxinerama-dev
+      - name: Configure
+        run: cmake --preset linux-${{ matrix.toolchain }}-debug
+      - name: Build
+        run: cmake --build --preset linux-${{ matrix.toolchain }}-debug --parallel 2
+      - name: Test
+        run: ctest --preset linux-${{ matrix.toolchain }}-debug --output-on-failure
+      - name: Upload CTest log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-${{ matrix.toolchain }}
+          path: build/linux-${{ matrix.toolchain }}-debug/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+
+  sanitizers:
+    name: Clang ASan and UBSan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build \
+            libasound2-dev libx11-dev libxrandr-dev libxi-dev \
+            libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
+            libxinerama-dev
+      - name: Configure
+        run: cmake --preset linux-clang-sanitized
+      - name: Build
+        run: cmake --build --preset linux-clang-sanitized --parallel 2
+      - name: Headless sanitizer tests
+        run: ctest --preset linux-clang-sanitized --output-on-failure
+      - name: Upload CTest log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-sanitizers
+          path: build/linux-clang-sanitized/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

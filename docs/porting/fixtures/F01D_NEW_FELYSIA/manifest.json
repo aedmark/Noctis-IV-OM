@@ -1,0 +1,73 @@
+{
+  "id": "F01D_NEW_FELYSIA",
+  "status": "accepted named F01 galaxy/star reference",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-26",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3",
+    "data/CURRENT.BIN": "0c04c9f5441646dd845c2a536fe8a31423e57050d980874edefe7c70d515bcd2"
+  },
+  "initial_state": "Use ../F01C_MIRACLE/seed-current.bin as data/CURRENT.BIN in each fresh disposable DOS root. The 378-byte seed positions the avatar at the GOESnet console and contains no selected target. Its provenance and byte-level derivation are in the F01C manifest. Each accepted ST run starts from this same seed, not from the PAR run's save.",
+  "steps": [
+    "Copy pinned data/, modules/, and dosbox.conf into a new disposable directory and verify the reference hashes. Copy ../F01C_MIRACLE/seed-current.bin to data/CURRENT.BIN and verify its hash. Do not use the tracked checkout as the DOS working directory.",
+    "Launch DOSBox-X with the disposable root mounted as N:, switch to N:, cd modules, and run NOCTIS.EXE; press Enter if the boot screen waits. When the GOESnet console is active, press Home and Backspace as needed to clear the input line.",
+    "For a separate query run, type PAR NEW FELYSIA and press Enter. Wait for the 147-byte GOES STARMAP ANALYSIS output; preserve data/GOESFILE.TXT as par-new-felysia.txt. This establishes displayed coordinates but is not one of the two accepted target-save runs.",
+    "For each of two fresh target runs, type ST NEW FELYSIA and press Enter. Wait until the 147-byte LOOKING FOR TARGET output appears and data/COMM.BIN has been consumed. Preserve the output as st-new-felysia.txt. The module's STARTING VIMANA DRIVE text alone is not evidence that the game saved a target.",
+    "Allow the game to resume, then press Escape for a normal save/exit. If the game has not yet exited and the save still has ap_targetted=0, wait for the ST module to release keyboard control and press Escape again. Accept only a normal-exit save with ap_targetted=1 and the target fields below. Compare the two accepted saves with extract_current_target.py; do not compare whole saves byte-for-byte."
+  ],
+  "starmap_record": {
+    "label_offset": 36332,
+    "raw_id_le_hex": "13562b7c5414f240",
+    "id_double": 74053.28031476615,
+    "label": "NEW FELYSIA          S00"
+  },
+  "goesnet_results": {
+    "par_file": "par-new-felysia.txt",
+    "par_bytes": 147,
+    "par_sha256": "553a4342c0c294074275bd4c466fdfda85fdda8f954e6b61eecdd0fed4f4ded3",
+    "par_coordinates_displayed": [6555696, 4832326, -2337595],
+    "st_file": "st-new-felysia.txt",
+    "st_bytes": 147,
+    "st_sha256": "e68ca41e02ab3c87e1e6c18a6be1ba6ed2e413f89bd351144c0020b5967a1db9"
+  },
+  "saved_fields": {
+    "ap_targetting_at_8": 0,
+    "ap_targetted_at_9": 1,
+    "ap_target_class_i16_at_31": 0,
+    "ap_target_spin_i8_at_14": 0,
+    "ap_target_rgb_i8_at_15_17": [63, 58, 40],
+    "ap_target_radius_f32_at_63": 6.913000106811523,
+    "ap_target_radius_bits_hex": "0x40dd374c",
+    "ap_target_xyz_f64_at_95_103_111": [6555696, -4832326, -2337595]
+  },
+  "native_sector_input": [6600000, -4800000, -2400000, 0],
+  "replay_save": {
+    "file": "engaged-current.bin",
+    "bytes": 378,
+    "sha256": "00582b3fd972705bf5a4e5dd8f3c2ed73e15aa5ea1ad57062f461d307df66bd9",
+    "usage": "Copy to data/CURRENT.BIN only in a disposable DOS root with the pinned reference inputs; this is a captured engaged-target state, not a byte-exact golden for future runs."
+  },
+  "output_sha256": {
+    "direct_run_1/data/CURRENT.BIN": "00582b3fd972705bf5a4e5dd8f3c2ed73e15aa5ea1ad57062f461d307df66bd9",
+    "direct_run_2/data/CURRENT.BIN": "9b0b8ea1d1932d19fc9856c7f87199ec41ccd9de44b4cd832fdc8f5d631da154"
+  },
+  "captures": [
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "00582b3fd972705bf5a4e5dd8f3c2ed73e15aa5ea1ad57062f461d307df66bd9"
+    },
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "9b0b8ea1d1932d19fc9856c7f87199ec41ccd9de44b4cd832fdc8f5d631da154"
+    }
+  ],
+  "excluded_run": "An initial PAR run produced correct displayed coordinates, but later ST keystrokes were not accepted by that DOSBox session. Its pre-target save (SHA-256 72dcc0d1936773ed6c83598b34d01e68676877fe789b0a8a822af80a82bf560f) has ap_targetted=0 and is not counted among the direct repetitions.",
+  "comparison_level": "EXACT saved coordinates, class, RGB, spin, radius f32 bits, and raw GOESnet output; TOLERANT starmap double ID; STRUCTURAL on-screen presentation",
+  "notes": "Two accepted ST-only runs from the same seed agree on every target field. Their whole-save hashes differ because other state is time-dependent; the included replay save is evidence and a resume point, not a byte-exact golden. GOESnet PAR displays positive Y by convention while the internal saved Y is negative. The sector origin is inferred by matching DOS's saved coordinates to the native sector function; DOS does not serialize it. NEW FELYSIA is the star's starmap label; F02A separately establishes that the FELYSIA planet belongs to BALASTRACKONASTREYA, not this star."
+}

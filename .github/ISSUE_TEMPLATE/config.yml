@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community test instructions
+    url: https://github.com/aedmark/Noctis-IV-OM/blob/master/COMMUNITY_TESTING.md
+    about: Read the focused compatibility-test route before filing a result.

@@ -1,0 +1,64 @@
+{
+  "id": "F02B_FELYSIA_PROPERTIES",
+  "status": "accepted repeated DOS planet identity/type/radius/revolution reference with native match; landing and surface pending",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-27",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3",
+    "source_seed_current_bin": "0c04c9f5441646dd845c2a536fe8a31423e57050d980874edefe7c70d515bcd2",
+    "generated_system_seed_current_bin": "85bad338d1254b311d138f5fb0aa97a470ca170173d44461625f35f6ffa23d10"
+  },
+  "initial_state": "Each run used a fresh disposable DOS root. seed_felysia_system.py transformed the tracked F01C console seed into the same 378-byte P04-in-parent-system input; the generated seed is reproducible and was not checked in as a second binary copy.",
+  "steps": [
+    "Copy pinned data/, modules/, and dosbox.conf into a fresh disposable root and verify their hashes.",
+    "Run python3 docs/porting/fixtures/seed_felysia_system.py docs/porting/fixtures/F01C_MIRACLE/seed-current.bin DISPOSABLE/data/CURRENT.BIN and verify hash 85bad338d1254b311d138f5fb0aa97a470ca170173d44461625f35f6ffa23d10.",
+    "Mount the disposable root as N:, switch to N:, cd modules, and run NOCTIS.EXE with the pinned DOSBox-X configuration.",
+    "Use the built-in keyboard shortcuts R, 7, 8 to select onboard devices, miscellaneous, and local target data. Wait for the panel to finish opening and record the displayed fields.",
+    "Exit normally with Escape, retain the CURRENT.BIN hash, and repeat every step in a second fresh root. Whole-save and screenshot hashes are evidence of separate runs, not byte-exact goldens."
+  ],
+  "seeded_and_saved_fields_both_runs": {
+    "ip_targetted_i8_at_11": 3,
+    "ip_reached_i8_at_13": 1,
+    "nearstar_class_i16_at_35": 0,
+    "nearstar_nop_i16_at_37": 5,
+    "nearstar_radius_f32_bits_at_67": "0x40a0ac08",
+    "nearstar_xyz_f64_at_119_127_135": [-18928.0, -29680.0, -67336.0]
+  },
+  "repeated_display_fields": {
+    "label": "FELYSIA",
+    "logical_id": "P04",
+    "rotation": "TRIADS 000:100:000",
+    "revolution": "0 EPOCS, 111:753:904",
+    "radius": "0.0261 CENTIDYAMS",
+    "local_environment": "BREATHABLE"
+  },
+  "native_result": {
+    "planet_count": 5,
+    "body_count": 22,
+    "logical_index": 3,
+    "type": 3,
+    "type_description": "felisian / breathable",
+    "radius": 0.026135999999999996,
+    "radius_display": "0.0261",
+    "ring_radius": 0.0,
+    "orbit_radius": 226.04236288139393,
+    "revolution_period_f32_seconds": 111753904.0,
+    "revolution_display": "0 EPOCS, 111:753:904"
+  },
+  "native_comparison": "The extracted native generator matches the repeated DOS planet count, logical ID, type, radius display, environment, and revolution text. The revolution calculation uses Noctis's 4*pi/3 sphere-volume factor; using pi alone produces an incorrect result. Body count and exact internal orbit fields remain native-only until separately observed in DOS.",
+  "output_sha256": {
+    "run_1/data/CURRENT.BIN": "bf1cb6440308f1b58f6849762c6342eff4f57e348af759ddcb7d770ccf071409",
+    "run_2/data/CURRENT.BIN": "aba2cf66ddd8791efa8699376f627c7e0d055ecfc00802470820bf5d13d8145d",
+    "run_1/felysia-local-data.png": "ee5793f59e18e32409d679c7d6600186ff139593bfc50e6b4fce202b5a0a63ba",
+    "run_2/felysia-local-data.png": "2b65c3868b36595945bcddf729083716d8ef08bae9819bf4c072e760aeb7b723"
+  },
+  "capture_retention": "The screenshots remain outside Git; their hashes and exact regeneration procedure are retained here. The stable text was transcribed to local-data.txt.",
+  "comparison_level": "EXACT repeated displayed identity, type description, revolution text, rotation text, and serialized parent-system fields; TOLERANT displayed radius to four decimals; STRUCTURAL rendered planet and atmosphere; no landing/surface claim",
+  "notes": "This capture validates P04 in the parent system established by F02A. The crafted save changes only documented CURRENT.BIN fields and the DOS executable reconstructs nearstar_nop and the planet arrays on load. The differing whole-save and screenshot hashes reflect time and orbital presentation."
+}

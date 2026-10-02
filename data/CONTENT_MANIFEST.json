@@ -1,0 +1,20 @@
+{
+  "content_version": "2023-10",
+  "source_commit": "3759857",
+  "files": {
+    "STARMAP.BIN": {
+      "sha256": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+      "size": 1202500,
+      "record_size": 32,
+      "records": 37578,
+      "consolidated_size": 1202500
+    },
+    "GUIDE.BIN": {
+      "sha256": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+      "size": 4063588,
+      "record_size": 84,
+      "records": 48376,
+      "consolidated_size": 4063588
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# Native-only regression baseline; not DOS-verified. The matrix includes
+# negative, zero, and positive sector axes; rarity acceptance/rejection; and
+# each of the legacy empty-axis rejection points.
+# id sector_x sector_y sector_z rarity present x y z class radius_milli red green blue spin
+origin 0 0 0 0 1 -50000 -50000 -50000 0 5021 63 58 40 0
+home-west -400000 99600000 -400000 0 1 -332496 99619693 -349076 2 483 63 63 63 1
+home-center 0 100000000 0 0 1 -50000 99950000 -50000 7 2185 10 20 63 6
+home-east 300000 100200000 -100000 0 1 318928 100216574 -33444 3 30784 63 30 20 0
+outer-near 400000000 100000000 0 1 0 0 0 0 0 0 0 0 0 0
+outer-far 800000000 100000000 200000000 3 1 800001712 100018945 200040951 0 5180 63 58 40 0
+negative-y -300000 -100000000 400000 0 1 -250000 -100032086 422565 8 6322 63 32 16 0
+empty-x 0 0 50000 0 0 0 0 0 0 0 0 0 0 0
+empty-y 0 50000 0 0 0 0 0 0 0 0 0 0 0 0
+empty-z -50000 0 50000 0 0 0 0 0 0 0 0 0 0 0

@@ -1,0 +1,68 @@
+{
+  "id": "F01A_ADELPHE",
+  "status": "accepted supplemental galaxy/star reference; F01 MIRACLE and NEW FELYSIA remain open",
+  "reference_commit": "5c46de934ef69130b5b672f9cc3de703558364cb",
+  "capture_date": "2026-09-26",
+  "dosbox_x_version": "2026.08.31 SDL1, commit 0e5c2f9, Linux 64-bit",
+  "host_os_arch": "Linux x86_64",
+  "config_sha256": "3da3ec703dad90829e854754586d735c8c97ab541d22e725c286b0f8cc151e2d",
+  "input_sha256": {
+    "modules/NOCTIS.EXE": "5e64d532091c9be1f91d7e0bc57719df24020ba38b0662f225f65d3c55e579ac",
+    "data/STARMAP.BIN": "9fac3dd47c77127aba5f6f2fc9a1a8ea6f9b6577c6117c66bc8c0189948ebb20",
+    "data/GUIDE.BIN": "e2d22f76383a8ac254f3bd6dd956faec69a47f080955b332cc0fbf8fb228b3b3",
+    "data/SUPPORTS.NCT": "495259a0e453c7a56ed5f0bdc2a5788c855ec788843c42666ada7ad437d4e4f3"
+  },
+  "initial_state": "data/CURRENT.BIN absent in each fresh disposable copy",
+  "steps": [
+    "Copy the repository's data/ and modules/ directories plus dosbox.conf to a new disposable directory; verify the four pinned input hashes and config hash before launch. Other module utilities remain present but are not invoked.",
+    "Launch DOSBox-X with the disposable root mounted as N:, switch to N:, cd modules, run NOCTIS.EXE; press Enter if the DOSBox-X boot screen waits.",
+    "In the ship view press r (onboard devices), 8 (cartography), 8 (show targets in range). Wait until ADELPHE is highlighted in the target list.",
+    "Press Enter; verify that the display shows ADELPHE, S02, and TGT FIXED.",
+    "Press Escape to close the list and Escape again to exit normally. Repeat the same sequence from another fresh copy.",
+    "Run python3 docs/porting/fixtures/extract_current_target.py on both data/CURRENT.BIN files and compare the documented little-endian target fields; do not compare the entire time-dependent save byte-for-byte."
+  ],
+  "starmap_record": {
+    "label_offset": 50956,
+    "raw_id_le_hex": "cb62dbc611d3cf40",
+    "id_double": 16294.138881133307,
+    "label": "ADELPHE              S02"
+  },
+  "saved_fields": {
+    "ap_targetting_at_8": 0,
+    "ap_targetted_at_9": 1,
+    "ap_target_class_i16_at_31": 2,
+    "ap_target_spin_i8_at_14": 1,
+    "ap_target_rgb_i8_at_15_17": [63, 63, 63],
+    "ap_target_radius_f32_at_63": 0.45399999618530273,
+    "ap_target_radius_bits_hex": "0x3ee872b0",
+    "ap_target_xyz_f64_at_95_103_111": [3352848, -4391963, -1106519]
+  },
+  "native_sector_input": [3300000, -4400000, -1100000, 0],
+  "output_sha256": {
+    "direct_run_1/data/CURRENT.BIN": "2ea24b8469d92d7f8fccc2e9ad3bc2b2e4cd66f7f1730fb86d85ecf734ec8884",
+    "direct_run_2/data/CURRENT.BIN": "f35ba853e8d9a7545c39a2276e869a643cf65f40149552b7f52b99976ee25f75",
+    "exploratory_run/data/CURRENT.BIN": "7df853f8331b30975709265eb186b0adcff64b0961bbb3f564f414698919f919"
+  },
+  "captures": [
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "2ea24b8469d92d7f8fccc2e9ad3bc2b2e4cd66f7f1730fb86d85ecf734ec8884",
+      "screenshot": "selected-repeat.png",
+      "screenshot_sha256": "2701a6162108c83fd05abf5d5dc68d225230eda8f9bbc73ec7a464cce93845d6"
+    },
+    {
+      "current_bin_bytes": 378,
+      "current_bin_sha256": "f35ba853e8d9a7545c39a2276e869a643cf65f40149552b7f52b99976ee25f75",
+      "screenshot": "selected-direct.png",
+      "screenshot_sha256": "33c7fe92651c9504f4e187bef831697cdd9e5b5573c75910c01d7b23a3bf574b"
+    }
+  ],
+  "exploratory_run": {
+    "notes": "A separate fresh-copy run involved help, an abandoned flight-control targeting attempt, then the same cartography selection. It also produced the identical saved target fields; its data-sheet screenshot shows ADELPHE, S02, and radius 0.4540. It is evidence, not one of the two direct-sequence repetitions.",
+    "current_bin_sha256": "7df853f8331b30975709265eb186b0adcff64b0961bbb3f564f414698919f919",
+    "screenshot": "star-data.png",
+    "screenshot_sha256": "5cc32663a8ca0875aaa162f4bc68eef4c63862254e8b1435320e47c9906e7d6a"
+  },
+  "comparison_level": "EXACT saved coordinates, class, RGB, spin, and radius f32 bits; TOLERANT starmap double ID; STRUCTURAL screen text",
+  "notes": "Both direct-sequence repetitions agree on every saved target field. Complete CURRENT.BIN hashes differ, so those whole files are not golden fixtures. The screenshots are evidence, not pixel-exact baselines. Native recomputation of the ID differs from the stored DOS x87-derived double by approximately 2e-12."
+}

@@ -1,0 +1,1 @@
+GOES STARMAP ANALYSIS&&&&&&&&&&&&&&&&&&&&&SUBJECT: STAR;       NAME: NEW FELYSIA    X=6555696            Y=4832326            Z=-2337595           

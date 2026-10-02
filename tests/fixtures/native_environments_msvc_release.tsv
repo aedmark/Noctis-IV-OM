@@ -1,0 +1,7 @@
+# Exact MSVC Release baselines for one live production surface frame.
+# case longitude latitude scenario rainy waves_in waves_out frame_hash
+felysia-habitable 1 60 2 5.000 0 0 37725b4a49af766b
+felysia-habitable 4 60 1 5.000 1 1 ee680296a14fac7c
+felysia-habitable 1 0 4 0.000 0 0 24eda493dcae8d8a
+felysia-thick-atmosphere 1 60 0 5.000 0 0 31f8c9ac6693fead
+felysia-rocky 1 60 0 0.000 0 0 986a288bfb99bdd0

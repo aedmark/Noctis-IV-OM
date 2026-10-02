@@ -1,0 +1,10 @@
+if(NOT DEFINED SOURCE_DIR OR NOT DEFINED DESTINATION_DIR)
+    message(FATAL_ERROR "SOURCE_DIR and DESTINATION_DIR are required")
+endif()
+
+file(MAKE_DIRECTORY "${DESTINATION_DIR}")
+foreach(name IN ITEMS STARMAP.BIN GUIDE.BIN)
+    if(NOT EXISTS "${DESTINATION_DIR}/${name}")
+        file(COPY_FILE "${SOURCE_DIR}/${name}" "${DESTINATION_DIR}/${name}")
+    endif()
+endforeach()

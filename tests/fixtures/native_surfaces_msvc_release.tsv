@@ -1,0 +1,9 @@
+# Exact MSVC Release baselines for the production surface generator.
+# case type seed scenario texture_scale height_hash texture_hash object_hash min max
+felysia-rocky 1 1813013 0 32 8ca4271db5cca9c1 bae8e81679673b95 4c03af8af434d8c9 0 85
+felysia-thick-atmosphere 2 71236 0 32 b6729a9d9f1c0af4 85e8021d50b63e55 83f2991e79236ce0 0 126
+felysia-habitable 3 952631 2 128 da14eccf19e9fc07 9d122f670b125728 5ea2525745b31bde 48 131
+felysia-corrugated 4 108682 0 32 623f895560cac806 ec72a6579bfd6354 bb98d45c18e8030d 0 61
+felysia-thin-atmosphere 5 32708 0 32 140d1e68916b5fb2 55ba9faaa6557869 6e7facc611e23df3 0 31
+class11-icy 7 59348 0 32 600f98ab98233825 ef40dd77445e7b84 5de472fa91dd0799 0 0
+felysia-milky 8 242221 0 32 1a969224dbb6bcff 5415c4413955e471 0fd45327f0c39f4f 0 102

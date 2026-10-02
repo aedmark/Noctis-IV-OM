@@ -1,0 +1,9 @@
+# Exact native baselines for one live production surface frame. These are
+# native compatibility fixtures, not frames extracted from DOS. Life, ruins,
+# loose objects, and the capsule are excluded for M4-W05.
+# case longitude latitude scenario rainy waves_in waves_out frame_hash
+felysia-habitable 1 60 2 5.000 0 0 e248b0264c27fa79
+felysia-habitable 4 60 1 5.000 1 1 e23fab47748b39f4
+felysia-habitable 1 0 4 0.000 0 0 00759b99bba249ea
+felysia-thick-atmosphere 1 60 0 5.000 0 0 ecac9704b1c38b62
+felysia-rocky 1 60 0 0.000 0 0 92ba853366e45428

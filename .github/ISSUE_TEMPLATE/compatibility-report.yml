@@ -1,0 +1,98 @@
+name: Community compatibility report
+description: Report a pass or failure from the focused Linux/Windows preview test
+title: "[Compatibility]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Noctis IV OM. Use one report per machine and archive. Please review logs and attachments before sharing them.
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Overall result
+      options:
+        - Passed the assigned route
+        - Completed with non-blocking problems
+        - Blocked by a failure
+        - Crashed, hung, or lost/corrupted data
+    validations:
+      required: true
+  - type: input
+    id: archive
+    attributes:
+      label: Archive and SHA-256
+      description: Give the exact archive filename and its verified SHA-256 value.
+      placeholder: Noctis-IV-OM-...-preview.zip — abc123...
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Test commit or invitation
+      description: Paste the commit ID or the test-invitation link.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux X11
+        - Linux Wayland desktop via XWayland
+        - Windows
+        - Windows build under Wine (supplemental)
+        - Other or uncertain
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: System and graphics environment
+      description: Include OS/version, CPU architecture, graphics card, driver, and desktop/session where applicable.
+      placeholder: Ubuntu 24.04; x86-64; AMD Radeon ...; Mesa ...; GNOME Wayland/XWayland
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Startup diagnostics
+      description: Drag in noctis-diagnostics.txt or paste its complete JSON Lines output after checking it for private information.
+    validations:
+      required: true
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Assigned checklist results
+      description: Mark each assigned COMMUNITY_TESTING.md step pass, fail, skipped, or not applicable.
+      placeholder: |
+        1. Clean start — pass
+        2. Cockpit — pass
+        3. Space flight — fail (details below)
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and reproduction steps
+      description: For a failure, describe what happened, what you expected, and the shortest repeatable sequence. Write “None” for a clean pass.
+    validations:
+      required: true
+  - type: textarea
+    id: legacy
+    attributes:
+      label: Legacy data (only when assigned)
+      description: State the source/version, original filename and size, and migration result. Do not upload private data without reviewing it.
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots or additional notes
+      description: Display problems are easier to triage with an image. Do not attach private saves or crash dumps without reviewing them.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I used a fresh extraction of the archive named above.
+          required: true
+        - label: I reviewed the diagnostics and attachments for private information.
+          required: true

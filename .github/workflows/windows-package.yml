@@ -1,0 +1,73 @@
+name: Windows preview package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Windows x86-64 package
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure release build
+        run: cmake --preset windows-msvc-release
+      - name: Build
+        run: cmake --build --preset windows-msvc-release --parallel 2
+      - name: Test platform-independent suite
+        run: >-
+          ctest --preset windows-msvc-release --output-on-failure
+          -LE requires_graphics
+      - name: Create ZIP and checksum
+        run: cpack -C Release --config build/windows-msvc-release/CPackConfig.cmake
+      - name: Verify archive checksum
+        shell: pwsh
+        run: |
+          $archive = "build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip"
+          $expected = ((Get-Content "$archive.sha256") -split '\s+')[0]
+          $actual = (Get-FileHash -Algorithm SHA256 $archive).Hash
+          if ($actual -ne $expected) {
+            throw "SHA-256 mismatch: expected $expected, got $actual"
+          }
+      - name: Verify extracted archive
+        run: >-
+          cmake
+          -DPACKAGE=${{ github.workspace }}/build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip
+          -P cmake/VerifyWindowsPackage.cmake
+      - name: Verify self-contained Microsoft runtime
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $install = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          $dumpbin = Get-ChildItem "$install\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (-not $dumpbin) {
+            throw "Could not locate dumpbin.exe"
+          }
+          $exe = "build/windows-msvc-release/windows-package-verification/Noctis-IV-OM-windows-x86_64-preview/nivlr.exe"
+          $dependencies = (& $dumpbin.FullName /DEPENDENTS $exe | Out-String)
+          if ($dependencies -match '(?i)\b(?:VCRUNTIME|MSVCP)\d') {
+            throw "Packaged executable still depends on a Visual C++ Redistributable DLL`n$dependencies"
+          }
+      - name: Upload verified Windows preview
+        uses: actions/upload-artifact@v7
+        with:
+          name: Noctis-IV-OM-windows-x86_64-preview
+          path: |
+            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip
+            build/windows-msvc-release/Noctis-IV-OM-windows-x86_64-preview.zip.sha256
+          if-no-files-found: error
+      - name: Upload CTest log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-windows-package
+          path: build/windows-msvc-release/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
