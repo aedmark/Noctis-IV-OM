@@ -31,44 +31,44 @@ void save_surface_display_settings() {
 }
 } // namespace
 
-/*  Funzioni e variabili globali di tracciamento e gestione
-    delle superfici planetarie, in poligonale (h! ce la far??)
+/*  Global functions and variables for rendering and managing
+    planetary surfaces, using polygons (h! will I make it??)
 
-    Si, ce l'ho fatta, ahem... dunque...
-    per tracciare in tempo utile una superficie di 40000 quadranti,
-    ovvero 80000 triangoli, su una matrice di 200x200 (un po' tantino
-    in effetti) ho applicato un procedimento di, boh...
-    "focalizzazione" diciamo. Pi? probabilmente pu? chiamarsi
-    "depth culling"... inclusi i riflessi, la funzione "fragment"
-    passa al vaglio 160.000 poligoni per fotogramma, disegnandone
-    comunque circa un decimo. E' importante ottimizzare quella,
-    quando si vuole ottimizzare qualcosa... */
+    Yes, I made it, ahem... so...
+    to render in a reasonable time a surface of 40,000 quads,
+    or 80,000 triangles, on a 200x200 matrix (a bit much
+    actually) I applied a process of, dunno...
+    let's call it "focusing". More likely it could be called
+    "depth culling"... including reflections, the "fragment" function
+    evaluates 160,000 polygons per frame, drawing
+    about a tenth of them anyway. It's important to optimize that,
+    when you want to optimize something... */
 
-int8_t sctype; // tipo di scenario.
+int8_t sctype; // scenario type.
 #define OCEAN 1
 #define PLAINS 2
 #define DESERT 3
 #define ICY 4
 
-float dsd1, dsd2;          // distanza dal sole (pri/sec)
-float nray1, nray2;        // raggio del sole (pri/sec)
-float latitude;            // latitudine (0..90, 90=poli)
-float exposure;            // longitudine relativa al centro dell'area diurna.
-float sun_x, sun_y, sun_z; // coordinate del "sole" locale.
-int16_t sh_delta;          // shift del puntatore di confronto per lo shading.
+float dsd1, dsd2;          // distance from the sun (pri/sec)
+float nray1, nray2;        // sun radius (pri/sec)
+float latitude;            // latitude (0..90, 90=poles)
+float exposure;            // longitude relative to the center of the day area.
+float sun_x, sun_y, sun_z; // coordinates of the local "sun".
+int16_t sh_delta;          // comparison pointer shift for shading.
 
-// dati riguardanti il "sole" primario se ci si trova
-// attorno a un sole secondario (sistemi multipli di classe 8)
+// data regarding the primary "sun" if we are located
+// around a secondary sun (class 8 multiple systems)
 int16_t pri_crepzone;
 int16_t pri_nightzone;
 int16_t pri_sun_x_factor;
 float pri_latitude, pri_exposure;
 float pri_x, pri_y, pri_z;
 
-int8_t mirror    = 0; // effetto specchio d'acqua (agisce su "fragment").
-int8_t waves_in  = 0; // flag di presenza delle onde sui mari.
-int8_t waves_out = 0; // flag di produzione di onde sui mari.
-int32_t T_SCALE;      // scala della texture, passata in H/V_MATRIXS.
+int8_t mirror    = 0; // water mirror effect (acts on "fragment").
+int8_t waves_in  = 0; // flag for wave presence on seas.
+int8_t waves_out = 0; // flag for wave generation on seas.
+int32_t T_SCALE;      // texture scale, passed in H/V_MATRIXS.
 uint32_t fixture_tree_draws    = 0;
 uint32_t fixture_rock_draws    = 0;
 uint32_t fixture_animal_draws  = 0;
@@ -175,45 +175,45 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2, int32_
 void build_fractal_tree(float x, float y, float z, float scaling, float reduction, float globalwidth, int32_t layers,
                         int32_t divisions, float distance_from_perfection, uint8_t rootcolormask, uint8_t leafcolormask,
                         float branchdetail, int8_t isrootnode, int8_t occurrence) {
-    // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
-    // con una struttura multilivello, ma va usata con parsimonia perch? ?
-    // ovviamente una cosa piuttosto laboriosa in termini di tempo.
+    // recursive function: draws the entire pseudo-random tree
+    // with a multilevel structure, but it must be used sparingly because it is
+    // obviously quite a time-consuming process.
     //
-    // serve qualche spiegazione per i parametri, che sono davvero tantini...
+    // some explanation is needed for the parameters, which are quite numerous...
     //
-    // P(x;y;z)    - origine del tronco (punto medio della base del tronco)
-    // scaling     - altezza del tronco (determina anche la lunghezza dei rami)
-    // reduction   - coefficiente di riduzione della lunghezza dei rami,
-    //           calcolata rispetto a quella del tronco livello per livello
-    // globalwidth - coefficiente che determina la larghezza dei rami,
-    //           calcolata rispetto alla loro lunghezza
-    // layers  - numero di processi ricorsivi di suddivisione del tronco
-    //           una buona tattica per disegnare ciuffi d'erba ? porre
-    //           questo parametro E il successivo entrambi a zero...
-    // divisions   - maschera delle ramificazioni della cima di ogni ramo
-    // branchdetail- step di rotazione nel tracciamento dei rami
-    //           (p.es. 120 traccia 360/120 = 3 poligoni per ramo)...
-    //           il minimo livello di dettaglio ? 360, un poligono per ramo,
-    //           180 fa i rami piatti ma visibili da ogni lato,
-    //           e infine 120 approssima piuttosto bene...
-    // isrootnode  - chiamare la funzione con questo parametro impostato a 1
-    //           per ottenere un albero normale, anche se si possono
-    //           agevolmente disegnare dei cespugli semplicemente ponendo
-    //           questo flag a zero, poich? un cespuglio pu? essere anche
-    //           approssimato, in effetti, come un albero senza tronco
-    // occurrence  - ? un contatore, va semplicemente posto a zero.
+    // P(x;y;z)    - trunk origin (midpoint of the trunk's base)
+    // scaling     - trunk height (also determines branch length)
+    // reduction   - reduction coefficient for branch length,
+    //             calculated relative to the trunk's length level by level
+    // globalwidth - coefficient that determines branch width,
+    //             calculated relative to their length
+    // layers      - number of recursive trunk subdivision processes
+    //             a good tactic for drawing tufts of grass is to set
+    //             this parameter AND the next one both to zero...
+    // divisions   - branching mask for the top of each branch
+    // branchdetail- rotation step when rendering branches
+    //             (e.g., 120 draws 360/120 = 3 polygons per branch)...
+    //             the minimum level of detail is 360, one polygon per branch,
+    //             180 makes flat branches but visible from all sides,
+    //             and finally 120 approximates quite well...
+    // isrootnode  - call the function with this parameter set to 1
+    //             to get a normal tree, although you can
+    //             easily draw bushes simply by setting
+    //             this flag to zero, since a bush can also be
+    //             approximated, in fact, as a tree without a trunk
+    // occurrence  - is a counter, simply set it to zero.
     //
-    // rootcolormask ? il colore di base per il tronco e per i rami.
-    // leafcolormask ? il colore di base per le foglie.
+    // rootcolormask is the base color for the trunk and branches.
+    // leafcolormask is the base color for the leaves.
     //
-    // distance_from_perfection, infine, ? un coefficiente in gradi, che
-    // esprime di quanto i rami "figli" possono divaricarsi ad ogni ulteriore
-    // suddivisione dei rami "padri": in pratica, distance_from_perfection
-    // rappresenta l'irregolarit? generale dell'albero - ad esempio, per le
-    // latifoglie bisognerebbe impostare questo parametro ad un valore alto
-    // (diciamo all'incirca 1.25), mentre per qualcosa di pi? simile ad una
-    // conifera questo valore andrebbe abbassato all'incirca a 0.3 .. 0.4
-    // (ponendolo a zero si otterrebbero rami in una colonna verticale).
+    // distance_from_perfection, lastly, is a coefficient in degrees, which
+    // expresses how much the "child" branches can diverge at each further
+    // subdivision of the "parent" branches: in practice, distance_from_perfection
+    // represents the general irregularity of the tree - for example, for
+    // broadleaf trees this parameter should be set to a high value
+    // (say roughly 1.25), while for something more akin to a
+    // conifer this value should be lowered to roughly 0.3 .. 0.4
+    // (setting it to zero would result in branches stacked in a vertical column).
     int16_t subdivs;
     int8_t polycolor;
     int8_t pf = flares;
@@ -426,50 +426,50 @@ void tree(float x, float y, float z, int32_t depth) {
 }
 
 void cespuglio(float x, float y, float z, int32_t depth) {
-    // disegna un cespuglio.
+    // draws a bush.
 
-    // da 48 mt in poi: ammasso di foglie.
+    // from 48 meters onwards: cluster of leaves.
     if (depth >= 3) {
         greenmush(x, y, z, 7, 7, mushscaling, 209, 31, 0);
         return;
     }
 
     switch (depth) {
-    case 2: // 32 -- 48 mt: visibili i ramoscelli pi? grandi.
+    case 2: // 32 -- 48 meters: largest twigs visible.
         build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0, 0);
         break;
 
-    case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
+    case 1: // 16 -- 32 meters: 50% of the branches visible.
         build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0, 0);
         break;
 
-    case 0: //  0 -- 16 mt: cespuglio completo.
+    case 0: //  0 -- 16 meters: complete bush.
         build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0, 0);
     }
 }
 
 void ciuffo(float x, float y, float z, int32_t depth) {
-    // disegna un ciuffo d'erba.
+    // draws a tuft of grass.
 
-    // da 64 mt in poi, non ? visibile.
+    // from 64 meters onwards, it is not visible.
     if (depth >= 4) {
         return;
     }
 
     switch (depth) {
-    case 3: // 48 -- 64 mt: qualche macchietta.
+    case 3: // 48 -- 64 meters: a few specks.
         greenmush(x, y, z, 3, 7, 1023, 216, 31, 0);
         break;
 
-    case 2: // 32 -- 48 mt: visibile un filo d'erba.
+    case 2: // 32 -- 48 meters: a single blade of grass is visible.
         build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0, 0);
         break;
 
-    case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
+    case 1: // 16 -- 32 meters: 50% of the grass blades visible.
         build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 90, 0, 0);
         break;
 
-    case 0: //  0 -- 16 mt: un ciuffo completo.
+    case 0: //  0 -- 16 meters: a complete tuft.
         build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 60, 0, 0);
     }
 }
