@@ -2923,7 +2923,13 @@ int main(int argc, char **argv) {
         if (noctis::is_fullscreen()) {
             ToggleFullscreen();
         }
+#ifdef __EMSCRIPTEN__
+        // The canvas follows the browser window, which may be a phone or a
+        // narrow pane; the viewport letterboxes the 320x200 frame inside it.
+        SetWindowMinSize(160, 100);
+#else
         SetWindowMinSize(640, 480);
+#endif
         DisableCursor();
         auto image     = GenImageColor(adapted_width, adapted_height, {});
         screen_texture = LoadTextureFromImage(image);

@@ -21,10 +21,10 @@
       font: 15px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
       overflow: hidden;
     }
+    /* raylib sizes the canvas to the window (the game is resizable) and the
+       game letterboxes itself, so CSS must not stretch it. */
     #canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
       outline: none;
       background: #000;
       image-rendering: pixelated;
