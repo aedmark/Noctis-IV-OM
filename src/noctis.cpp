@@ -568,19 +568,19 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t 
         txtr = p_surfacemap;
         d    = (digit - 32) * 36;
 
-        // TODO; Valgrind said there was a big bad invalid write happening here,
-        //  so I just blindly changed this loop to start at one. It probably
-        //  breaks things...
-        for (n = 1; n < 36; n++) {
-
-            i           = 256 * n - 5;
-            txtr[i - 1] = 0; // Avoid aliasing at the end of the scanline.
+        for (n = 0; n < 36; n++) {
+            i = 256 * n - 5;
+            if (i > 0) {
+                txtr[i - 1] = 0; // Avoid aliasing at the end of the scanline.
+            }
 
             for (m = 0; m < 32; m++) {
-                if (read_u32_le(digimap2 + 4 * (n + d)) & pp[m]) {
-                    txtr[i] = pixel_color;
-                } else {
-                    txtr[i] = 0;
+                if (i >= 0) {
+                    if (read_u32_le(digimap2 + 4 * (n + d)) & pp[m]) {
+                        txtr[i] = pixel_color;
+                    } else {
+                        txtr[i] = 0;
+                    }
                 }
 
                 i++;

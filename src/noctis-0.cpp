@@ -33,6 +33,7 @@
 
 */
 
+#include <cstdio>
 #include <iostream>
 #include <raylib.h>
 
@@ -983,25 +984,30 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     uint32_t offset = 0;
 
     if (xp == xa) {
-        if (ya >= yp) {
-            pi = adapted_width * yp + xp;
-            pf = adapted_width * (ya + 1);
-        } else {
-            pi = adapted_width * ya + xp;
-            pf = adapted_width * (yp + 1);
+        if (xp >= adapted_width) {
+            return;
+        }
+        uint32_t y_start = std::min(yp, ya);
+        uint32_t y_end   = std::max(yp, ya);
+        if (y_start >= adapted_height) {
+            return;
+        }
+        if (y_end >= adapted_height) {
+            y_end = adapted_height - 1;
         }
 
-        pi += offset;
-        pf += offset;
+        uint32_t pi = adapted_width * y_start + xp;
+        uint32_t pf = adapted_width * (y_end + 1);
 
         offset = pi;
 
         switch (flares) {
         case 0:
             while (offset < pf) {
-                adapted[offset]     = 0x3E;
-                adapted[offset + 1] = 0x00;
-
+                adapted[offset] = 0x3E;
+                if (xp + 1 < adapted_width) {
+                    adapted[offset + 1] = 0x00;
+                }
                 offset += adapted_width;
             }
             break;
@@ -1035,10 +1041,16 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             break;
         case 3:
             while (offset < pf) {
-                adapted[offset]     = 0x2E;
-                adapted[offset + 1] = 0x1E;
-                adapted[offset + 2] = 0x13;
-                adapted[offset + 3] = 0x0E;
+                adapted[offset] = 0x2E;
+                if (xp + 1 < adapted_width) {
+                    adapted[offset + 1] = 0x1E;
+                }
+                if (xp + 2 < adapted_width) {
+                    adapted[offset + 2] = 0x13;
+                }
+                if (xp + 3 < adapted_width) {
+                    adapted[offset + 3] = 0x0E;
+                }
                 offset += adapted_width;
             }
             break;
@@ -1092,80 +1104,87 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
-            uint32_t tempB = (global_y / 1000);
-            uint32_t index = global_x / 1000;
+            uint32_t px = global_x / 1000;
+            uint32_t py = global_y / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += adapted_width * tempB;
-            // TODO; Figure out why this is over-running and actually fix it.
-            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
-
-            adapted[index]     = 0x00;
-            adapted[index + 1] = 0x3E;
+            if (px < adapted_width && py < adapted_height) {
+                uint32_t index = adapted_width * py + px;
+                adapted[index] = 0x00;
+                if (px + 1 < adapted_width) {
+                    adapted[index + 1] = 0x3E;
+                }
+            }
         }
         break;
     case 1: // Intrinsically luminous sticks.
         while (global_x < xa) {
-            uint32_t tempB = (global_y / 1000);
-            uint32_t index = global_x / 1000;
+            uint32_t px = global_x / 1000;
+            uint32_t py = global_y / 1000;
 
             global_x += a * 2;
             global_y += b * 2;
 
-            index += adapted_width * tempB;
-            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
+            if (px < adapted_width && py < adapted_height) {
+                uint32_t index = adapted_width * py + px;
+                uint16_t color = adapted[index] << 2u;
 
-            uint16_t color = adapted[index] << 2u;
+                if ((color & 0xFFu) <= 0xDF) {
+                    color += 32;
+                } else {
+                    color = (color & 0xFF00u) + 0xFB;
+                }
 
-            if ((color & 0xFFu) <= 0xDF) {
-                color += 32;
-            } else {
-                color = (color & 0xFF00u) + 0xFB;
+                adapted[index] = (color >> 2u) & 0xFFu;
             }
-
-            adapted[index] = (color >> 2u) & 0xFFu;
         }
         break;
     case 2: // Sticks that absorb light ("smoked")
         while (global_x < xa) {
-            uint32_t tempB = (global_y / 1000);
-            uint32_t index = global_x / 1000;
+            uint32_t px = global_x / 1000;
+            uint32_t py = global_y / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += adapted_width * tempB;
-            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
+            if (px < adapted_width && py < adapted_height) {
+                uint32_t index = adapted_width * py + px;
+                uint16_t color = adapted[index];
 
-            uint16_t color = adapted[index];
+                color &= 0x3Fu;
+                adapted[index] &= 0xC0u;
 
-            color &= 0x3Fu;
-            adapted[index] &= 0xC0u;
-
-            color >>= 1u;
-            adapted[index] += color;
+                color >>= 1u;
+                adapted[index] += color;
+            }
         }
-
         break;
 
     case 3: // Same as type 0, but wider.
         while (global_x < xa) {
-            uint32_t tempB = (global_y / 1000);
-            uint32_t index = global_x / 1000;
+            uint32_t px = global_x / 1000;
+            uint32_t py = global_y / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += adapted_width * tempB;
-            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
-
-            adapted[index]     = 0xCE;
-            adapted[index + 1] = 0xD3;
-            adapted[index + 2] = 0xDE;
-            adapted[index + 3] = 0xEE;
+            if (px < adapted_width && py < adapted_height) {
+                uint32_t index = adapted_width * py + px;
+                adapted[index] = 0xCE;
+                if (px + 1 < adapted_width) {
+                    adapted[index + 1] = 0xD3;
+                }
+                if (px + 2 < adapted_width) {
+                    adapted[index + 2] = 0xDE;
+                }
+                if (px + 3 < adapted_width) {
+                    adapted[index + 3] = 0xEE;
+                }
+            }
         }
+        break;
     default:
         break;
     }
@@ -2089,9 +2108,8 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
 
 // Returns the alphabetic correspondent of integers and / or real numbers.
 char *alphavalue(double value) {
-    // Please Note: Different behavior on Windows & Linux. TODO; Fix
-    gcvt(value, 15, dec);
-    return (dec);
+    std::snprintf(dec, sizeof(dec), "%.15g", value);
+    return dec;
 }
 
 // Draws the background, with the map offsets.map.

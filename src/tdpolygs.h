@@ -212,7 +212,7 @@ void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color
                 adapted[idx] = color;
                 break;
             case 1:
-                adapted[idx] = std::min(adapted[idx] & 0x3Fu + color, 62u);
+                adapted[idx] = std::min((adapted[idx] & 0x3Fu) + color, 62u);
                 break;
             case 2:
                 adapted[idx] = std::min(0x40u + (bboxmax.x - curr.x), 127u);

@@ -83,5 +83,16 @@ int main() {
                      static_cast<unsigned long long>(textured_hash), textured_pixels);
         return 1;
     }
+
+    reset_renderer();
+    flares = 1;
+    framebuffer.fill(10);
+    draw_triangle_2d(glm::ivec2(10, 10), glm::ivec2(30, 10), glm::ivec2(20, 30), 20);
+    const auto blended_pixel = framebuffer[adapted_width * 15 + 20];
+    if (blended_pixel != 30) {
+        std::fprintf(stderr, "draw_triangle_2d flares=1 expected 30, got %u\n", blended_pixel);
+        return 1;
+    }
+
     return 0;
 }

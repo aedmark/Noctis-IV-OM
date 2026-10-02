@@ -20,8 +20,8 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M4 | Planet generation, landing, and surface exploration | DONE |
 | M5 | Ship interface, persistence, and GOESnet parity | DONE |
 | M6 | Noctis IV Plus feature migration | DONE |
-| M7 | Cross-platform compatibility preview | NOT STARTED |
-| M8 | Stabilization and 1.0 | NOT STARTED |
+| M7 | Cross-platform compatibility preview | IN PROGRESS |
+| M8 | Stabilization and 1.0 | IN PROGRESS |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -185,7 +185,7 @@ containers, not substitutes for that ledger.
 | M7-W03 | Produce portable Windows package | DONE — fresh Windows 2022 CI builds a static-runtime Release ZIP, passes 34 required tests, verifies checksum and exact extracted contents, runs packaged diagnostics, rejects Visual C++ Redistributable DLL dependencies, and uploads the artifact; see `WINDOWS_PACKAGING.md` and run `36796703199` |
 | M7-W04 | Add configuration, data-path, and migration UX | DONE — OS-native Linux/Windows roots, executable-relative immutable resources/defaults, safe explicit migration, read-only path diagnostics, isolated fixtures, and both revised packages pass hosted verification; see `RUNTIME_PATHS.md` and runs `36866928901`, `36866929363`, `36866929200`, and `36866929028` |
 | M7-W05 | Run cross-platform fixture suite and publish known differences | DONE — the report publishes the compiler-specific surface boundary; exact Linux and MSVC Release baselines are enforced, all 40 Windows Release tests pass, and `KNOWN_ISSUES.md` ships in both packages; see `M7_COMPATIBILITY_REPORT.md` and run `36869013306` |
-| M7-W06 | Conduct focused community compatibility test | IN PROGRESS — the first pair was withdrawn after manual Linux testing exposed a cockpit-text pulse and ambiguous terminal/flight instructions; follow-up testing proved the later repeating blink is the inherited zero-power warning, fixed the ineffective depleted-save `--standard-drive` recovery, and requires a fresh same-commit Linux/Windows candidate pair before the maintainer routes resume |
+| M7-W06 | Conduct focused community compatibility test | IN PROGRESS — candidate pair v0.0.1-preview released; maintainer manual core route on Linux confirmed working; recruitment for Windows testing in progress |
 
 **Exit criteria**
 
@@ -199,7 +199,7 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status |
 | --- | --- | --- |
-| M8-W01 | Resolve release-blocking compatibility and stability defects | NOT STARTED |
+| M8-W01 | Resolve release-blocking compatibility and stability defects | IN PROGRESS — resolved lithium depletion bug on relaunch; hardened 2D flare line drawer with viewport clipping against 1-3 byte buffer overflows; fixed operator precedence in additive polygon flare blending; prevented font glyph buffer underflow and restored row 0 rendering; guarded NOMINMAX macro; replaced non-portable gcvt with std::snprintf |
 | M8-W02 | Complete user, contributor, migration, and troubleshooting docs | NOT STARTED |
 | M8-W03 | Establish performance budgets and profile representative scenes | NOT STARTED |
 | M8-W04 | Verify license notices, provenance, and distribution contents | NOT STARTED |
