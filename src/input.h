@@ -40,18 +40,23 @@ struct InputFrame {
     bool page_down_pressed     = false;
     bool home_pressed          = false;
     bool end_pressed           = false;
-    bool toggle_cursor_pressed = false;
-    bool toggle_audio_pressed  = false;
+    bool toggle_cursor_pressed     = false;
+    bool toggle_audio_pressed      = false;
+    bool toggle_fullscreen_pressed = false;
+    bool toggle_aspect_pressed     = false;
 };
 
-using InputProvider      = InputFrame (*)();
-using AudioToggleHandler = void (*)();
+using InputProvider        = InputFrame (*)();
+using AudioToggleHandler   = void (*)();
+using DisplayToggleHandler = void (*)();
 
 void apply_input_frame(const InputFrame &frame);
 void set_input_provider(InputProvider provider);
 void reset_input_provider();
 void reset_input_state();
 void set_audio_toggle_handler(AudioToggleHandler handler);
+void set_fullscreen_toggle_handler(DisplayToggleHandler handler);
+void set_aspect_toggle_handler(DisplayToggleHandler handler);
 
 } // namespace noctis
 

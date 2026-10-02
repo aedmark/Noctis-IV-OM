@@ -269,12 +269,12 @@ void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std
 
 const std::vector<std::string_view> &plus_help_lines(bool surface) {
     static const std::vector<std::string_view> space{
-        "NOCTIS IV PLUS - SPACE SHORTCUTS",
+        "NOCTIS IV OM - SPACE SHORTCUTS",
         "M/* SNAPSHOT   B/DELETE RAW SNAPSHOT",
-        "S ROOFSPEED   DOWN MOUSELOOK",
+        "T/SHIFT+S ROOFSPEED   DOWN MOUSELOOK",
         "F2 VISUAL EFFECTS   F3 MOVIEMAKER"};
     static const std::vector<std::string_view> ground{
-        "NOCTIS IV PLUS - SURFACE SHORTCUTS",
+        "NOCTIS IV OM - SURFACE SHORTCUTS",
         "J JUMP   SPACE JETPACK   C RELEASE",
         "L TORCH   M/* SNAP   N// WIDE   B/DEL RAW",
         "DOWN MOUSELOOK   F2 EFFECTS   F3 MOVIE"};
@@ -283,13 +283,21 @@ const std::vector<std::string_view> &plus_help_lines(bool surface) {
 
 const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        std::int8_t lens_flare_mode,
-                                                       bool seamless_border) {
-    return {"NOCTIS IV+ VISUAL EFFECTS SETTINGS",
-            draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
-            lens_flare_mode == 1 ? "LENS FLARES ALWAYS ON (F)"
-                : lens_flare_mode == -1 ? "LENS FLARES ALWAYS OFF (F)"
-                                        : "VISOR LENS FLARES ONLY (F)",
-            seamless_border ? "SEAMLESS BORDER (B)" : "DEFAULT BORDER (B)"};
+                                                       bool seamless_border,
+                                                       int timewarp_multiplier) {
+    std::vector<std::string> lines = {
+        "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
+        draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
+        lens_flare_mode == 1 ? "LENS FLARES ALWAYS ON (F)"
+            : lens_flare_mode == -1 ? "LENS FLARES ALWAYS OFF (F)"
+                                    : "VISOR LENS FLARES ONLY (F)",
+        seamless_border ? "SEAMLESS BORDER (B)" : "DEFAULT BORDER (B)"};
+    if (timewarp_multiplier > 0) {
+        char buf[48];
+        std::snprintf(buf, sizeof(buf), "TIMEWARP %dx ([ / ] ADJUST)", timewarp_multiplier);
+        lines.emplace_back(buf);
+    }
+    return lines;
 }
 
 const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,

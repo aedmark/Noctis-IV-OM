@@ -43,12 +43,12 @@
           and being the first person to see what is there.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#download">Download 1.3.0 Release</a>
+          <a class="btn btn-primary" href="#download">Download 1.4.0 Release</a>
           <a class="btn btn-secondary" href="#first-flight">How to Fly</a>
         </div>
         <div class="hero-status-strip">
           <span class="status-dot"></span>
-          <span>v1.3.0 The Aural Update now available · Procedural Ambient Audio &amp; Foley · Vimana Warp Dynamics · Windows &amp; Linux</span>
+          <span>v1.4.0 The Celestial &amp; Display Update now available · Dynamic Planetary Rotation · Timewarp Slider · Display Scaling · Windows &amp; Linux</span>
         </div>
       </div>
     </section>
@@ -57,12 +57,12 @@
     <section class="download-section" id="download" aria-labelledby="download-title">
       <div class="section">
         <div class="section-heading">
-          <span class="eyebrow eyebrow-amber">1.3.0 FEATURE RELEASE // THE AURAL UPDATE</span>
+          <span class="eyebrow eyebrow-amber">1.4.0 FEATURE RELEASE // THE CELESTIAL &amp; DISPLAY UPDATE</span>
           <h2 id="download-title">Download Noctis IV OM</h2>
           <p>
-            Standalone, fully self-contained portable releases featuring the new <strong>Procedural Ambient Audio Engine</strong>,
-            dynamic Vimana warp acoustics, tactile exploration Foley, planetary <strong>Suit Torch</strong> headlamp (<kbd>L</kbd>),
-            canonical observation deck frame pacing, and rock-solid surface session checkpointing.
+            Standalone, fully self-contained portable releases featuring real-time <strong>Dynamic Planetary Rotation</strong>,
+            interactive <strong>Timewarp Multiplier Slider</strong> (1x–5000x), authentic <strong>4:3 CRT Aspect Ratio</strong> letterboxing (<kbd>F8</kbd>),
+            fullscreen toggle (<kbd>F11</kbd>), and built-in procedural ambient audio engine.
             No installers, zero external audio asset dependencies, and no DOSBox required.
           </p>
         </div>
@@ -79,12 +79,12 @@
               Native 64-bit executable with all required runtime assets included.
               Runs on Windows 10 &amp; 11 (and verified under Wine on Linux).
             </p>
-            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.3.0/Noctis-IV-OM-windows-x86_64.zip">
+            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.4.0/Noctis-IV-OM-windows-x86_64.zip">
               Download for Windows (.zip)
             </a>
             <div class="card-specs">
-              <span>Size: ~7.8 MB · v1.3.0</span>
-              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.3.0/Noctis-IV-OM-windows-x86_64.zip.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
+              <span>Size: ~7.8 MB · v1.4.0</span>
+              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.4.0/Noctis-IV-OM-windows-x86_64.zip.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
             </div>
             <ul class="download-steps">
               <li>Extract the downloaded <code>.zip</code> file anywhere.</li>
@@ -104,12 +104,12 @@
               Verified on Ubuntu 24.04+ (X11 / XWayland).
               Self-contained release tarball configured in portable mode by default.
             </p>
-            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.3.0/Noctis-IV-OM-linux-x86_64.tar.gz">
+            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.4.0/Noctis-IV-OM-linux-x86_64.tar.gz">
               Download for Linux (.tar.gz)
             </a>
             <div class="card-specs">
-              <span>Size: ~2.7 MB · v1.3.0</span>
-              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.3.0/Noctis-IV-OM-linux-x86_64.tar.gz.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
+              <span>Size: ~2.7 MB · v1.4.0</span>
+              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v1.4.0/Noctis-IV-OM-linux-x86_64.tar.gz.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
             </div>
             <ul class="download-steps">
               <li>Extract the archive: <code>tar -xzf Noctis-IV-OM-linux-x86_64.tar.gz</code></li>
@@ -125,7 +125,7 @@
             Run <code>./nivlr --prepare-user-data --migrate-from "/path/to/old Noctis"</code>
             to safely import your catalogs, saves, and screenshots without overwriting anything.
           </p>
-          <a class="footnote-link" href="https://github.com/aedmark/Noctis-IV-OM/releases/tag/v1.3.0" target="_blank" rel="noopener">
+          <a class="footnote-link" href="https://github.com/aedmark/Noctis-IV-OM/releases/tag/v1.4.0" target="_blank" rel="noopener">
             View Release on GitHub →
           </a>
         </div>
@@ -361,13 +361,14 @@
         </div>
 
         <div class="control-card">
-          <span class="eyebrow">D // DATA &amp; RECORDING</span>
-          <h3>Capture Field Notes</h3>
+          <span class="eyebrow">D // DISPLAY &amp; AUDIO</span>
+          <h3>Display &amp; Audio</h3>
           <dl>
-            <div><dt><kbd>M</kbd> / <kbd>*</kbd></dt><dd>Take single photograph</dd></div>
-            <div><dt><kbd>N</kbd> / <kbd>/</kbd></dt><dd>Record 360° surface panorama</dd></div>
-            <div><dt><kbd>F2</kbd></dt><dd>Rendering &amp; display settings</dd></div>
-            <div><dt><kbd>F3</kbd></dt><dd>Open Moviemaker recorder</dd></div>
+            <div><dt><kbd>F11</kbd> / <kbd>Alt+Enter</kbd></dt><dd>Toggle fullscreen mode</dd></div>
+            <div><dt><kbd>F8</kbd></dt><dd>Cycle 4:3 CRT / 16:10 / 16:9 aspect</dd></div>
+            <div><dt><kbd>F9</kbd> / <kbd>Ctrl+M</kbd></dt><dd>Toggle procedural audio mute</dd></div>
+            <div><dt><kbd>F2</kbd></dt><dd>Visual effects panel</dd></div>
+            <div><dt><kbd>F3</kbd></dt><dd>Open Moviemaker suite</dd></div>
           </dl>
         </div>
       </div>

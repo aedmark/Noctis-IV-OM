@@ -3068,7 +3068,9 @@ void synchronize_secs_to_wall_clock() {
 // not participate in the result.
 void getsecs() {
     const auto previous_whole_second = static_cast<std::int64_t>(simulation_clock.seconds());
-    simulation_clock.advance();
+    const uint64_t step_count =
+        noctis::is_timewarp_active() ? static_cast<uint64_t>(noctis::get_timewarp_multiplier()) : 1ULL;
+    simulation_clock.advance(step_count);
     secs = simulation_clock.seconds();
     fsecs = simulation_clock.fraction();
     if (static_cast<std::int64_t>(secs) != previous_whole_second && _delay >= 10) {
@@ -4647,6 +4649,33 @@ void draw_planets() {
     }
 
     for (n = 0; n < nearstar_nob; n++) {
+        if (nearstar_p_rtperiod[n] <= 0) {
+            double seedval = 0.0;
+            if (nearstar_p_owner[n] > -1) {
+                if (nearstar_p_type[n]) {
+                    seedval = 1000000.0 * nearstar_ray * nearstar_p_type[n] * nearstar_p_orb_orient[n];
+                } else {
+                    seedval = 2000000.0 * n * nearstar_ray * nearstar_p_orb_orient[n];
+                }
+            } else {
+                if (nearstar_p_type[n]) {
+                    seedval = 1000000.0 * nearstar_p_type[n] * nearstar_p_orb_seed[n] * nearstar_p_orb_tilt[n] *
+                              nearstar_p_orb_ecc[n] * nearstar_p_orb_orient[n];
+                } else {
+                    seedval = 2000000.0 * n * nearstar_p_orb_seed[n] * nearstar_p_orb_tilt[n] *
+                              nearstar_p_orb_ecc[n] * nearstar_p_orb_orient[n];
+                }
+            }
+            fast_srand(legacy_u32_from_double(seedval) + 4112u);
+            nearstar_p_rtperiod[n] =
+                10.0 * (ranged_fast_random(50) + 1) + 10.0 * ranged_fast_random(25) + ranged_fast_random(250) + 41;
+        }
+        if (nearstar_p_rtperiod[n] > 0) {
+            auto rot = static_cast<int16_t>(std::fmod(secs / nearstar_p_rtperiod[n], 360.0));
+            if (rot < 0) rot += 360;
+            nearstar_p_rotation[n] = rot;
+        }
+
         planet_xyz(n);
         xx                       = plx - dzat_x;
         yy                       = ply - dzat_y;
@@ -5559,7 +5588,8 @@ void draw_plus_overlay(bool surface) {
         }
     } else if (graphics_menu_status) {
         const auto lines = noctis::plus_visual_menu_lines(draw_hud != 0, lens_flare_mode,
-                                                          seamless_border != 0);
+                                                          seamless_border != 0,
+                                                          noctis::get_timewarp_multiplier());
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0, lines[index].c_str());
         }

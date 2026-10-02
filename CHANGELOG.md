@@ -5,6 +5,26 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.4.0 (2026-10-02) — The Celestial & Display Update
+
+Noctis IV OM 1.4.0 introduces modern presentation and display enhancements,
+real-time dynamic planetary axial rotation, an interactive timewarp multiplier
+slider HUD, and observation deck control parity.
+
+### Modern Display & Presentation
+* **Aspect Ratio Preservation (<kbd>F8</kbd>):** Authentic 4:3 CRT proportions with dynamic pillarboxing/letterboxing preserving canonical round celestial bodies on widescreen displays, toggleable to 16:10 square pixels or 16:9 stretch mode via `F8`.
+* **Fullscreen & Window Management:** Seamless fullscreen toggling with <kbd>F11</kbd> or <kbd>Alt+Enter</kbd>. Dynamic window resizing with `FLAG_WINDOW_RESIZABLE` and defensive minimum 640x480 clamping.
+* **High-DPI HUD Overlay:** Full native display resolution HUD overlay featuring frosted glass badges, glowing telemetry pips, and smooth fadeouts for transient messages, aspect ratio shifts, audio mute, and simulation rates.
+
+### Dynamic Planetary Axial Rotation
+* **Real-Time Axial Rotation in Space:** Fixed the legacy engine quirk where planetary bodies remained statically frozen during orbit. Planetary bodies now dynamically rotate around their spin axes per-frame based on the simulation clock and star-specific rotation rates (`nearstar_p_rotation[n]`).
+* **Sun-Locked Terminator & Cache Refresh:** Smooth planetary rotation while keeping the day/night terminator locked to the sun, invalidating surface rendering cache (`npcs = -12345`) whenever axial rotation advances by 3° or more to guarantee stutter-free celestial tracking.
+
+### Timewarp Multiplier Slider System
+* **Interactive HUD Slider:** High-DPI frosted glass timewarp slider with responsive mouse dragging, step buttons `[-]` / `[+]`, and direct numerical multiplier readouts from 1x to 5000x.
+* **Key Stepping & Universal Toggle:** Step simulation speed dynamically with bracket keys <kbd>[</kbd> / <kbd>]</kbd>. Toggle timewarp on/off with <kbd>T</kbd> or <kbd>Shift+S</kbd> seamlessly across the ship cabin, observation deck, and planetary surfaces.
+* **Deck Input Parity:** Observation deck input handlers now support timewarp toggling (<kbd>T</kbd> / <kbd>Shift+S</kbd>) and the <kbd>F2</kbd> visual effects menu (<kbd>T</kbd>, <kbd>F</kbd>, <kbd>B</kbd>).
+
 ## 1.3.0 (2026-10-02) — The Aural Update
 
 Noctis IV OM 1.3.0 introduces a completely procedural ambient audio engine and

@@ -76,6 +76,7 @@ MouseControlDelta surface_mouse_control(std::int8_t mode, bool right_button, boo
 }
 
 bool should_wait_for_frame(bool on_roof, bool roof_speed) { return !on_roof || !roof_speed; }
+bool is_roof_speed_key(std::int16_t key) { return key == 't' || key == 'T' || key == 'S'; }
 
 DriveRecharge recharge_drive(std::int16_t &power, std::int8_t &charge) {
     if (power > 15000) return DriveRecharge::none;

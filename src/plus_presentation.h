@@ -20,7 +20,8 @@ void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std
 const std::vector<std::string_view> &plus_help_lines(bool surface);
 const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        std::int8_t lens_flare_mode,
-                                                       bool seamless_border);
+                                                       bool seamless_border,
+                                                       int timewarp_multiplier = 0);
 const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
                                                       std::uint16_t cadence,
                                                       bool black_flash,

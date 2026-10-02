@@ -63,6 +63,7 @@ set(SOURCE_FILES
     src/plus_controls.cpp
     src/plus_presentation.cpp
     src/audio.cpp
+    src/display.cpp
     src/movie_capture.cpp
     src/goesnet_protocol.cpp
     src/goesnet_data.cpp
@@ -214,6 +215,15 @@ if(BUILD_TESTING)
         target_link_libraries(audio_tests PRIVATE shell32 ole32)
     endif()
     add_test(NAME audio_determinism COMMAND audio_tests)
+    add_executable(display_tests tests/display_test.cpp src/display.cpp src/simulation_clock.cpp)
+    target_include_directories(display_tests PRIVATE src)
+    target_compile_features(display_tests PRIVATE cxx_std_20)
+    set_target_properties(display_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    target_link_libraries(display_tests PRIVATE raylib)
+    if(WIN32)
+        target_link_libraries(display_tests PRIVATE shell32 ole32)
+    endif()
+    add_test(NAME display COMMAND display_tests)
     add_executable(movie_capture_tests tests/movie_capture_test.cpp src/movie_capture.cpp)
     target_include_directories(movie_capture_tests PRIVATE src)
     target_compile_features(movie_capture_tests PRIVATE cxx_std_20)
@@ -495,8 +505,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32)
     set(CPACK_PACKAGE_NAME "Noctis-IV-OM")
     set(CPACK_PACKAGE_VENDOR "Noctis IV OM contributors")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-        "Noctis IV OM 1.3.0 Feature Release")
-    set(CPACK_PACKAGE_VERSION "1.3.0")
+        "Noctis IV OM 1.4.0 Feature Release")
+    set(CPACK_PACKAGE_VERSION "1.4.0")
     set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}")
     set(CPACK_PACKAGE_CHECKSUM "SHA256")
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)

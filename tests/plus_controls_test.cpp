@@ -56,6 +56,14 @@ int main() {
                       && noctis::should_wait_for_frame(true, false)
                       && !noctis::should_wait_for_frame(true, true),
                   "roof-speed pacing gate changed");
+    ok &= require(noctis::is_roof_speed_key('t')
+                      && noctis::is_roof_speed_key('T')
+                      && noctis::is_roof_speed_key('S')
+                      && !noctis::is_roof_speed_key('s')
+                      && !noctis::is_roof_speed_key('w')
+                      && !noctis::is_roof_speed_key('a')
+                      && !noctis::is_roof_speed_key('d'),
+                  "roof speed key toggle mapping changed");
 
     std::int16_t power = 15000;
     std::int8_t charge = 2;

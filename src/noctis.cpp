@@ -6,6 +6,7 @@
 #include "noctis.h"
 #include "audio.h"
 #include "brtl.h"
+#include "display.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
 #include "indexed_framebuffer.h"
@@ -20,6 +21,7 @@
 #include "plus_presentation.h"
 #include "runtime_paths.h"
 #include "ship_interface.h"
+#include "simulation_clock.h"
 #include "startup_diagnostics.h"
 #include "travel.h"
 #include <algorithm>
@@ -2874,15 +2876,18 @@ int main(int argc, char **argv) {
         !persistence_fixture_mode && !movie_fixture_mode && !surface_fixture_mode && !landing_fixture_mode &&
         !orbit_surface_fixture_mode && !environment_fixture_mode && !content_fixture_mode &&
         !oakenshield_fixture_mode) {
-        noctis::log_event("info", "graphics", "initializing Raylib window 1280x720");
-        InitWindow(1280, 720, "Noctis IV LR");
+        noctis::log_event("info", "graphics", "initializing Raylib window 1280x720 (Noctis IV OM)");
+        SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+        InitWindow(1280, 720, "Noctis IV OM");
         if (!IsWindowReady()) {
             noctis::log_event("error", "graphics", "window initialization failed");
             return 1;
         }
+        SetWindowMinSize(640, 480);
         DisableCursor();
         auto image     = GenImageColor(adapted_width, adapted_height, {});
         screen_texture = LoadTextureFromImage(image);
+        SetTextureFilter(screen_texture, TEXTURE_FILTER_POINT);
         UnloadImage(image);
 
         if (!no_audio_mode) {
@@ -2892,6 +2897,15 @@ int main(int argc, char **argv) {
         noctis::set_audio_toggle_handler([]() {
             noctis::toggle_audio_mute();
             status(noctis::is_audio_muted() ? "AUDIO MUTED" : "AUDIO ACTIVE", 50);
+        });
+        noctis::set_fullscreen_toggle_handler([]() {
+            noctis::toggle_fullscreen();
+            status(noctis::is_fullscreen() ? "FULLSCREEN" : "WINDOWED", 50);
+        });
+        noctis::set_aspect_toggle_handler([]() {
+            const auto next_mode = noctis::cycle_aspect_ratio_mode(noctis::get_aspect_ratio_mode());
+            noctis::set_aspect_ratio_mode(next_mode);
+            status(noctis::aspect_ratio_mode_name(next_mode), 50);
         });
     }
 
@@ -3954,11 +3968,30 @@ void swapBuffers() {
         noctis::apply_suit_torch_rgba(pixels.data(), adapted, adapted_width, adapted_height);
     }
     UpdateTexture(screen_texture, pixels.data());
-    DrawTextureNPatch(screen_texture,
-                      {.source = {.x = 0, .y = 0, .width = (float) adapted_width, .height = (float) adapted_height}},
-                      {.x = 0, .y = 0, .width = 1280, .height = 720}, {}, 0.0f, WHITE);
-    // Frame limiter (18 FPS)
-    static constexpr auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
+
+    int render_w = GetRenderWidth();
+    int render_h = GetRenderHeight();
+    if (render_w <= 0 || render_h <= 0) {
+        render_w = GetScreenWidth();
+        render_h = GetScreenHeight();
+    }
+    const auto viewport = noctis::calculate_viewport(render_w, render_h, noctis::get_aspect_ratio_mode());
+
+    DrawTexturePro(screen_texture,
+                   Rectangle{0.0f, 0.0f, static_cast<float>(adapted_width), static_cast<float>(adapted_height)},
+                   Rectangle{viewport.x, viewport.y, viewport.width, viewport.height},
+                   Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+
+    if (fcs_status_delay > 0) {
+        noctis::render_high_dpi_hud(reinterpret_cast<const char *>(fcs_status_extended),
+                                    fcs_status_delay, render_w, render_h, viewport);
+    }
+    noctis::render_timewarp_slider(render_w, render_h, viewport, fcs_status_delay);
+
+    // Frame limiter: 18.2 FPS canonical simulation tick (55 ms);
+    // 62.5 FPS (~16 ms) during timewarp or on observation deck when ROOFSPEED is enabled.
+    const auto goal = std::chrono::milliseconds(
+        ((ontheroof != 0 && roof_speed != 0) || noctis::is_timewarp_active()) ? 16 : FRAME_TIME_MILLIS);
     static auto next_frame     = std::chrono::steady_clock::now() + goal;
     std::this_thread::sleep_until(next_frame);
     const auto now = std::chrono::steady_clock::now();
@@ -6013,11 +6046,15 @@ resynctoplanet:
 
     //
 
-    /* Hook for managing the motion characteristics of planet surface features
-     *
-     */
+    /* Hook for managing the motion characteristics of planet surface features */
+    static double last_map_refresh_secs = 0.0;
+    static int16_t last_target_rotation = 0;
     if (ip_targetted != -1 && ip_reached) {
-        if ((int32_t) secs % 300 == 0) {
+        const int16_t cur_rot = nearstar_p_rotation[ip_targetted];
+        if (std::abs(secs - last_map_refresh_secs) >= 300.0 ||
+            std::abs(cur_rot - last_target_rotation) >= 3) {
+            last_map_refresh_secs = secs;
+            last_target_rotation = cur_rot;
             npcs = -12345;
         }
     }
@@ -6056,6 +6093,34 @@ resynctoplanet:
                            50);
                 }
             } else if (handle_movie_key(mc, false)) {
+            } else if (graphics_menu_status) {
+                if (mc == 't') {
+                    draw_hud = !draw_hud;
+                    status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
+                } else if (mc == 'f') {
+                    lens_flare_mode = noctis::cycle_lens_flare_mode(lens_flare_mode);
+                    status(lens_flare_mode == 1    ? "FLARES ON"
+                           : lens_flare_mode == -1 ? "FLARES OFF"
+                                                   : "VISOR FLARES",
+                           100);
+                } else if (mc == 'b' || mc == noctis::delete_snapshot_key) {
+                    seamless_border = !seamless_border;
+                    status(seamless_border ? "SEAMLESS BD." : "DEFAULT BD.", 100);
+                }
+            } else if (noctis::is_roof_speed_key(mc)) {
+                noctis::toggle_timewarp();
+                roof_speed = noctis::is_timewarp_active() ? 1 : 0;
+                noctis::touch_timewarp_slider();
+                char msg[32];
+                std::snprintf(msg, sizeof(msg), noctis::is_timewarp_active() ? "TIME %dx" : "REALTIME 1x",
+                              noctis::get_timewarp_multiplier());
+                status(msg, 50);
+            } else if (mc == '[' || mc == ']' || mc == '-' || mc == '+' || mc == '=') {
+                const auto m = noctis::step_timewarp_multiplier((mc == '[' || mc == '-') ? -1 : 1);
+                noctis::touch_timewarp_slider();
+                char msg[32];
+                std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
+                status(msg, 50);
             } else if (noctis::snapshot_action(mc, false, false, false) == noctis::SnapshotAction::normal) {
                 snapshot(0, 1);
             } else if (noctis::snapshot_action(mc, false, false, false) == noctis::SnapshotAction::raw) {
@@ -6191,6 +6256,29 @@ resynctoplanet:
 
                 if (snapshot_command == noctis::SnapshotAction::raw) {
                     snapshot(0, 0);
+                    goto endmain;
+                }
+
+                if (noctis::is_roof_speed_key(mc) && !(labstar || labplanet) && !graphics_menu_status &&
+                    !ip_targetting && !manual_target) {
+                    noctis::toggle_timewarp();
+                    roof_speed = noctis::is_timewarp_active() ? 1 : 0;
+                    noctis::touch_timewarp_slider();
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), noctis::is_timewarp_active() ? "TIME %dx" : "REALTIME 1x",
+                                  noctis::get_timewarp_multiplier());
+                    status(msg, 50);
+                    goto endmain;
+                }
+
+                if ((mc == '[' || mc == ']' || mc == '-' || mc == '+' || mc == '=') &&
+                    !(labstar || labplanet) && !graphics_menu_status &&
+                    !ip_targetting && !manual_target) {
+                    const auto m = noctis::step_timewarp_multiplier((mc == '[' || mc == '-') ? -1 : 1);
+                    noctis::touch_timewarp_slider();
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
+                    status(msg, 50);
                     goto endmain;
                 }
 

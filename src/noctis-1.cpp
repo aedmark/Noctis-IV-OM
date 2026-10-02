@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "brtl.h"
+#include "display.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
 #include "native_save.h"
@@ -10,6 +11,7 @@
 #include "plus_controls.h"
 #include "plus_presentation.h"
 #include "runtime_paths.h"
+#include "simulation_clock.h"
 #include "startup_diagnostics.h"
 #include <algorithm>
 
@@ -5734,6 +5736,26 @@ nosecondarysun:
                     suit_torch = !suit_torch;
                     status(suit_torch ? "TORCH ON" : "TORCH OFF", 50);
                     noctis::play_torch_click(suit_torch != 0);
+                    continue;
+                }
+
+                if (!graphics_menu_status && !movie_recorder.menu_open() && noctis::is_roof_speed_key(w)) {
+                    noctis::toggle_timewarp();
+                    roof_speed = noctis::is_timewarp_active() ? 1 : 0;
+                    noctis::touch_timewarp_slider();
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), noctis::is_timewarp_active() ? "TIME %dx" : "REALTIME 1x",
+                                  noctis::get_timewarp_multiplier());
+                    status(msg, 50);
+                    continue;
+                }
+
+                if (!graphics_menu_status && !movie_recorder.menu_open() && (w == '[' || w == ']')) {
+                    const auto m = noctis::step_timewarp_multiplier((w == '[') ? -1 : 1);
+                    noctis::touch_timewarp_slider();
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
+                    status(msg, 50);
                     continue;
                 }
 

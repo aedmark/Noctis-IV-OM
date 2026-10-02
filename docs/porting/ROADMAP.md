@@ -19,9 +19,10 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M3 | Playable space-flight vertical slice | DONE |
 | M4 | Planet generation, landing, and surface exploration | DONE |
 | M5 | Ship interface, persistence, and GOESnet parity | DONE |
-| M6 | Noctis IV Plus feature migration | DONE |
-| M7 | Cross-platform compatibility preview | IN PROGRESS |
-| M8 | Stabilization and 1.0 | IN PROGRESS |
+| M7 | Cross-platform compatibility preview | DONE |
+| M8 | Stabilization and 1.0 General Availability | DONE |
+| M9 | Modern Presentation & Display Enhancements | DONE |
+| M10 | Deterministic Upscaling & Fidelity Increase | PLANNED |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -211,6 +212,38 @@ containers, not substitutes for that ledger.
 - All mandatory blueprint success criteria have evidence.
 - No open release-blocking defect or unresolved distribution gate remains.
 - A clean tag reproducibly yields tested release artifacts.
+
+## M9 — Modern Presentation & Display Enhancements
+
+**Goal:** Deliver modern, flexible, high-fidelity windowing and display presentation while strictly preserving retro 3D software rendering and determinism.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M9-W01 | Aspect ratio preservation & dynamic letterboxing | DONE | Implemented `calculate_viewport()` with authentic 4:3 CRT proportions (canonical round celestial bodies, dynamic pillarboxing/letterboxing in arbitrary aspect ratios), 16:10 square-pixel mode, and 16:9 stretch mode; cycle with `F8`; verified in `tests/display_test.cpp` |
+| M9-W02 | Window management, resizing, and fullscreen | DONE | Updated window title to "Noctis IV OM"; enabled dynamic window resizing via `FLAG_WINDOW_RESIZABLE` with minimum 640x480 bounds; added `F11` and `Alt+Enter` toggle for true/borderless fullscreen; verified in `tests/input_mapping_test.cpp` |
+| M9-W03 | High-DPI HUD overlay | DONE | Implemented `render_high_dpi_hud()` rendering transient telemetry, FCS status messages, and display mode notifications at full display resolution above the retro canvas with frosted glass badge, glowing status pip, and smooth fadeout |
+
+**Exit criteria**
+
+- Window can be resized to arbitrary resolutions without distorting celestial body geometry.
+- Fullscreen and aspect ratio cycling operate dynamically via hotkeys and display high-DPI status badges.
+- All existing compatibility fixtures and determinism test suites pass with identical hashes.
+
+## M10 — Deterministic Upscaling & Fidelity Increase
+
+**Goal:** Provide advanced deterministic post-processing, upscaling, and geometry fidelity enhancements to elevate visual presentation on modern high-resolution displays.
+
+| ID | Work item | Status | Dependencies |
+| --- | --- | --- | --- |
+| M10-W01 | Deterministic edge-directed upscaling | PLANNED | Evaluate and implement deterministic edge-scaling filters (such as integer scaling, xBRZ, or EPX) to scale the 320x200 software framebuffer to high resolutions with smooth curves while retaining authentic color palettes |
+| M10-W02 | CRT simulation shader pipeline | PLANNED | Design optional GLSL post-processing shaders modeling authentic vintage space-sim monitors: aperture grille / shadow mask phosphors, subtle scanline weighting, bloom on bright star cores, and gentle barrel curvature |
+| M10-W03 | Sub-pixel geometry rasterization & fidelity mode | PLANNED | Add high-fidelity software rasterization pipeline with sub-pixel vertex precision and high-precision transcendental math, switchable via runtime preference with byte-exact legacy mode toggle |
+
+**Exit criteria**
+
+- Upscaling filters produce deterministic results across platforms without visual artifacts or tearing.
+- CRT shaders run within a strict 1.0 ms GPU budget.
+- Legacy software rendering remains available as a toggleable baseline, with 100% regression fixture agreement.
 
 ## Work item template
 

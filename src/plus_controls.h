@@ -37,6 +37,7 @@ MouseControlDelta surface_mouse_control(std::int8_t mode, bool right_button, boo
                                         std::uint8_t movement_scale);
 
 bool should_wait_for_frame(bool on_roof, bool roof_speed);
+bool is_roof_speed_key(std::int16_t key);
 
 enum class DriveRecharge : std::uint8_t { none, lithium, omega, power_loss };
 DriveRecharge recharge_drive(std::int16_t &power, std::int8_t &charge);

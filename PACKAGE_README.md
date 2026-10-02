@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 1.3.0 Release
+# Noctis IV OM — Linux 1.4.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.3.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.4.0 release is
 verified on 64-bit Ubuntu 24.04+ using the X11 display backend. It can run from a
 Wayland desktop through XWayland; native Wayland support is not included.
 
@@ -63,6 +63,9 @@ building the game from source.
 
 ## Controls and Audio
 
+- **Fullscreen:** Press `F11` or `Alt+Enter` to toggle fullscreen mode.
+- **Aspect Ratio:** Press `F8` to cycle aspect ratio (4:3 CRT authentic, 16:10 square pixels, 16:9 stretch).
+- **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
 - **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
 - **Audio Mute:** Press `F9` or `Ctrl+M` to toggle procedural audio mute.
@@ -70,8 +73,9 @@ building the game from source.
 
 ## Release status
 
-This is the 1.3.0 Aural Update release with built-in procedural ambient audio,
-dynamic Vimana warp acoustics, and canonical observation deck pacing. Please keep the JSON Lines
+This is the 1.4.0 Celestial & Display Update release featuring authentic CRT aspect ratio
+cycling, fullscreen toggle, window resizing, real-time planetary axial rotation, and
+an interactive timewarp multiplier slider HUD. Please keep the JSON Lines
 output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

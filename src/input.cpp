@@ -52,12 +52,17 @@ noctis::InputFrame poll_raylib_input() {
     frame.end_pressed       = IsKeyPressed(KEY_END);
     frame.toggle_cursor_pressed = IsKeyPressed(KEY_F10);
     frame.toggle_audio_pressed  = IsKeyPressed(KEY_F9) || (frame.control_down && IsKeyPressed(KEY_M));
+    frame.toggle_fullscreen_pressed =
+        IsKeyPressed(KEY_F11) || ((IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)) && IsKeyPressed(KEY_ENTER));
+    frame.toggle_aspect_pressed = IsKeyPressed(KEY_F8);
     return frame;
 }
 
-noctis::InputProvider input_provider            = poll_raylib_input;
-noctis::AudioToggleHandler audio_toggle_handler = nullptr;
-bool cursor_captured                            = false;
+noctis::InputProvider input_provider                   = poll_raylib_input;
+noctis::AudioToggleHandler audio_toggle_handler        = nullptr;
+noctis::DisplayToggleHandler fullscreen_toggle_handler = nullptr;
+noctis::DisplayToggleHandler aspect_toggle_handler     = nullptr;
+bool cursor_captured                                   = false;
 
 void push_extended_key(std::int16_t scan_code) {
     keys.push(scan_code);
@@ -168,6 +173,8 @@ void reset_input_state() {
 }
 
 void set_audio_toggle_handler(AudioToggleHandler handler) { audio_toggle_handler = handler; }
+void set_fullscreen_toggle_handler(DisplayToggleHandler handler) { fullscreen_toggle_handler = handler; }
+void set_aspect_toggle_handler(DisplayToggleHandler handler) { aspect_toggle_handler = handler; }
 
 } // namespace noctis
 
@@ -184,5 +191,11 @@ void handle_input() {
     }
     if (frame.toggle_audio_pressed && audio_toggle_handler) {
         audio_toggle_handler();
+    }
+    if (frame.toggle_fullscreen_pressed && fullscreen_toggle_handler) {
+        fullscreen_toggle_handler();
+    }
+    if (frame.toggle_aspect_pressed && aspect_toggle_handler) {
+        aspect_toggle_handler();
     }
 }
