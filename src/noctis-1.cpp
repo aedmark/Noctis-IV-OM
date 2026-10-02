@@ -3992,6 +3992,7 @@ void planetary_main() {
     int8_t raw_widesnap     = 0;
     bool jumping            = false;
     bool jetpack            = false;
+    int8_t suit_torch       = 0;
     int16_t w, lw = 10, now = 25, waveratio = 5, waveblur = 0;
     int16_t flick, flicks, fshift;
     int8_t secondarysun = 0;
@@ -5514,6 +5515,7 @@ nosecondarysun:
         }
 
         // il fotogramma ? finito. ora lo visualizza.
+        noctis::apply_suit_torch(adapted, adapted_width, adapted_height, suit_torch != 0);
         draw_plus_overlay(true);
         surrounding(draw_hud || graphics_menu_status || about || movie_recorder.menu_open(), openhudcount);
         QUADWORDS = 16000;
@@ -5698,6 +5700,12 @@ nosecondarysun:
                         status(seamless_border ? "SEAMLESS BD." : "DEFAULT BD.", 100);
                         continue;
                     }
+                }
+
+                if (w == 'l' || w == 'L' || (!graphics_menu_status && !movie_recorder.menu_open() && (w == 'f' || w == 'F'))) {
+                    suit_torch = !suit_torch;
+                    status(suit_torch ? "TORCH ON" : "TORCH OFF", 50);
+                    continue;
                 }
 
                 if (w == '+' && surlight < 63) {

@@ -1,6 +1,7 @@
 #include "plus_presentation.h"
 
 #include <cstdio>
+#include <vector>
 
 namespace {
 bool require(bool value, const char *message) {
@@ -45,5 +46,26 @@ int main() {
                       && recording[3] == "BLACK FLASH WHEN CAPTURING (F)"
                       && recording[4].find("FPS 12.50") != std::string::npos,
                   "F3 menu state text changed");
+    ok &= require(surface[2].find("TORCH") != std::string_view::npos,
+                  "F1 surface help should include torch");
+
+    // Suit torch presentation test
+    std::vector<std::uint8_t> test_frame(320 * 200, 0);
+    test_frame[108 * 320 + 160] = 0;   // Dark terrain at center of beam
+    test_frame[10 * 320 + 10] = 5;     // Outside the beam
+    test_frame[108 * 320 + 161] = 70;  // Sky/stars pixel in beam area
+    test_frame[108 * 320 + 162] = 192; // Object/vegetation in beam area
+
+    // Torch inactive: no changes
+    noctis::apply_suit_torch(test_frame.data(), 320, 200, false);
+    ok &= require(test_frame[108 * 320 + 160] == 0, "torch inactive should not modify pixels");
+
+    // Torch active: illuminates dark ground and objects, preserves sky and outside pixels
+    noctis::apply_suit_torch(test_frame.data(), 320, 200, true);
+    ok &= require(test_frame[108 * 320 + 160] >= 25, "torch active should illuminate center ground");
+    ok &= require(test_frame[10 * 320 + 10] == 5, "torch active should not modify outside pixels");
+    ok &= require(test_frame[108 * 320 + 161] == 70, "torch active should preserve sky/stars");
+    ok &= require(test_frame[108 * 320 + 162] > 192, "torch active should illuminate objects");
+
     return ok ? 0 : 1;
 }

@@ -16,6 +16,7 @@ movement, and drive recharge.
 | Stardrifter | `s` | Toggle roof speed. The normal 55 ms presentation wait is bypassed only while the player is on the roof; switching it off cannot leave a future wait accumulated. |
 | Space and surface | Down | Cycle movement mouse, mouselook, and inverted-Y mouselook. The shared mode persists in the native save. |
 | Surface | `j` | Jump while at ground level. |
+| Surface | `l` (or `f`) | Toggle suit torch / headlamp with forward spotlight beam. |
 | Surface | Space | Fire the jetpack while outside the capsule; continued presses add upward thrust. |
 | Surface | `c` | Release jetpack directional control. |
 
