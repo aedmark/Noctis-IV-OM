@@ -2216,6 +2216,7 @@ bool unfreeze() {
     }
 
     noctis::NativeSaveState native_state;
+    bool is_legacy_migration = false;
     const auto native_result = noctis::load_native_save(native_situation_file, native_state);
     if (native_result.status == noctis::NativeSaveStatus::ok) {
         apply_native_state(native_state);
@@ -2228,6 +2229,9 @@ bool unfreeze() {
         noctis::LegacySituationImport imported;
         const auto legacy_result = noctis::load_legacy_situation(situation_file, imported);
         if (legacy_result.status == noctis::NativeSaveStatus::not_found) {
+            synchronize_secs_to_wall_clock();
+            npcs = -12345;
+            prepare_nearstar();
             return true;
         }
         if (legacy_result.status != noctis::NativeSaveStatus::ok) {
@@ -2240,6 +2244,7 @@ bool unfreeze() {
             return false;
         }
         apply_native_state(imported.state);
+        is_legacy_migration = true;
         noctis::log_event("info", "legacy_migration",
                           std::string("migrated ") + std::string(noctis::legacy_layout_name(imported.layout))
                               + " situation to native v1");
@@ -2248,9 +2253,19 @@ bool unfreeze() {
     /* Resynchronization of the situation
      * 	in relation to previous events
      * 	(hidden evolution of the situation). */
-    elapsed = secs;
+    const double saved_secs = secs;
     synchronize_secs_to_wall_clock();
-    elapsed = secs - elapsed;
+    if (is_legacy_migration || saved_secs < 1e8) {
+        elapsed = 0.0;
+        if (helptime != 0.0) {
+            helptime = 0.0;
+        }
+    } else {
+        elapsed = secs - saved_secs;
+        if (elapsed < 0.0) {
+            elapsed = 0.0;
+        }
+    }
 
     if ((helptime != 0.0) && (secs > (helptime + 20))) {
         helptime = 0;
@@ -2931,6 +2946,34 @@ int main(int argc, char **argv) {
                 return 1;
             }
             std::printf("persistence_fixture phase=standard power=20000 lithium=120 save=restored\n");
+            return 0;
+        }
+        if (std::string_view(persistence_fixture_phase) == "clean-start") {
+            if (pwr != 20000 || charge != 120 || secs < 1e8) {
+                noctis::log_event("error", "persistence_fixture",
+                                  "clean start was not initialized with full power and wall-clock time");
+                return 1;
+            }
+            freeze();
+            std::printf("persistence_fixture phase=clean-start power=20000 lithium=120 save=stored\n");
+            return 0;
+        }
+        if (std::string_view(persistence_fixture_phase) == "clean-restart") {
+            if (pwr != 20000 || charge != 120 || secs < 1e8) {
+                noctis::log_event("error", "persistence_fixture", "clean restart depleted power or lithium");
+                return 1;
+            }
+            freeze();
+            std::printf("persistence_fixture phase=clean-restart power=20000 lithium=120 save=restored\n");
+            return 0;
+        }
+        if (std::string_view(persistence_fixture_phase) == "legacy-unsynced") {
+            if (pwr != 20000 || charge != 120 || secs < 1e8) {
+                noctis::log_event("error", "persistence_fixture", "unsynchronized save depleted power or lithium");
+                return 1;
+            }
+            freeze();
+            std::printf("persistence_fixture phase=legacy-unsynced power=20000 lithium=120 save=restored\n");
             return 0;
         }
         noctis::log_event("error", "persistence_fixture", "unknown fixture phase");
