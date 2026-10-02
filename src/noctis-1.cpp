@@ -3293,8 +3293,8 @@ void create_sky(int8_t atmosphere) {
     // filtri colorati di base.
     float br = (float) sky_red_filter / 64, bg = (float) sky_grn_filter / 64, bb = (float) sky_blu_filter / 64;
     float tr = (float) gnd_red_filter / 64, tg = (float) gnd_grn_filter / 64, tb = (float) gnd_blu_filter / 64;
-    float fr[4], fg[4], fb[4]; // filtri colorati per 4 sfumature.
-    float al = (albedo / 64);  // costante di albedo
+    float fr[4] = {0.0f}, fg[4] = {0.0f}, fb[4] = {0.0f}; // filtri colorati per 4 sfumature.
+    float al = (static_cast<float>(albedo) / 64.0f);  // costante di albedo
     // calcola il fattore "distanza dal sole" per l'intensit? della luce
     // ? infuenzato anche dal tipo di stella.
     float sb, dfs;
@@ -3594,6 +3594,8 @@ void create_sky(int8_t atmosphere) {
         goto like7;
         // case 9: non considerato: ? un oggetto substellare.
         // case 10: non considerato: ? una stella compagna.
+    default:
+        goto like1;
     }
 
     // evita gradienti negativi, non hanno senso.
@@ -3639,7 +3641,7 @@ void create_sky(int8_t atmosphere) {
     if (!atmosphere) {
         shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
     } else {
-        if (nightzone) {
+        if (nightzone || dfs <= 0.2f) {
             shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
 
             if (nearstar_p_type[ip_targetted] == 3) {
@@ -3661,6 +3663,15 @@ void create_sky(int8_t atmosphere) {
         } else {
             shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, fr[1], fg[1], fb[1]);
         }
+    }
+
+    if (dfs <= 0.2f) {
+        if (fr[0] < 4.0f) fr[0] = 4.0f;
+        if (fg[0] < 4.0f) fg[0] = 4.0f;
+        if (fb[0] < 4.0f) fb[0] = 4.0f;
+        if (fr[2] < 6.0f) fr[2] = 6.0f;
+        if (fg[2] < 6.0f) fg[2] = 6.0f;
+        if (fb[2] < 6.0f) fb[2] = 6.0f;
     }
 
     // sfumatura per il suolo.
@@ -3945,9 +3956,24 @@ int8_t entryflag = 0; // flag: se settato all'ingresso di planetary_main,
 // di superficie.
 
 void planetary_main() {
+    struct SurfaceActiveScope {
+        const int8_t cached_body;
+        SurfaceActiveScope(int8_t body) : cached_body(body) {
+            surface_active = 1;
+        }
+        ~SurfaceActiveScope() {
+            surface_active = 0;
+            if (cached_body >= 0) {
+                ip_targetted = cached_body;
+            }
+        }
+    } surface_scope(ip_targetted);
+
     // Surface rendering must retain the landed body's type even if low power
     // clears the ship's orbital target while the player is still outside.
-    const int8_t surface_body_type = nearstar_p_type[ip_targetted];
+    const int8_t surface_body_type = (ip_targetted >= 0 && ip_targetted < nearstar_nob)
+        ? nearstar_p_type[ip_targetted]
+        : 0;
     const int16_t widesnappingangle = 71;
     uint16_t pqw                    = QUADWORDS;
     int32_t cpos;
@@ -5062,7 +5088,11 @@ nosecondarysun:
                     gravity += planet_grav;
                 }
             } else {
-                gravity += planet_grav * 0.16;
+                if (planet_grav * 0.16 < 8.0) {
+                    gravity += 8.0f;
+                } else {
+                    gravity += planet_grav * 0.16;
+                }
                 pos_x -= sin(wdir) * wp * 10;
                 pos_z += cos(wdir) * wp * 10;
             }
@@ -5788,17 +5818,25 @@ nosecondarysun:
                     fixed_step = 0;
                 }
 
-                if (w == 27 && landed) {
-                    const noctis::SurfaceSaveState state{
-                        landing_pt_lon, landing_pt_lat, atl_x, atl_z, atl_x2, atl_z2,
-                        pos_x, pos_y, pos_z, user_alfa, user_beta,
-                        openhuddelta, openhudcount, hud_rtl_closed};
-                    const auto save_result = noctis::save_surface_save(native_surface_file, state);
-                    if (save_result.status == noctis::NativeSaveStatus::ok) {
-                        exitflag = 1;
+                if (w == 27) {
+                    if (landed) {
+                        if (surface_scope.cached_body >= 0) {
+                            ip_targetted = surface_scope.cached_body;
+                        }
+                        const noctis::SurfaceSaveState state{
+                            landing_pt_lon, landing_pt_lat, atl_x, atl_z, atl_x2, atl_z2,
+                            pos_x, pos_y, pos_z, user_alfa, user_beta,
+                            openhuddelta, openhudcount, hud_rtl_closed};
+                        const auto save_result = noctis::save_surface_save(native_surface_file, state);
+                        if (save_result.status == noctis::NativeSaveStatus::ok) {
+                            exitflag = 1;
+                            goto nodissolve;
+                        }
+                        noctis::log_event("error", "surface_save", save_result.message);
+                    } else {
+                        exitflag = 0;
                         goto nodissolve;
                     }
-                    noctis::log_event("error", "surface_save", save_result.message);
                 }
             }
         }

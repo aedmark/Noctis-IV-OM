@@ -323,6 +323,12 @@ if(BUILD_TESTING)
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/landing_fixture.cmake)
     set_tests_properties(landing_return_fixture PROPERTIES TIMEOUT 30)
 
+    add_test(NAME oakenshield_landing_fixture COMMAND ${CMAKE_COMMAND}
+        -DAPP=$<TARGET_FILE:nivlr>
+        -DRESOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/res
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/oakenshield_fixture.cmake)
+    set_tests_properties(oakenshield_landing_fixture PROPERTIES TIMEOUT 30)
+
     add_test(NAME surface_environment_fixtures COMMAND ${CMAKE_COMMAND}
         -DAPP=$<TARGET_FILE:nivlr>
         -DPYTHON=${Python3_EXECUTABLE}

@@ -241,6 +241,7 @@ extern float wdir;
 extern float wdirsin;
 extern float wdircos;
 extern int8_t landed;
+extern int8_t surface_active;
 extern int32_t atl_x, atl_z, atl_x2, atl_z2;
 extern double qid;
 extern int16_t in;

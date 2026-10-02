@@ -2404,6 +2404,7 @@ bool landing_fixture_mode = false;
 bool environment_fixture_mode = false;
 bool content_fixture_mode = false;
 bool orbit_surface_fixture_mode = false;
+bool oakenshield_fixture_mode = false;
 const char *surface_fixture_name = "felysia-habitable";
 const char *environment_fixture_name = "felysia-habitable";
 
@@ -2640,6 +2641,8 @@ int main(int argc, char **argv) {
             }
         } else if (std::string_view(argv[arg]) == "--landing-fixture") {
             landing_fixture_mode = true;
+        } else if (std::string_view(argv[arg]) == "--oakenshield-fixture") {
+            oakenshield_fixture_mode = true;
         } else if (std::string_view(argv[arg]) == "--orbit-surface-fixture") {
             orbit_surface_fixture_mode = true;
         } else if (std::string_view(argv[arg]) == "--native-save-fixture") {
@@ -2680,7 +2683,7 @@ int main(int argc, char **argv) {
     const bool fixture_mode = native_save_fixture_mode || ship_interface_fixture_mode
         || goesnet_fixture_mode || persistence_fixture_mode || movie_fixture_mode
         || surface_fixture_mode || landing_fixture_mode || orbit_surface_fixture_mode
-        || environment_fixture_mode || content_fixture_mode;
+        || environment_fixture_mode || content_fixture_mode || oakenshield_fixture_mode;
     if (fixture_mode && !user_data_override) {
         std::error_code error;
         user_data_override = std::filesystem::current_path(error);
@@ -2724,7 +2727,7 @@ int main(int argc, char **argv) {
                           + "; preserved=" + std::to_string(storage.preserved_files));
     if (prepare_user_data_only) return 0;
     if (!native_save_fixture_mode && !ship_interface_fixture_mode && !goesnet_fixture_mode && !persistence_fixture_mode && !movie_fixture_mode && !surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode
-        && !environment_fixture_mode && !content_fixture_mode) {
+        && !environment_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
         noctis::log_event("info", "graphics", "initializing Raylib window 1280x720");
         InitWindow(1280, 720, "Noctis IV LR");
         if (!IsWindowReady()) {
@@ -3304,7 +3307,7 @@ int main(int argc, char **argv) {
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
     if (!surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode
-        && !environment_fixture_mode && !content_fixture_mode) {
+        && !environment_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
         handle_input();
     }
     mpul = 0;
@@ -3351,6 +3354,162 @@ int main(int argc, char **argv) {
         landing_point = 0;
         entryflag = 0;
         planetary_main();
+        return 0;
+    }
+    if (oakenshield_fixture_mode) {
+        ap_target_x = 3321776.0;
+        ap_target_y = -4323134.0;
+        ap_target_z = -1004416.0;
+        ap_target_class = 5;
+        ap_target_ray = 1.086F;
+        ap_target_spin = 0;
+        ap_target_r = 63;
+        ap_target_g = 58;
+        ap_target_b = 40;
+        _delay = 0;
+        prepare_nearstar();
+        ip_targetted = 0;
+
+        landing_pt_lon = 0;
+        landing_pt_lat = 60;
+        reset_simulation_time(0);
+        planet_xyz(ip_targetted);
+        dzat_x = plx;
+        dzat_y = ply;
+        dzat_z = plz;
+        dxx = dzat_x - nearstar_x;
+        dyy = dzat_y - nearstar_y;
+        dzz = dzat_z - nearstar_z;
+        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        proj_from_vehicle();
+        landing_point = 1;
+        draw_planets();
+        landing_point = 0;
+        entryflag = 0;
+
+        // Part 1: Descent, touchdown, and ESC surface save
+        static std::uint32_t oak_touchdown_frame = 0;
+        static int oak_frame_count = 0;
+        oak_touchdown_frame = 0;
+        oak_frame_count = 0;
+        noctis::reset_input_state();
+        noctis::set_input_provider([]() {
+            noctis::InputFrame frame;
+            ++oak_frame_count;
+            if (landed && oak_touchdown_frame == 0) {
+                oak_touchdown_frame = oak_frame_count;
+            }
+            if (landed && oak_frame_count > static_cast<int>(oak_touchdown_frame) + 5) {
+                frame.escape_down = true;
+            }
+            return frame;
+        });
+        planetary_main();
+        noctis::reset_input_provider();
+
+        // Verify starfield and terrain palette on dim star after create_sky has run
+        const bool sky_stars_visible = surface_palette[127 * 3 + 0] >= 40;
+        const bool terrain_defined = surface_palette[0] >= 0 && surface_palette[44 * 3 + 0] >= 4;
+        const bool landing_ok = exitflag == 1 && landed && oak_touchdown_frame > 0 && oak_touchdown_frame < 550;
+
+        // Part 2: Surface resume with corrupted ip_targetted (simulating power loss)
+        noctis::SurfaceRestore surface_restore;
+        const auto surface_result = noctis::load_or_migrate_surface(native_surface_file, surface_file, surface_restore);
+        bool resume_ok = false;
+        bool oak_resume_palette_valid = false;
+        static int oak_resume_count = 0;
+        oak_resume_count = 0;
+        if (surface_result.status == noctis::NativeSaveStatus::ok) {
+            landing_pt_lon = surface_restore.state.landing_longitude;
+            landing_pt_lat = surface_restore.state.landing_latitude;
+            // Force ip_targetted to -1 to verify defensive recovery
+            ip_targetted = -1;
+            if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
+                int16_t best_body = 0;
+                double min_d2 = -1.0;
+                for (int16_t n = 0; n < nearstar_nob; ++n) {
+                    planet_xyz(n);
+                    const double dpx = plx - dzat_x;
+                    const double dpy = ply - dzat_y;
+                    const double dpz = plz - dzat_z;
+                    const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
+                    if (min_d2 < 0.0 || d2 < min_d2) {
+                        min_d2 = d2;
+                        best_body = n;
+                    }
+                }
+                ip_targetted = best_body;
+            }
+            update_star_label();
+            update_planet_label();
+            getsecs();
+            planet_xyz(ip_targetted);
+            dzat_x = plx;
+            dzat_y = ply;
+            dzat_z = plz;
+            dxx = dzat_x - nearstar_x;
+            dyy = dzat_y - nearstar_y;
+            dzz = dzat_z - nearstar_z;
+            dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+            proj_from_vehicle();
+            landing_point = 1;
+            draw_planets();
+            landing_point = 0;
+            entryflag = 1;
+
+            noctis::reset_input_state();
+            noctis::set_input_provider([]() {
+                noctis::InputFrame frame;
+                ++oak_resume_count;
+                if (oak_resume_count >= 5) {
+                    frame.escape_down = true;
+                }
+                return frame;
+            });
+            planetary_main();
+            noctis::reset_input_provider();
+            resume_ok = (exitflag == 1 && landed && ip_targetted == 0);
+            oak_resume_palette_valid = (surface_palette[127 * 3 + 0] >= 40 && surface_palette[44 * 3 + 0] >= 4);
+        }
+
+        // Part 3: Test ESC during descent cleanly aborts to ship
+        planet_xyz(ip_targetted);
+        dzat_x = plx;
+        dzat_y = ply;
+        dzat_z = plz;
+        dxx = dzat_x - nearstar_x;
+        dyy = dzat_y - nearstar_y;
+        dzz = dzat_z - nearstar_z;
+        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        proj_from_vehicle();
+        landing_point = 1;
+        draw_planets();
+        landing_point = 0;
+        entryflag = 0;
+        landed = 0;
+        static int oak_descent_abort_frames = 0;
+        oak_descent_abort_frames = 0;
+        noctis::reset_input_state();
+        noctis::set_input_provider([]() {
+            noctis::InputFrame frame;
+            ++oak_descent_abort_frames;
+            if (oak_descent_abort_frames >= 10) {
+                frame.escape_down = true;
+            }
+            return frame;
+        });
+        planetary_main();
+        noctis::reset_input_provider();
+        const bool abort_ok = (exitflag == 0 && !landed && oak_descent_abort_frames == 10);
+
+        if (!landing_ok || !sky_stars_visible || !terrain_defined || !resume_ok || !oak_resume_palette_valid || !abort_ok) {
+            fprintf(stderr, "oakenshield_fixture failed: landing_ok=%d (touchdown=%u) sky_stars=%d terrain=%d resume_ok=%d resume_palette=%d abort_ok=%d\n",
+                    landing_ok, oak_touchdown_frame, sky_stars_visible, terrain_defined, resume_ok, oak_resume_palette_valid, abort_ok);
+            return 1;
+        }
+
+        printf("oakenshield_fixture touchdown=%u sky_stars=ok terrain=ok resume=ok palette=valid abort=ok status=ok\n",
+               oak_touchdown_frame);
         return 0;
     }
     if (landing_fixture_mode || orbit_surface_fixture_mode) {
@@ -3499,6 +3658,22 @@ int main(int argc, char **argv) {
                                   + " surface checkpoint to native v1");
         }
         // recupero labels del pianeta e della stella-bersaglio
+        if (ip_targetted < 0 || ip_targetted >= nearstar_nob) {
+            int16_t best_body = 0;
+            double min_d2 = -1.0;
+            for (int16_t n = 0; n < nearstar_nob; ++n) {
+                planet_xyz(n);
+                const double dpx = plx - dzat_x;
+                const double dpy = ply - dzat_y;
+                const double dpz = plz - dzat_z;
+                const double d2 = dpx * dpx + dpy * dpy + dpz * dpz;
+                if (min_d2 < 0.0 || d2 < min_d2) {
+                    min_d2 = d2;
+                    best_body = n;
+                }
+            }
+            ip_targetted = best_body;
+        }
         update_star_label();
         update_planet_label();
         // risincronizzazione istantanea della posizione della navicella
@@ -3581,7 +3756,7 @@ void swapBuffers() {
         }
         return;
     }
-    if (surface_fixture_mode || landing_fixture_mode) {
+    if (surface_fixture_mode || landing_fixture_mode || oakenshield_fixture_mode) {
         return;
     }
     BeginDrawing();

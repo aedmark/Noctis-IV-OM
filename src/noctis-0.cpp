@@ -635,6 +635,7 @@ float wdirsin = 0;  // Optimization value.
 float wdircos = 1;  // Optimization value.
 
 int8_t landed; // Flag set at the time of landing.
+int8_t surface_active = 0;
 // Coded position quotiento of the lander (quotient:remainder).
 int32_t atl_x, atl_z, atl_x2, atl_z2;
 
@@ -5839,7 +5840,9 @@ void additional_consumes() {
             stspeed      = 0;
             ip_reaching  = 0;
             ip_reached   = 1;
-            ip_targetted = -1;
+            if (!landed && !surface_active) {
+                ip_targetted = -1;
+            }
 
             if (pwr != 15000) {
                 status("POWER LOSS", 100);
