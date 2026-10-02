@@ -73,11 +73,22 @@ Replace this document at the end of every session; Git holds older versions.
   - Mapped `Home` and `End` keys for GOES prompt clearing and boundary scrolling.
   - Packaged, checksummed, verified, and tagged `v1.0.1`.
 
+- **Release 1.1.0 (Feature Release — The Torchlight Update):**
+  - Added planetary Suit Torch / Headlamp toggled with `L` key with authentic spotlight cone, ambient lighting, and quadratic falloff in 32-bit RGBA color space.
+  - Sharpened HUD status messages (`TORCH ON`, `TORCH OFF`, `MOUSELOOK ENABLED`, etc.) rendered at native resolution directly over the retro framebuffer.
+  - Automatically preserve spaceship situation state (`current.niv`) via `freeze()` when quitting from planetary surfaces via `Escape`.
+  - Reconstruct star system on cold restart surface resume (`_delay = 0`).
+  - Guarded orbital mechanics (`planet_xyz`, `moonorigin`, `rtp`) against division by zero and `NaN` on empty systems.
+  - Hardened HUD telemetry text renderer (`wrouthud`) against buffer overflows and sanitized telemetry values.
+  - Safely discard orphaned surface checkpoints without process abort.
+  - Verified 41/41 passing test suite across all compiler configurations.
+  - Packaged, checksummed, verified, and tagged `v1.1.0`.
+
 ## Test suite and package status
 
-- **Clang Release:** 41/41 passed (4.00s).
-- **GCC Debug:** 41/41 passed (16.96s).
-- **Clang Sanitized (ASan + UBSan):** 41/41 passed (58.88s, zero leaks, zero UB).
+- **Clang Release:** 41/41 passed (4.01s).
+- **GCC Debug:** 41/41 passed (16.78s).
+- **Clang Sanitized (ASan + UBSan):** 41/41 passed (57.86s, zero leaks, zero UB).
 - **MinGW Windows Cross-Compilation:** Built cleanly with zero warnings.
 - **Linux Package (`.tar.gz`):** Built, checksummed, verified with `VerifyLinuxPackage.cmake`.
 - **Windows Package (`.zip`):** Built, checksummed, verified with `VerifyWindowsPackage.cmake`.
@@ -85,5 +96,5 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Next steps
 
-1. Monitor community feedback on 1.0.1 release.
-2. Plan subsequent post-1.0 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).
+1. Monitor community feedback on 1.1.0 Torchlight release.
+2. Plan subsequent post-1.1 feature updates (e.g. procedural audio engine integration, Wayland native backend, high-DPI scaling).

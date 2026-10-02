@@ -5,6 +5,20 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.1.0 (2026-10-02) — The Torchlight Update
+
+Noctis IV OM 1.1.0 introduces the planetary Suit Torch headlamp, high-resolution
+crisp HUD status text, and critical surface session resume stabilization.
+
+### New Features & Visual Improvements
+* **Suit Torch / Headlamp (`L` Key):** Added a player headlamp toggled with `L` while exploring planetary surfaces. Illuminates nightside worlds, tidally locked dark hemispheres, and unlit caves with a focused directional beam, realistic quadratic distance attenuation, and smooth 32-bit RGBA surface shading.
+* **Crisp HUD Status Overlay:** Redesigned transient HUD status messages (such as `TORCH ON`, `TORCH OFF`, `MOUSELOOK ENABLED`) to render at native display resolution directly above the retro framebuffer, eliminating text blurriness and visual degradation.
+
+### Surface Persistence & Engine Stability
+* **Surface Save Situation Synchronization:** Ensured spaceship orbital and flight state (`current.niv`) is automatically preserved with `freeze()` whenever the player quits from a planetary surface via `Escape`, preventing desynchronization between ship and surface checkpoints.
+* **Stellar Reconstruction on Cold Resume:** Resolved a startup delay issue where celestial bodies were not regenerated upon cold relaunch when resuming a surface save.
+* **Defensive Orbital & HUD Bounds:** Guarded celestial coordinate calculations (`planet_xyz`, `moonorigin`, `rtp`) against division by zero and `NaN` propagation on systems without bodies; hardened `wrouthud` to prevent buffer overflow when handling non-standard character codes; and safely discarded orphaned surface checkpoints without process termination.
+
 ## 1.0.1 (2026-10-02) — Patch Release
 
 Noctis IV OM 1.0.1 resolves low-gravity landing stalls, dim-star surface

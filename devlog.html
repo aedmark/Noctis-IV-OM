@@ -93,6 +93,12 @@
     <p>Following the 1.0 General Availability release, community exploration on low-gravity worlds like star Oakenshield’s first planet revealed an unexpected stall during descent. We investigated and established a solid vertical acceleration floor to guarantee smooth touchdown regardless of planetary mass, along with an instant Escape abort back to the cockpit.</p>
     <p>We also illuminated planets around very dim stars that previously went pitch-black, protected the ship’s targeted body from power-loss resets while the pilot is outside, and restored the Page Up and Page Down controls for suit helmet visor operation and GOES guide scrolling.</p>
   </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.1.0: Lighting the Torch — Nightside Illumination and Crisp HUD Telemetry</h2>
+    <p>Exploring the unlit nightside of planets or tidally locked worlds no longer requires fumbling in total darkness. Version 1.1.0 introduces the planetary Suit Torch headlamp, toggled at any time with the <kbd>L</kbd> key. The headlamp casts an authentic spotlight beam directly in front of the explorer, blending ambient illumination, radial beam focus, quadratic distance attenuation, and smooth surface normal shading in 32-bit RGBA color space.</p>
+    <p>In addition, transient HUD status messages (such as TORCH ON/OFF and MOUSELOOK notifications) now render at crisp native display resolution directly over the retro framebuffer, eliminating text blur. Under the hood, surface session quitting via Escape now seamlessly synchronizes the ship’s orbital situation and guards celestial coordinates against cold-restart resets, ensuring your expeditions can be saved and resumed anywhere across the galaxy.</p>
+  </section>
 </article>
 </body>
 </html>
