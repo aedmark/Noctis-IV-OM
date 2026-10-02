@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Development telemetry for Noctis IV OM.">
+  <meta name="theme-color" content="#000000">
+  <title>NOCTIS IV OM // TELEMETRY_LOG</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="index.html" aria-label="Noctis IV OM home">
+        <span class="wordmark-main">NOCTIS IV</span>
+        <span class="wordmark-mark">OM</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="index.html#download">Download</a>
+        <a href="index.html#discover">The Galaxy</a>
+        <a href="index.html#gallery">Views</a>
+        <a href="index.html#first-flight">Flight Manual</a>
+        <a href="index.html#controls">Controls</a>
+        <a href="devlog.html">Dev Diary</a>
+        <a class="nav-cta" href="index.html#download">Get Preview</a>
+      </nav>
+    </div>
+  </header>
+
+<article class="dev-diary" id="diary">
+  <header>
+    <h1>[TELEMETRY] System Development Log</h1>
+    <p class="date">INIT_DATE: September 27, 2026</p>
+    <p><strong><a href="https://github.com/aedmark/noctis-iv-om">SOURCE_REPOSITORY</a></strong></p>
+  </header>
+
+  <section class="update-entry">
+    <p>Development on the modern Noctis port has reached an important turning point. Most of the recent work has been deep inside the machinery of the game: random-number generators, clocks, input adapters, palettes, and software polygon renderers.</p>
+    <p>The original DOS source remains our historical reference, while Noctis IV LR provides the modern C++ foundation.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] A Native Build We Can Trust</h2>
+    <p>The Linux version can now be built consistently with two different C++ compilers. It has automated tests, startup diagnostics, and checks for memory errors and other unsafe behavior.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] Separating Time from Frame Rate</h2>
+    <p>The simulation now advances in fixed steps, independently of how long the computer takes to present each frame. Drawing the screen and advancing the universe are treated as separate jobs.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] The Stardrifter Moves</h2>
+    <p>The Stardrifter's interstellar and local guidance systems have been separated from the drawing loop and tested as part of the actual game code. For the first canonical journey, the ship leaves its inherited starting position and travels to BALASTRACKONASTREYA, the confirmed parent star of FELYSIA.</p>
+    <p>The interstellar leg takes exactly 396 simulation ticks. The local leg takes another 392. The trip also exercises the original power and lithium recharge behavior, ending with plenty of fuel in reserve.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] Down to the Ground and Back</h2>
+    <p>The Stardrifter now has a repeatable round trip between orbit and the surface. A headless pilot requests a landing on FELYSIA, rides the capsule through gravity and touchdown, walks away across the generated terrain, returns to the capsule, and lets it seal and lift back aboard.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] The Stardrifter Answers Back</h2>
+    <p>The cockpit has had a less glamorous but very useful refit. We mapped every inherited ship screen, every onboard menu, the three information panels in the flight display, and the four original preferences.</p>
+    <p>The modern keyboard bridge had another quiet limitation: it threw away everything except lowercase letters and digits. Printable text now arrives intact without being entered twice when Raylib reports it through two paths.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] GOESnet Comes Home</h2>
+    <p>The Stardrifter no longer has to step out of the game and ask a folder of DOS programs what a command means. GOESnet now lives inside Noctis. Star and planet searches, travel targets, dependency listings, guide reading, note writing, catalog editing, star lists, exports, help, and screen clearing all pass through native components with one shared language.</p>
+  </section>
+  
+  <section class="update-entry">
+    <h2>[UPDATE] The Camera Is Rolling</h2>
+    <p>Moviemaker is back. F3 now opens its control panel in space or on a planet, and a recording becomes a numbered “deck” of bitmap frames.</p>
+    <p>The native version treats old footage carefully. If a deck already exists, it refuses to record over it and asks for another number.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] Windows Calls In</h2>
+    <p>The required Windows lane now builds cleanly and passes 34 automated tests. The deterministic stars and systems still agree, old saves still migrate, new saves survive restarts, GOESnet still edits its catalogs, Moviemaker still protects existing footage, and the scripted flights and landing state still arrive where expected.</p>
+  </section>
+</article>
+</body>
+</html>
