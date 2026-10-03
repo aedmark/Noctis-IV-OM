@@ -12,6 +12,7 @@ namespace {
 constexpr std::array<int, 11> g_timewarp_steps = {1, 2, 5, 10, 25, 50, 100, 250, 500, 1000, 5000};
 int g_timewarp_multiplier = 100;
 bool g_timewarp_active = false;
+std::optional<double> g_universe_seconds_override;
 }
 
 void SimulationClock::reset(double seconds) {
@@ -33,7 +34,11 @@ double SimulationClock::fraction() const {
 
 std::uint64_t SimulationClock::ticks() const { return ticks_; }
 
+void set_universe_seconds_override(std::optional<double> seconds) { g_universe_seconds_override = seconds; }
+
 double current_universe_seconds() {
+    if (g_universe_seconds_override)
+        return *g_universe_seconds_override;
     // Preserve the legacy port's local-time epoch and compatibility offset.
     std::tm epoch{};
     epoch.tm_mday = 1;
