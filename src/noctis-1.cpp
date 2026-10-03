@@ -5137,12 +5137,21 @@ nosecondarysun:
             }
         } else {
             if (landed) {
-                if (jetpack) {
-                    // Jetpack thrusters provide sustained upward lift overcoming planetary gravity
-                    const float upward_lift = planet_grav * 1.25f + 40.0f;
-                    gravity -= upward_lift;
-                    if (gravity < -450.0f) {
-                        gravity = -450.0f; // Stable ascent ceiling
+                if (key_space_down) {
+                    jumping = true;
+                    jetpack = true;
+                    if (pos_y > crcy - 1200.0f) {
+                        // Thrusters provide sustained upward lift while space is held
+                        gravity -= (planet_grav + 35.0f);
+                        if (gravity < -260.0f) {
+                            gravity = -260.0f;
+                        }
+                    } else {
+                        // Maximum flight ceiling reached (1200 units above local ground):
+                        // Thrusters cannot accelerate higher into space
+                        if (gravity < 0.0f) {
+                            gravity = 0.0f;
+                        }
                     }
                 } else if (pos_y > crcy - 300) {
                     drop_y = planet_grav * (pos_y - crcy) * 0.00333; // 1/300
@@ -5591,7 +5600,7 @@ nosecondarysun:
                  (!option_mouse_look && std::abs(mdlty) > 2));
             telemetry.player_walking = (landed != 0) && active_walking_input &&
                                        (std::fabs(step) > 5.0f || std::fabs(shift) > 5.0f) && !jumping;
-            telemetry.jetpack_active = jetpack;
+            telemetry.jetpack_active = (landed != 0) && key_space_down;
             noctis::update_audio_telemetry(telemetry);
         }
 
@@ -5875,6 +5884,12 @@ nosecondarysun:
                 if (snapshot_command == noctis::SnapshotAction::raw) {
                     snapshot(0, 0);
                 }
+
+                static bool prev_space_down = false;
+                if (landed && key_space_down && !prev_space_down) {
+                    noctis::play_jetpack_burst();
+                }
+                prev_space_down = (landed != 0) && key_space_down;
 
                 bool prev_jetpack = jetpack;
                 noctis::SurfaceVerticalState vertical{gravity, jumping, jetpack};

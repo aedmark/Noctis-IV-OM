@@ -26,6 +26,7 @@ struct InputFrame {
     bool enter_pressed         = false;
     bool apostrophe_pressed    = false;
     bool space_pressed         = false;
+    bool space_down            = false;
     bool delete_pressed        = false;
     bool minus_pressed         = false;
     bool comma_pressed         = false;
@@ -72,6 +73,7 @@ void set_overlay_input_handler(OverlayInputHandler handler);
 extern std::int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern std::uint16_t mpul;
 extern wasdmov key_move_dir;
+extern bool key_space_down;
 
 std::int16_t get_key();
 bool is_key();

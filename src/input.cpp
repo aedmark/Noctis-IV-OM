@@ -46,6 +46,7 @@ noctis::InputFrame poll_raylib_input() {
     frame.enter_pressed       = pressed(KEY_ENTER);
     frame.apostrophe_pressed  = pressed(KEY_APOSTROPHE);
     frame.space_pressed       = pressed(KEY_SPACE);
+    frame.space_down          = IsKeyDown(KEY_SPACE);
     frame.delete_pressed      = pressed(KEY_DELETE);
     frame.minus_pressed       = pressed(KEY_MINUS) || pressed(KEY_KP_SUBTRACT);
     frame.comma_pressed       = pressed(KEY_COMMA);
@@ -89,6 +90,7 @@ void push_extended_key(std::int16_t scan_code) {
 std::int16_t mdltx = 0, mdlty = 0, mouse_x = 0, mouse_y = 0;
 std::uint16_t mpul = 0;
 wasdmov key_move_dir{};
+bool key_space_down = false;
 
 std::int16_t get_key() {
     if (keys.empty()) {
@@ -114,6 +116,7 @@ void apply_input_frame(const InputFrame &frame) {
     key_move_dir.backward = frame.move_backward;
     key_move_dir.left     = frame.move_left;
     key_move_dir.right    = frame.move_right;
+    key_space_down        = frame.space_down;
 
     if (frame.escape_down) {
         keys.push(27);
@@ -187,6 +190,7 @@ void reset_input_state() {
     mdltx = mdlty = mouse_x = mouse_y = 0;
     mpul                              = 0;
     key_move_dir                      = {};
+    key_space_down                    = false;
 }
 
 void set_audio_toggle_handler(AudioToggleHandler handler) { audio_toggle_handler = handler; }

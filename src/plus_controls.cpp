@@ -113,7 +113,6 @@ void apply_surface_vertical_key(std::int16_t key, bool outside_capsule, float pl
     if (player_y > ground_y - 150.0F) {
         state.gravity = -500.0F;
         state.jumping = true;
-        state.jetpack = true;
     } else {
         state.gravity -= 50.0F;
         state.jumping = true;
