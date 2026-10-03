@@ -125,33 +125,47 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
                 surface_mod = 0.65f + 0.35f * (static_cast<float>(idx - 128) / 9.0f);
             }
 
-            constexpr float max_beam = 180.0f;
-            const float beam = intensity * surface_mod * max_beam;
-
             const std::size_t rgba_idx = (row_pixel_offset + x) * 4;
             const int cur_r = rgba[rgba_idx + 0];
             const int cur_g = rgba[rgba_idx + 1];
             const int cur_b = rgba[rgba_idx + 2];
 
-            // Ambient awareness: full beam on dark/nightside planets,
-            // subtle fill-light on sunlit surfaces to prevent wash-out
+            // True albedo luminance scaling: illuminates the surface's existing
+            // colors and texture by increasing luminance, preserving hue and saturation
+            // without washing out into a flat white circular overlay.
             const float lum = cur_r * 0.299f + cur_g * 0.587f + cur_b * 0.114f;
-            const float ambient_scale = 1.0f - std::clamp((lum - 20.0f) / 160.0f, 0.0f, 0.80f);
-            const float effective_beam = beam * ambient_scale;
+            const float ambient_scale = 1.0f - std::clamp((lum - 15.0f) / 165.0f, 0.0f, 0.85f);
+            const float delta_lum = intensity * surface_mod * 145.0f * ambient_scale;
 
-            const float beam_r = effective_beam;
-            const float beam_g = effective_beam * 0.96f;
-            const float beam_b = effective_beam * 0.90f;
+            float out_r_f, out_g_f, out_b_f;
+            if (lum > 0.5f) {
+                const float scale = 1.0f + delta_lum / lum;
+                const float target_r = cur_r * scale;
+                const float target_g = cur_g * scale;
+                const float target_b = cur_b * scale;
 
-            // Screen blending: 255 - ((255 - cur) * (255 - beam)) / 255
-            // Preserves surface detail, normal shading, and contrast without hard clipping
-            const int out_r = 255 - static_cast<int>((255 - cur_r) * (255.0f - std::min(255.0f, beam_r)) / 255.0f);
-            const int out_g = 255 - static_cast<int>((255 - cur_g) * (255.0f - std::min(255.0f, beam_g)) / 255.0f);
-            const int out_b = 255 - static_cast<int>((255 - cur_b) * (255.0f - std::min(255.0f, beam_b)) / 255.0f);
+                if (lum < 12.0f) {
+                    const float w_color = lum / 12.0f;
+                    const float r_diff = cur_r + delta_lum;
+                    const float g_diff = cur_g + delta_lum * 0.96f;
+                    const float b_diff = cur_b + delta_lum * 0.90f;
+                    out_r_f = (1.0f - w_color) * r_diff + w_color * target_r;
+                    out_g_f = (1.0f - w_color) * g_diff + w_color * target_g;
+                    out_b_f = (1.0f - w_color) * b_diff + w_color * target_b;
+                } else {
+                    out_r_f = target_r;
+                    out_g_f = target_g;
+                    out_b_f = target_b;
+                }
+            } else {
+                out_r_f = cur_r + delta_lum;
+                out_g_f = cur_g + delta_lum * 0.96f;
+                out_b_f = cur_b + delta_lum * 0.90f;
+            }
 
-            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::clamp(out_r, 0, 255));
-            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(std::clamp(out_g, 0, 255));
-            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(std::clamp(out_b, 0, 255));
+            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::clamp(static_cast<int>(out_r_f + 0.5f), 0, 255));
+            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(static_cast<int>(std::clamp(static_cast<int>(out_g_f + 0.5f), 0, 255)));
+            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(static_cast<int>(std::clamp(static_cast<int>(out_b_f + 0.5f), 0, 255)));
         }
     }
 }
