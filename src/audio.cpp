@@ -127,6 +127,8 @@ struct SynthesizerState {
     StateVariableFilter filter_jetpack_hiss{};
     StateVariableFilter filter_rain{};
     StateVariableFilter filter_thunder{};
+    StateVariableFilter filter_suit_vent_l{};
+    StateVariableFilter filter_suit_vent_r{};
 
     // Oscillators phase accumulators
     float phase_cabin_sub = 0.0f;
@@ -416,16 +418,28 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         float surface_r = 0.0f;
         if (g_synth.cur_surface_gain > 0.001f) {
             if (g_synth.cur_atmo_density <= 0.001f) {
-                // VACUUM (Airless Moon / Asteroid): Dead silence outside!
-                // Only gentle internal spacesuit life support hum
-                g_synth.phase_suit_hum += TWO_PI * 92.0f * dt;
+                // VACUUM (Airless Moon / Asteroid): Silence outside;
+                // gentle internal spacesuit life support ventilation
+                g_synth.phase_suit_hum += TWO_PI * 36.0f * dt;
                 if (g_synth.phase_suit_hum >= TWO_PI)
                     g_synth.phase_suit_hum -= TWO_PI;
 
-                float suit_tone = std::sin(g_synth.phase_suit_hum) * 0.04f;
-                float suit_air  = g_synth.noise_l.next_pink() * 0.025f;
-                surface_l       = suit_tone + suit_air;
-                surface_r       = suit_tone + suit_air;
+                float suit_sub = std::sin(g_synth.phase_suit_hum) * 0.012f;
+
+                // Soft spacesuit ventilation air noise (pink noise smoothly lowpassed at 120 Hz)
+                float suit_pink_l = g_synth.noise_l.next_pink();
+                float suit_pink_r = g_synth.noise_r.next_pink();
+
+                float sv_l_low = 0.0f, sv_l_band = 0.0f, sv_l_high = 0.0f;
+                float sv_r_low = 0.0f, sv_r_band = 0.0f, sv_r_high = 0.0f;
+                g_synth.filter_suit_vent_l.process(suit_pink_l, 120.0f, 0.6f, AUDIO_SAMPLE_RATE, sv_l_low, sv_l_band, sv_l_high);
+                g_synth.filter_suit_vent_r.process(suit_pink_r, 120.0f, 0.6f, AUDIO_SAMPLE_RATE, sv_r_low, sv_r_band, sv_r_high);
+
+                float suit_air_l = sv_l_low * 0.08f;
+                float suit_air_r = sv_r_low * 0.08f;
+
+                surface_l = suit_sub + suit_air_l;
+                surface_r = suit_sub + suit_air_r;
             } else {
                 // ATMOSPHERIC WORLD: Dynamic wind, gusts, and weather
                 float gust = 0.5f + 0.35f * std::sin(g_synth.lfo_gust_1) + 0.15f * std::sin(g_synth.lfo_gust_2);
@@ -433,7 +447,8 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
                 float density     = g_synth.cur_atmo_density;
                 float base_cutoff = 100.0f + 650.0f * (density / (1.0f + density));
                 float wind_cutoff = base_cutoff * (0.65f + 0.70f * gust);
-                float wind_q      = 1.0f + 1.5f * (1.0f / (0.5f + density));
+                // Clamp wind_q to prevent harsh resonance ringing / whistling at low density
+                float wind_q      = std::clamp(0.65f + 0.40f * (1.0f / (1.0f + density)), 0.65f, 1.10f);
 
                 float nl = g_synth.noise_l.next_pink();
                 float nr = g_synth.noise_r.next_pink();
