@@ -4777,8 +4777,8 @@ nosecondarysun:
             }
         }
 
-        // resistenza in salita.
-        if (landed) {
+        // resistenza in salita (only applies when walking on the ground).
+        if (landed && pos_y >= crcy - 20) {
             drop_x = pp_gravity * 0.012;
             drop_x *= hpoint(refx, refz) - hpoint(pos_x, pos_z);
             drop_x -= 2.4;
