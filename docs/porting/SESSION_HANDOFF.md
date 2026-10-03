@@ -105,5 +105,8 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Next steps
 
-1. Monitor community feedback on 1.3.0 The Aural Update release.
-2. Plan future enhancements (e.g. native Wayland backend, custom control rebinding, expanded audio Foley).
+1. Milestone M11 (In-Engine Media Export & Exploration Ergonomics):
+   - M11-W01: In-engine screenshot & panorama download/export from the F4 Image Archive Viewer (direct browser file download on web, gallery reveal on desktop).
+   - M11-W02: Native gamepad / joystick flight and surface movement.
+   - M11-W03: Configurable keybindings and sensitivity persistence.
+   - M11-W04: Audio category volume controls in HUD / F2 menu.

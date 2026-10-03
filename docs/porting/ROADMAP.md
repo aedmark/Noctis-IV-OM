@@ -23,6 +23,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M8 | Stabilization and 1.0 General Availability | DONE |
 | M9 | Modern Presentation & Display Enhancements | DONE |
 | M10 | Deterministic Upscaling & Fidelity Increase | DONE |
+| M11 | In-Engine Media Export & Exploration Ergonomics | IN PROGRESS |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -247,6 +248,23 @@ containers, not substitutes for that ledger.
 - Sub-pixel fidelity eliminates geometric jitter on textured and flat 3D surfaces and celestial bodies.
 - Display and presentation preferences persist across game sessions in the user configuration directory.
 - Legacy software rendering remains available as a toggleable baseline, with 100% regression fixture agreement.
+
+## M11 — In-Engine Media Export & Exploration Ergonomics
+
+**Goal:** Provide seamless in-engine media export for the browser and desktop editions, accompanied by input and exploration ergonomic enhancements.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M11-W01 | In-engine screenshot & panorama download/export | PLANNED | Provide direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (e.g. key `D` to download/export the active image to the user's Downloads folder in Web via Emscripten JavaScript bridge, and open/reveal in file explorer on desktop) |
+| M11-W02 | Gamepad and joystick flight controls | PLANNED | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, rumble feedback) |
+| M11-W03 | Configurable controls & sensitivity persistence | PLANNED | User-configurable keybindings, mouse sensitivity sliders, and pitch invert toggles persisted in `settings.ini` |
+| M11-W04 | Audio category volume controls | PLANNED | Volume sliders for master, cabin ambience, propulsion, surface weather, and exploration Foley in the HUD / F2 menu |
+
+**Exit criteria**
+
+- Web players can download captured screenshots and panoramas directly to their computer with a single in-engine keypress or button in the F4 Image Archive without opening developer tools.
+- Desktop players can open the gallery folder or export captures directly from within the game.
+- All existing 45 automated test suites continue passing with 100% determinism.
 
 ## Work item template
 
