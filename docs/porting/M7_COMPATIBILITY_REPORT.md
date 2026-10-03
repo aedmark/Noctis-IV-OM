@@ -28,9 +28,12 @@ byte-identical (`dd14fcc6528cab25`).
 
 They are not universally pixel-identical. Four of seven raw generator cases
 match in full. The thick-atmosphere, habitable, and icy cases have one or more
-platform-specific buffer hashes. All five live environment frames, both
-populated frames, and the three surface checkpoints in the journey have
-platform-specific indexed-frame hashes.
+platform-specific buffer hashes. Since the M8-W01 HUD formatting fix (see
+"Baseline refresh after M8-W01" below), three of five live environment frames
+and the rocky populated sequence are byte-identical between the Release builds;
+the remaining two environment frames, the habitable populated sequence, and
+the three surface checkpoints in the journey have platform-specific
+indexed-frame hashes.
 
 The exact Linux baselines remain in `modern/tests/fixtures/native_surfaces.tsv`,
 `native_environments.tsv`, and `native_surface_content.tsv`. Exact MSVC Release
@@ -70,3 +73,27 @@ The accepted player-facing limitation ships as `KNOWN_ISSUES.md`. A future
 change to the generator or rasterizer must either retain the appropriate exact
 platform baseline or receive a new evidence-backed compatibility review; hashes
 must not be refreshed merely to make CI green.
+
+## Baseline refresh after M8-W01
+
+The Windows package workflow failed from commit `713a66d` (M8-W01) onward
+because the MSVC Release surface baselines no longer matched. That commit
+replaced `gcvt` with `snprintf("%.15g")` in `alphavalue`. The surface HUD
+prints its `SQC` longitude, latitude, and position readout through
+`alphavalue`, and MSVC's `_gcvt` writes a trailing decimal point for integral
+values (`1.` where glibc writes `1`). The M7 MSVC baselines therefore recorded
+HUD text that differed from Linux; glibc formats both ways identically, so the
+Linux baselines were unaffected.
+
+Probe run `37065718049` built `windows-msvc-release` from master `2a67147` in
+two variants and printed every fixture's output. With `alphavalue` reverted to
+`_gcvt`, all eight previous MSVC Release hashes (five environment frames, two
+populated sequences, and the journey's ground, outbound, and capsule
+checkpoints) were reproduced exactly. This shows that no other surface change
+since M7 alters the MSVC Release output: not the 1.0.1 dim-star illumination,
+the 1.1.0 torch, or the 1.5.0 sub-pixel work. With the current code, every
+structural field and count is unchanged. The `habitable 4:60`, `habitable 1:0`,
+and `rocky 1:60` environment frames and the rocky populated sequence now equal
+the Linux baselines exactly. The MSVC manifests were refreshed to the
+current-code hashes from that run. The remaining differences are the inherited
+floating-point differences described above.
