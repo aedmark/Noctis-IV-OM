@@ -1,0 +1,33 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-release",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8090",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "build/web-release"
+      ],
+      "port": 8090
+    },
+    {
+      "name": "site-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8091",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "/tmp/claude-1000/-home-gordonk-PycharmProjects-Noctis-IV-OM/6a40349c-1640-4782-891f-dc8635a11797/scratchpad/_site"
+      ],
+      "port": 8091
+    }
+  ]
+}
