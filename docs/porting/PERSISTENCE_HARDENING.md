@@ -46,6 +46,14 @@ It saves, removes the legacy input, starts a second application process from
 native v1 alone, verifies the state, continues, and saves again. No host window
 or manual input is required.
 
+Every fixture process runs with `--fixture-universe-seconds 1000000000`, which
+pins the universe clock that `unfreeze()` uses to replay hidden elapsed time.
+Without it, the clean-restart phase was flaky: the internal lamp (on by
+default) is charged `elapsed / 84` power for the wall-clock seconds between
+the previous save and the next load, and the truncation to `int16_t` turned
+any crossed second boundary into 19999 power. The flag is accepted only in
+fixture modes; gameplay still uses the wall clock.
+
 ## Scope
 
 All evidence is automated on the supported Linux lanes. Windows verification

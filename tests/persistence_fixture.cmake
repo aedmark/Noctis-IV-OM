@@ -9,6 +9,10 @@ if(NOT seed_result EQUAL 0)
     message(FATAL_ERROR "could not create persistence seed: ${seed_error}")
 endif()
 
+# Every phase sees the same universe clock. unfreeze() charges the internal
+# lamp (and other active systems) for the wall-clock seconds between a save and
+# the next load, so a free-running clock makes clean-restart report 19999 power
+# whenever the two processes straddle a second boundary.
 foreach(phase IN ITEMS advance verify deplete standard clean-start clean-restart legacy-unsynced)
     if(phase STREQUAL "advance")
         set(drive_arg "--omega-drive")
@@ -43,6 +47,7 @@ with open('${root}/data/current.bin', 'r+b') as f:
     execute_process(
         COMMAND "${CMAKE_COMMAND}" -E env --unset=DISPLAY --unset=WAYLAND_DISPLAY
             "${APP}" --persistence-fixture "${phase}" ${drive_arg}
+            --fixture-universe-seconds 1000000000
         WORKING_DIRECTORY "${root}"
         RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE report)
     if(phase STREQUAL "advance")
