@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 namespace noctis {
 
@@ -21,6 +22,9 @@ private:
 };
 
 double current_universe_seconds();
+// Fixture-only seam: pins current_universe_seconds() so multi-process
+// persistence fixtures observe no hidden elapsed time between runs.
+void set_universe_seconds_override(std::optional<double> seconds);
 
 // Timewarp simulation rate controls
 int get_timewarp_multiplier();

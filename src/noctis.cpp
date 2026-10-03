@@ -2781,6 +2781,7 @@ int main(int argc, char **argv) {
     bool no_audio_mode                    = false;
     int drive_override                    = 0;
     const char *persistence_fixture_phase = nullptr;
+    std::optional<double> fixture_universe_seconds;
     std::optional<std::filesystem::path> user_data_override;
     std::optional<std::filesystem::path> migration_source;
     std::optional<bool> portable_mode_override;
@@ -2825,6 +2826,8 @@ int main(int argc, char **argv) {
         } else if (std::string_view(argv[arg]) == "--persistence-fixture" && arg + 1 < argc) {
             persistence_fixture_mode  = true;
             persistence_fixture_phase = argv[++arg];
+        } else if (std::string_view(argv[arg]) == "--fixture-universe-seconds" && arg + 1 < argc) {
+            fixture_universe_seconds = std::strtod(argv[++arg], nullptr);
         } else if (std::string_view(argv[arg]) == "--movie-fixture") {
             movie_fixture_mode = true;
         } else if (std::string_view(argv[arg]) == "--environment-fixture") {
@@ -2857,6 +2860,13 @@ int main(int argc, char **argv) {
                               persistence_fixture_mode || movie_fixture_mode || surface_fixture_mode ||
                               landing_fixture_mode || orbit_surface_fixture_mode || environment_fixture_mode ||
                               content_fixture_mode || oakenshield_fixture_mode;
+    if (fixture_universe_seconds) {
+        if (!fixture_mode) {
+            noctis::log_event("error", "arguments", "--fixture-universe-seconds requires a fixture mode");
+            return 2;
+        }
+        noctis::set_universe_seconds_override(fixture_universe_seconds);
+    }
     if (fixture_mode && !user_data_override) {
         std::error_code error;
         user_data_override = std::filesystem::current_path(error);
