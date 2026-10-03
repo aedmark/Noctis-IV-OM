@@ -5,7 +5,7 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
-## Unreleased
+## 1.7.1 (2026-10-03) — Native Wayland & Controls Update
 
 ### Features
 * **Native Wayland Support:** Linux builds now include native Wayland support alongside X11. The game automatically connects natively on Wayland compositors (GNOME, KDE Plasma, etc.) and seamlessly falls back to X11 on X11 sessions.

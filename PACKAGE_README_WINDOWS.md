@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.7.0 Release
+# Noctis IV OM — Windows 1.7.1 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.7.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.7.1 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -79,9 +79,9 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 1.7.0 Web Update release. The complete game is now also playable in the
-browser at https://aedmark.github.io/Noctis-IV-OM/play/, and quick key taps shorter than
-one frame are no longer missed. The Microsoft
+This is the 1.7.1 Maintenance Release, fixing the desktop F10 cursor capture toggle,
+correcting polygon vertical gradient rasterization, and delivering browser mouselook
+and fullscreen improvements for the web edition. The Microsoft
 C/C++ runtime is statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

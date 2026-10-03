@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 1.7.0</a>
+        <a class="nav-cta" href="index.html#download">Get 1.7.1</a>
       </nav>
     </div>
   </header>
@@ -138,6 +138,13 @@
     <p>Rather than restructuring the inherited game loops, the browser build uses ASYNCIFY so the space and surface loops hand control back to the browser once per 55 ms tick. Rendering goes through WebGL2, so the CRT shader works in the browser too, and the canvas follows any window size while the game letterboxes its 4:3 frame.</p>
     <p>Saves live in the browser's IndexedDB storage. The game autosaves about every 30 seconds and whenever the tab is hidden, including your exact position on a planet's surface, so closing the tab is safe. Because browsers reserve <kbd>Esc</kbd> for releasing the mouse and leaving fullscreen, it never ends a web session; on a planet it saves in place.</p>
     <p>Along the way we fixed quick key taps shorter than one frame being ignored on every platform, and the site's manual links now open the preserved Noctis IV Plus manual. The site itself now deploys automatically to GitHub Pages.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.7.1: Native Wayland &amp; Controls Update — Wayland Compositors, Web Pointer Lock, and Polygon Gradients</h2>
+    <p>Version 1.7.1 brings native Wayland support to Linux desktops alongside X11. The Linux binary dynamically detects Wayland compositors (such as GNOME and KDE Plasma) and runs with crisp, stutter-free native presentation, seamlessly falling back to X11 when run under an X11 session.</p>
+    <p>For the browser edition, mouse pointer locking and fullscreen toggling have been reworked: clicking either the Launch overlay or the canvas captures the pointer cleanly across modern browsers, pressing <kbd>Esc</kbd> releases the cursor without disrupting the session, and <kbd>F11</kbd> or <kbd>Alt+Enter</kbd> toggles fullscreen presentation. On desktop builds, the <kbd>F10</kbd> cursor capture toggle bug has been resolved.</p>
+    <p>Under the hood, this release fixes vertical scanline gradient rasterization in the 3D polygon engine, cleans up star coordinate hashing with clear descriptive naming, and clears all remaining pending items across the core engine.</p>
   </section>
 </article>
 </body>
