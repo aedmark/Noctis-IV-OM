@@ -4761,6 +4761,20 @@ nosecondarysun:
             if (fabs(step) < 0.5) {
                 step = 0;
             }
+        } else {
+            // In-flight air drag when not actively driving forward
+            if (!key_move_dir.forward && !key_move_dir.backward && !(mpul & 1U)) {
+                step /= 1.05;
+                if (fabs(step) < 0.5) {
+                    step = 0;
+                }
+            }
+            if (!key_move_dir.left && !key_move_dir.right) {
+                shift /= 1.05;
+                if (fabs(shift) < 0.5) {
+                    shift = 0;
+                }
+            }
         }
 
         // resistenza in salita.
@@ -5123,7 +5137,14 @@ nosecondarysun:
             }
         } else {
             if (landed) {
-                if (pos_y > crcy - 300) {
+                if (jetpack) {
+                    // Jetpack thrusters provide sustained upward lift overcoming planetary gravity
+                    const float upward_lift = planet_grav * 1.25f + 40.0f;
+                    gravity -= upward_lift;
+                    if (gravity < -450.0f) {
+                        gravity = -450.0f; // Stable ascent ceiling
+                    }
+                } else if (pos_y > crcy - 300) {
                     drop_y = planet_grav * (pos_y - crcy) * 0.00333; // 1/300
                     gravity += drop_y;
                 } else {
@@ -5140,7 +5161,7 @@ nosecondarysun:
             }
         }
 
-        if (pos_y > crcy - 200) {
+        if (pos_y >= crcy - 10) {
             jumping = false;
             jetpack = false;
         } else {
