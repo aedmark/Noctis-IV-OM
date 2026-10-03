@@ -25,7 +25,7 @@ endfunction()
 # than inheriting backend defaults that may change in a future dependency.
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT EMSCRIPTEN)
     set(GLFW_BUILD_X11 ON CACHE BOOL "Build GLFW with the verified X11 backend" FORCE)
-    set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "Native Wayland is not yet a supported backend" FORCE)
+    set(GLFW_BUILD_WAYLAND ON CACHE BOOL "Build GLFW with native Wayland support" FORCE)
 endif()
 
 # The browser build targets WebGL2 so the CRT shader can use GLSL ES 3.00.

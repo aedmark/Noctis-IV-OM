@@ -19,8 +19,6 @@ This preview has one accepted cross-platform presentation difference:
 Other preview limitations:
 
 - The Windows ZIP is unsigned, so Windows may show a SmartScreen warning.
-- Linux is verified through the X11 backend. Wayland sessions are expected to
-  use XWayland; a native Wayland backend is not yet a supported configuration.
 
 Please include the build checksum and diagnostics output with any report. See
 `COMMUNITY_TESTING.md` for the focused test route and report link.

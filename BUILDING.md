@@ -13,11 +13,11 @@ sudo apt-get update
 sudo apt-get install -y clang cmake ninja-build \
   libasound2-dev libx11-dev libxrandr-dev libxi-dev \
   libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
-  libxinerama-dev
+  libxinerama-dev libwayland-dev libxkbcommon-dev wayland-protocols
 ```
 
-The verified build uses X11. A Wayland desktop runs it through XWayland; do not
-install Wayland development packages for this configuration.
+The Linux build supports both native Wayland and X11 backends, automatically
+selecting Wayland on Wayland compositors and falling back to X11.
 
 ### 2. Configure, build, and test
 
@@ -265,8 +265,8 @@ Restore network access or use the offline-cache command above.
 
 ### X11 or OpenGL headers are missing
 
-Install the Ubuntu packages from the first section. Native Wayland development
-packages are not part of this build.
+Install the Ubuntu packages from the first section, including X11, Wayland,
+and OpenGL development libraries.
 
 ### Start completely fresh
 

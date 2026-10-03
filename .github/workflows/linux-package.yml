@@ -20,7 +20,7 @@ jobs:
           sudo apt-get install -y clang cmake ninja-build xvfb \
             libasound2-dev libx11-dev libxrandr-dev libxi-dev \
             libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
-            libxinerama-dev
+            libxinerama-dev libwayland-dev libxkbcommon-dev wayland-protocols
       - name: Configure release build
         run: cmake --preset linux-clang-release
       - name: Build

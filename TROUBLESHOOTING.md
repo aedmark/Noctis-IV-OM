@@ -42,9 +42,13 @@ opening a graphical window or modifying save files. Check that:
    ```sh
    LIBGL_ALWAYS_SOFTWARE=1 ./nivlr
    ```
-3. **Wayland sessions (Linux):** The current build targets X11. On Wayland
-   desktops (GNOME, KDE Wayland), the game runs seamlessly under XWayland.
-   Ensure `xwayland` is installed on your distribution.
+3. **Wayland sessions (Linux):** The Linux build includes native Wayland support
+   alongside X11. It automatically connects natively on Wayland compositors (GNOME,
+   KDE Plasma, etc.) and falls back to X11 on X11 sessions. If you ever need to
+   force the X11/XWayland backend on a Wayland desktop, launch with:
+   ```sh
+   WAYLAND_DISPLAY="" XDG_SESSION_TYPE=x11 ./nivlr
+   ```
 
 ### Windows SmartScreen warning
 

@@ -7,6 +7,9 @@ game, not translations of functions from Assembly to C++.
 
 ## Unreleased
 
+### Features
+* **Native Wayland Support:** Linux builds now include native Wayland support alongside X11. The game automatically connects natively on Wayland compositors (GNOME, KDE Plasma, etc.) and seamlessly falls back to X11 on X11 sessions.
+
 ### Fixes
 * **Browser Mouselook:** The web build now captures the mouse when you press LAUNCH. <kbd>Esc</kbd> releases it, clicking the game captures it again, and <kbd>F10</kbd> turns mouselook on or off. Browsers only allow mouse capture straight from a click or key press, so the page now handles it itself instead of the game.
 * **Browser Fullscreen:** <kbd>F11</kbd> and <kbd>Alt</kbd>+<kbd>Enter</kbd> now toggle fullscreen in the browser. Previously F11 was swallowed and Alt+Enter's delayed request was rejected.
