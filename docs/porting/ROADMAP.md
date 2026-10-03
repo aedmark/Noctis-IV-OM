@@ -256,9 +256,10 @@ containers, not substitutes for that ledger.
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
 | M11-W01 | In-engine screenshot & panorama download/export | PLANNED | Provide direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (e.g. key `D` to download/export the active image to the user's Downloads folder in Web via Emscripten JavaScript bridge, and open/reveal in file explorer on desktop) |
-| M11-W02 | Gamepad and joystick flight controls | PLANNED | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, rumble feedback) |
-| M11-W03 | Configurable controls & sensitivity persistence | PLANNED | User-configurable keybindings, mouse sensitivity sliders, and pitch invert toggles persisted in `settings.ini` |
-| M11-W04 | Audio category volume controls | PLANNED | Volume sliders for master, cabin ambience, propulsion, surface weather, and exploration Foley in the HUD / F2 menu |
+| M11-W02 | Flight & maneuvering acoustics | DONE | Procedural sublight RCS attitude thrusters (onset cold-gas valve burst + continuous bandpass hiss during attitude changes), atmospheric descent buffeting turbulence scaled with entry velocity and air density, and dual-stage mechanical touchdown clunk on planetary landing impact/bounce; verified in `tests/audio_test.cpp` and 45/45 passing CTest suites |
+| M11-W03 | Gamepad and joystick flight controls | PLANNED | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, rumble feedback) |
+| M11-W04 | Configurable controls & sensitivity persistence | PLANNED | User-configurable keybindings, mouse sensitivity sliders, and pitch invert toggles persisted in `settings.ini` |
+| M11-W05 | Audio category volume controls | PLANNED | Volume sliders for master, cabin ambience, propulsion, surface weather, and exploration Foley in the HUD / F2 menu |
 
 **Exit criteria**
 

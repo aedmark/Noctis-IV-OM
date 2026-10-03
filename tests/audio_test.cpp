@@ -23,6 +23,8 @@ int main() {
     ok &= require(!telemetry.travel_active, "default travel should be inactive");
     ok &= require(!telemetry.player_walking, "default walking should be false");
     ok &= require(!telemetry.jetpack_active, "default jetpack should be false");
+    ok &= require(!telemetry.rcs_active, "default rcs should be false");
+    ok &= require(telemetry.entry_buffeting == 0.0f, "default entry buffeting should be 0");
 
     // 2. Verify volume and mute controls
     ok &= require(!noctis::is_audio_muted(), "default muted should be false");
@@ -49,6 +51,8 @@ int main() {
     noctis::play_visor_servo();
     noctis::play_jetpack_burst();
     noctis::play_surface_footstep();
+    noctis::play_rcs_burst();
+    noctis::play_touchdown_clunk();
     noctis::shutdown_audio(); // Safe double-shutdown check
 
     std::printf("audio_test: all unit checks passed successfully\n");

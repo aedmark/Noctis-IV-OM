@@ -100,11 +100,14 @@ Sound g_sound_torch_on{};
 Sound g_sound_torch_off{};
 Sound g_sound_visor{};
 Sound g_sound_jetpack{};
+Sound g_sound_rcs_burst{};
+Sound g_sound_touchdown{};
 std::array<Sound, 3> g_sound_footsteps{};
 
-// Footstep timing
+// Footstep & RCS timing
 float g_footstep_timer = 0.2f;
 int g_footstep_index   = 0;
+bool g_last_rcs_active = false;
 std::chrono::steady_clock::time_point g_last_telemetry_time{};
 
 // Thunder rumble trigger for weather
@@ -125,6 +128,10 @@ struct SynthesizerState {
     StateVariableFilter filter_drive_r{};
     StateVariableFilter filter_drive_rumble{};
     StateVariableFilter filter_jetpack_hiss{};
+    StateVariableFilter filter_rcs_hiss_l{};
+    StateVariableFilter filter_rcs_hiss_r{};
+    StateVariableFilter filter_entry_buffet_l{};
+    StateVariableFilter filter_entry_buffet_r{};
     StateVariableFilter filter_rain{};
     StateVariableFilter filter_thunder{};
     StateVariableFilter filter_suit_vent_l{};
@@ -151,6 +158,7 @@ struct SynthesizerState {
     float lfo_gust_1   = 0.0f;
     float lfo_gust_2   = 0.0f;
     float lfo_roof_pan = 0.0f;
+    float lfo_buffet   = 0.0f;
 
     // Arrival / deceleration spool-down
     bool was_travel_active = false;
@@ -166,6 +174,8 @@ struct SynthesizerState {
     float cur_atmo_density   = 0.0f;
     float cur_rain_intensity = 0.0f;
     float cur_jetpack_gain   = 0.0f;
+    float cur_rcs_gain       = 0.0f;
+    float cur_buffet_gain    = 0.0f;
     float cur_master_gain    = 0.0f;
 };
 
@@ -232,6 +242,11 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         float target_roof    = (snap.scene == AudioScene::roof) ? 0.28f : 0.0f;
         float target_surface = (snap.scene == AudioScene::surface) ? 0.45f : 0.0f;
         float target_jetpack = snap.jetpack_active ? 0.32f : 0.0f;
+        float target_rcs     = (snap.rcs_active && !snap.travel_active &&
+                               (snap.scene == AudioScene::cabin || snap.scene == AudioScene::roof))
+                                   ? 0.22f
+                                   : 0.0f;
+        float target_buffet  = std::clamp(snap.entry_buffeting, 0.0f, 1.0f) * 0.55f;
 
         // Drive frequency: starts low at ignition (44Hz), rises with speed to 96Hz, drops as travel slows to stop
         float target_drive_freq = 44.0f + 52.0f * snap.travel_speed;
@@ -250,6 +265,8 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         g_synth.cur_atmo_density += smooth_k * (snap.atmosphere_density - g_synth.cur_atmo_density);
         g_synth.cur_rain_intensity += smooth_k * (snap.weather_rain - g_synth.cur_rain_intensity);
         g_synth.cur_jetpack_gain += smooth_k * (target_jetpack - g_synth.cur_jetpack_gain);
+        g_synth.cur_rcs_gain += smooth_k * (target_rcs - g_synth.cur_rcs_gain);
+        g_synth.cur_buffet_gain += smooth_k * (target_buffet - g_synth.cur_buffet_gain);
         g_synth.cur_master_gain += smooth_k * (target_vol - g_synth.cur_master_gain);
 
         // Advance LFOs
@@ -268,6 +285,10 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         g_synth.lfo_roof_pan += TWO_PI * 0.035f * dt;
         if (g_synth.lfo_roof_pan >= TWO_PI)
             g_synth.lfo_roof_pan -= TWO_PI;
+
+        g_synth.lfo_buffet += TWO_PI * 6.5f * dt; // 6.5 Hz turbulent buffeting cycle
+        if (g_synth.lfo_buffet >= TWO_PI)
+            g_synth.lfo_buffet -= TWO_PI;
 
         // -----------------------------------------------------------------
         // 1. Cabin Drone Synthesis (Warm, Soothing Stardrifter Interior)
@@ -499,13 +520,49 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         }
 
         // -----------------------------------------------------------------
-        // 5. Final Stereo Mix & Soft Limiter
+        // 5. Sublight RCS Attitude Thruster Continuous Hiss
+        // -----------------------------------------------------------------
+        float rcs_l = 0.0f;
+        float rcs_r = 0.0f;
+        if (g_synth.cur_rcs_gain > 0.001f) {
+            float rcs_nl = g_synth.noise_l.next_white();
+            float rcs_nr = g_synth.noise_r.next_white();
+            float rcs_ll = 0.0f, rcs_lb = 0.0f, rcs_lh = 0.0f;
+            float rcs_rl = 0.0f, rcs_rb = 0.0f, rcs_rh = 0.0f;
+            g_synth.filter_rcs_hiss_l.process(rcs_nl, 1900.0f, 1.3f, AUDIO_SAMPLE_RATE, rcs_ll, rcs_lb, rcs_lh);
+            g_synth.filter_rcs_hiss_r.process(rcs_nr, 1950.0f, 1.3f, AUDIO_SAMPLE_RATE, rcs_rl, rcs_rb, rcs_rh);
+            rcs_l = (rcs_lb * 0.75f + rcs_lh * 0.25f) * g_synth.cur_rcs_gain;
+            rcs_r = (rcs_rb * 0.75f + rcs_rh * 0.25f) * g_synth.cur_rcs_gain;
+        }
+
+        // -----------------------------------------------------------------
+        // 6. Atmospheric Entry Buffeting Turbulence
+        // -----------------------------------------------------------------
+        float buffet_l = 0.0f;
+        float buffet_r = 0.0f;
+        if (g_synth.cur_buffet_gain > 0.001f) {
+            float buffet_turb = 0.70f + 0.30f * std::sin(g_synth.lfo_buffet);
+            float b_noise_l   = g_synth.noise_l.next_pink();
+            float b_noise_r   = g_synth.noise_r.next_pink();
+            float b_cutoff    = 70.0f + 60.0f * (g_synth.cur_buffet_gain / 0.55f);
+            float bl_low = 0.0f, bl_band = 0.0f, bl_high = 0.0f;
+            float br_low = 0.0f, br_band = 0.0f, br_high = 0.0f;
+            g_synth.filter_entry_buffet_l.process(b_noise_l, b_cutoff, 1.8f, AUDIO_SAMPLE_RATE, bl_low, bl_band, bl_high);
+            g_synth.filter_entry_buffet_r.process(b_noise_r, b_cutoff * 1.05f, 1.8f, AUDIO_SAMPLE_RATE, br_low, br_band, br_high);
+            buffet_l = (bl_low * 0.80f + bl_band * 0.20f) * buffet_turb * g_synth.cur_buffet_gain;
+            buffet_r = (br_low * 0.80f + br_band * 0.20f) * buffet_turb * g_synth.cur_buffet_gain;
+        }
+
+        // -----------------------------------------------------------------
+        // 7. Final Stereo Mix & Soft Limiter
         // -----------------------------------------------------------------
         float mix_l = cabin_l * g_synth.cur_cabin_gain + roof_l * g_synth.cur_roof_gain +
-                      surface_l * g_synth.cur_surface_gain + drive_l * g_synth.cur_drive_gain;
+                      surface_l * g_synth.cur_surface_gain + drive_l * g_synth.cur_drive_gain +
+                      rcs_l + buffet_l;
 
         float mix_r = cabin_r * g_synth.cur_cabin_gain + roof_r * g_synth.cur_roof_gain +
-                      surface_r * g_synth.cur_surface_gain + drive_r * g_synth.cur_drive_gain;
+                      surface_r * g_synth.cur_surface_gain + drive_r * g_synth.cur_drive_gain +
+                      rcs_r + buffet_r;
 
         mix_l *= g_synth.cur_master_gain;
         mix_r *= g_synth.cur_master_gain;
@@ -615,6 +672,50 @@ void initialize_audio() {
         SetSoundVolume(g_sound_footsteps[k], 0.35f);
     }
 
+    // Sublight RCS Valve Burst: crisp cold-gas valve pop + 2100Hz bandpass rush
+    NoiseGenerator rcs_noise{98765};
+    StateVariableFilter rcs_filter{};
+    auto wave_rcs = make_procedural_wave(5292, [&rcs_noise, &rcs_filter](int /*i*/, float t) {
+        constexpr float duration = 0.12f;
+        float pop   = std::exp(-t / 0.008f) * std::sin(TWO_PI * 340.0f * t) * 0.45f;
+        float noise = rcs_noise.next_white();
+        float l = 0.0f, b = 0.0f, h = 0.0f;
+        rcs_filter.process(noise, 2100.0f, 1.4f, AUDIO_SAMPLE_RATE, l, b, h);
+        float gas_env = std::exp(-t / 0.035f);
+        if (t < 0.008f)
+            gas_env *= (t / 0.008f);
+        return (pop + b * gas_env * 0.85f) * 0.70f;
+    });
+    g_sound_rcs_burst = LoadSoundFromWave(wave_rcs);
+    UnloadWave(wave_rcs);
+    SetSoundVolume(g_sound_rcs_burst, 0.45f);
+
+    // Touchdown Mechanical Clunk: dual-stage heavy metallic thud + latch ring + regolith crunch
+    NoiseGenerator td_noise{54321};
+    auto wave_touchdown = make_procedural_wave(17640, [&td_noise](int /*i*/, float t) {
+        constexpr float duration = 0.40f;
+        // 1. Heavy low-frequency hull thud with pitch dropping 85Hz down to 35Hz
+        float phase_thud = TWO_PI * (85.0f * t - 25.0f * (t * t / duration));
+        float thud       = std::exp(-t / 0.075f) * std::sin(phase_thud) * 0.85f;
+
+        // 2. Dual damped metallic latch rings (720 Hz and 1150 Hz)
+        float click = 0.0f;
+        if (t >= 0.008f) {
+            float dt_click  = t - 0.008f;
+            float env_click = std::exp(-dt_click / 0.030f);
+            click = env_click * (std::sin(TWO_PI * 720.0f * dt_click) * 0.40f +
+                                 std::sin(TWO_PI * 1150.0f * dt_click) * 0.25f);
+        }
+
+        // 3. Regolith compression surface crunch
+        float crunch = std::exp(-t / 0.045f) * td_noise.next_pink() * 0.35f;
+
+        return (thud + click + crunch) * 0.75f;
+    });
+    g_sound_touchdown = LoadSoundFromWave(wave_touchdown);
+    UnloadWave(wave_touchdown);
+    SetSoundVolume(g_sound_touchdown, 0.70f);
+
     // 2. Continuous Procedural Ambient Stream:
     g_ambient_stream = LoadAudioStream(AUDIO_SAMPLE_RATE, 32, 2);
     if (IsAudioStreamValid(g_ambient_stream)) {
@@ -644,6 +745,10 @@ void shutdown_audio() {
         UnloadSound(g_sound_visor);
     if (IsSoundValid(g_sound_jetpack))
         UnloadSound(g_sound_jetpack);
+    if (IsSoundValid(g_sound_rcs_burst))
+        UnloadSound(g_sound_rcs_burst);
+    if (IsSoundValid(g_sound_touchdown))
+        UnloadSound(g_sound_touchdown);
     for (auto &snd : g_sound_footsteps) {
         if (IsSoundValid(snd))
             UnloadSound(snd);
@@ -675,6 +780,12 @@ void update_audio_telemetry(const AudioTelemetry &telemetry) {
     } else {
         g_footstep_timer = 0.2f;
     }
+
+    // Sublight RCS onset burst trigger
+    if (telemetry.rcs_active && !g_last_rcs_active) {
+        play_rcs_burst();
+    }
+    g_last_rcs_active = telemetry.rcs_active;
 
     // Weather thunder trigger
     if (telemetry.scene == AudioScene::surface && telemetry.weather_rain >= 2.0f) {
@@ -715,6 +826,18 @@ void play_surface_footstep() {
         return;
     PlaySound(g_sound_footsteps[g_footstep_index]);
     g_footstep_index = (g_footstep_index + 1) % 3;
+}
+
+void play_rcs_burst() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_rcs_burst);
+}
+
+void play_touchdown_clunk() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_touchdown);
 }
 
 void set_audio_muted(bool muted) { g_muted.store(muted); }

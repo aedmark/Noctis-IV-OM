@@ -5130,9 +5130,11 @@ nosecondarysun:
                     atl_z2  = 8192;
                     gravity = 0;
                     landed  = 1;
+                    noctis::play_touchdown_clunk();
                 } else {
                     bounces++;
                     gravity = -0.32 * gravity;
+                    noctis::play_touchdown_clunk();
                 }
             }
         } else {
@@ -5601,6 +5603,13 @@ nosecondarysun:
             telemetry.player_walking = (landed != 0) && active_walking_input &&
                                        (std::fabs(step) > 5.0f || std::fabs(shift) > 5.0f) && !jumping;
             telemetry.jetpack_active = (landed != 0) && key_space_down;
+            telemetry.rcs_active     = false;
+            if (!landed && atmosphere != 0 && gravity > 10.0f) {
+                telemetry.entry_buffeting = std::clamp(static_cast<float>(gravity) / 250.0f, 0.0f, 1.0f) *
+                                            std::clamp(static_cast<float>(pp_pressure) / 1.5f, 0.2f, 1.0f);
+            } else {
+                telemetry.entry_buffeting = 0.0f;
+            }
             noctis::update_audio_telemetry(telemetry);
         }
 

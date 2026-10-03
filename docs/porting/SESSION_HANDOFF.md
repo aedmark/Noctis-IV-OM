@@ -95,18 +95,23 @@ Replace this document at the end of every session; Git holds older versions.
   - Added `audio_determinism` unit test, maintaining 100% test pass rate (42/42 tests).
   - Packaged, checksummed, verified, and tagged `v1.3.0`.
 
+- **M11-W02 (Flight & Maneuvering Acoustics):**
+  - Synthesized sublight RCS attitude thruster acoustics: crisp cold-gas valve pop on maneuver onset (`play_rcs_burst()`, 0.12s, 2100 Hz bandpass) plus continuous subtle stereo thruster hiss (`filter_rcs_hiss_l/r` at 1900 Hz, gain ~0.22 smoothed) engaged during spacecraft navigation pitch/yaw steering (`dlt_nav_beta`), collision avoidance corrections, and observation deck attitude movement.
+  - Synthesized atmospheric entry buffeting turbulence: physical descent velocity (`gravity`) and air pressure (`pp_pressure`) dynamically drive pink noise through 2-pole resonant lowpass filter (65–125 Hz, $Q=1.8$) modulated by a 6.5 Hz turbulent LFO during planetary descent.
+  - Synthesized dual-stage physical touchdown clunk (`play_touchdown_clunk()`): 0.40s duration featuring low-frequency hull thud with pitch dropping from 85 Hz to 35 Hz, dual damped metallic latch rings (720 Hz and 1150 Hz), and surface regolith compression crunch on landing impact and ground bounce.
+  - Verified 100% test pass rate across all 45 automated test suites (including expanded `audio_test`).
+  - Web release re-built and served live on port 8090.
+
 ## Test suite and package status
 
-- **Clang Release:** 42/42 passed (3.98s).
-- **MinGW Windows Cross-Compilation:** Built cleanly (`nivlr.exe`).
-- **Linux Package (`.tar.gz`):** Built, checksummed, verified with `VerifyLinuxPackage.cmake`.
-- **Windows Package (`.zip`):** Built, checksummed, verified with `VerifyWindowsPackage.cmake`.
-- **Extracted Smoke Test:** Passed isolated `--diagnostics` with exit code 0.
+- **Clang Release:** 45/45 passed (4.10s).
+- **Web Release:** Built cleanly (`nivlr.html`, `nivlr.wasm`, `nivlr.data`).
+- **Live Server:** Python 3 daemon serving `build/web-release` at `http://localhost:8090/nivlr.html`.
 
 ## Next steps
 
 1. Milestone M11 (In-Engine Media Export & Exploration Ergonomics):
    - M11-W01: In-engine screenshot & panorama download/export from the F4 Image Archive Viewer (direct browser file download on web, gallery reveal on desktop).
-   - M11-W02: Native gamepad / joystick flight and surface movement.
-   - M11-W03: Configurable keybindings and sensitivity persistence.
-   - M11-W04: Audio category volume controls in HUD / F2 menu.
+   - M11-W03: Native gamepad / joystick flight and surface movement.
+   - M11-W04: Configurable keybindings and sensitivity persistence.
+   - M11-W05: Audio category volume controls in HUD / F2 menu.

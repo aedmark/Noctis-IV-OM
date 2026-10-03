@@ -19,6 +19,8 @@ struct AudioTelemetry {
     float travel_speed       = 0.0f;  // Propulsion speed / progress
     bool player_walking      = false; // Walking on planetary surface
     bool jetpack_active      = false; // Thruster firing
+    bool rcs_active          = false; // Sublight RCS attitude thruster firing
+    float entry_buffeting    = 0.0f;  // Atmospheric descent buffeting turbulence (0.0 to 1.0)
 };
 
 // Subsystem lifecycle
@@ -29,11 +31,13 @@ bool is_audio_ready();
 // Telemetry update (called once per simulation frame)
 void update_audio_telemetry(const AudioTelemetry &telemetry);
 
-// Exploration Foley triggers
+// Exploration & Flight Foley triggers
 void play_torch_click(bool turning_on);
 void play_visor_servo();
 void play_jetpack_burst();
 void play_surface_footstep();
+void play_rcs_burst();
+void play_touchdown_clunk();
 
 // Audio settings & controls
 void set_audio_muted(bool muted);
