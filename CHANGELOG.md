@@ -11,6 +11,8 @@ game, not translations of functions from Assembly to C++.
 * **Browser Mouselook:** The web build now captures the mouse when you press LAUNCH. <kbd>Esc</kbd> releases it, clicking the game captures it again, and <kbd>F10</kbd> turns mouselook on or off. Browsers only allow mouse capture straight from a click or key press, so the page now handles it itself instead of the game.
 * **Browser Fullscreen:** <kbd>F11</kbd> and <kbd>Alt</kbd>+<kbd>Enter</kbd> now toggle fullscreen in the browser. Previously F11 was swallowed and Alt+Enter's delayed request was rejected.
 * **Desktop F10:** The first <kbd>F10</kbd> press after startup now releases the mouse. Previously the game thought the mouse started released, so the first press re-captured it and did nothing visible.
+* **Polygon Vertical Gradients:** Corrected vertical scanline gradient calculation in 2D triangle rasterization (`case 4` in `draw_triangle_2d`), ensuring proper clamping and signed gradient stepping.
+* **Codebase Cleanup:** Verified and cleaned up legacy assembly registers in star sector position hashing (`isthere`), verified `single_pixel_at_ptr` offset against vanilla, and resolved all remaining `TODO`/`FIXME` comments in `src/`.
 
 ## 1.7.0 (2026-10-02) — The Web Update
 

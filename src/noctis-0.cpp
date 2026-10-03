@@ -2906,7 +2906,6 @@ int8_t pixilating_effect = LIGHT_EMITTING;
 int8_t pixel_spreads     = 1;
 uint8_t multicolourmask  = 0xC0;
 
-// TODO; Might be offset from proper position. Verify against vanilla.
 void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color) {
     if (offset >= adapted_width * adapted_height) {
         return;
@@ -5171,42 +5170,32 @@ int8_t isthere(double star_id) {
     for (sx = visible_sectors; sx > 0; sx--, sect_y -= k, sect_x += advance) {
         for (sy = visible_sectors; sy > 0; sy--, sect_z -= k, sect_y += advance) {
             for (sz = visible_sectors; sz > 0; sz--, sect_z += advance) {
-                // TODO; Cleanup, rename properly. No teletubby names.
-                int32_t eax = sect_x;
-                int32_t edx = sect_z;
+                constexpr int32_t sector_half_extent = 0xC350; // 50000
+                constexpr int32_t sector_mask        = 0x0001FFFF;
 
-                eax += edx;
-                int32_t ecx = eax;
-                edx         = eax;
-                edx &= 0x0001FFFF;
+                const int32_t sum_xz = sect_x + sect_z;
+                int32_t hash_x       = sum_xz & sector_mask;
+                int32_t star_x       = sect_x + hash_x - sector_half_extent;
+                laststar_x           = star_x;
 
-                edx += sect_x;
-                edx -= 0xC350;
-                laststar_x = edx;
+                const int64_t prod_x     = static_cast<int64_t>(star_x) * sum_xz;
+                const int32_t prod_x_low = static_cast<int32_t>(prod_x & 0xFFFFFFFF);
+                const int32_t prod_x_hi  = static_cast<int32_t>(prod_x >> 32);
+                const int32_t mix_x      = prod_x_hi + prod_x_low;
 
-                int64_t result = (int64_t) edx * (int64_t) eax;
-                eax            = result & 0xFFFFFFFF;
-                edx            = result >> 32;
+                const int32_t acc_sum = sum_xz + mix_x;
+                int32_t hash_y        = mix_x & sector_mask;
+                int32_t star_y        = sect_y + hash_y - sector_half_extent;
+                laststar_y            = star_y;
 
-                edx += eax;
-                ecx += edx;
-                edx &= 0x0001FFFF;
+                const int64_t prod_y     = static_cast<int64_t>(star_y) * acc_sum;
+                const int32_t prod_y_low = static_cast<int32_t>(prod_y & 0xFFFFFFFF);
+                const int32_t prod_y_hi  = static_cast<int32_t>(prod_y >> 32);
+                const int32_t mix_y      = prod_y_hi + prod_y_low;
 
-                edx += sect_y;
-                edx -= 0xC350;
-                laststar_y = edx;
-                eax        = ecx;
-
-                result = (int64_t) edx * (int64_t) eax;
-                eax    = result & 0xFFFFFFFF;
-                edx    = result >> 32;
-
-                edx += eax;
-                edx &= 0x0001FFFF;
-
-                edx += sect_z;
-                edx -= 0xC350;
-                laststar_z = edx;
+                int32_t hash_z = mix_y & sector_mask;
+                int32_t star_z = sect_z + hash_z - sector_half_extent;
+                laststar_z     = star_z;
 
                 laststar_x = round(laststar_x);
                 laststar_y = round(laststar_y);

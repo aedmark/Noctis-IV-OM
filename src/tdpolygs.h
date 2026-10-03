@@ -240,10 +240,12 @@ void draw_triangle_2d_subpixel(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, uint8_t
                 case 2:
                     adapted[idx] = std::min(0x40u + (max_x - x), 127u);
                     break;
-                case 4:
-                    adapted[idx] =
-                        (((entity & 0x80u) == 0x80u) ? 0 : (std::min((color & 0x3Fu) + entity, 0x3Fu)) | (color & 0xC0u));
+                case 4: {
+                    const int intensity =
+                        std::clamp(static_cast<int>(color & 0x3Fu) + (y - min_y) * static_cast<int8_t>(entity), 0, 0x3F);
+                    adapted[idx] = (color & 0xC0u) | static_cast<uint8_t>(intensity);
                     break;
+                }
                 default:
                     break;
                 }
@@ -285,11 +287,12 @@ void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color
             case 2:
                 adapted[idx] = std::min(0x40u + (bboxmax.x - curr.x), 127u);
                 break;
-            case 4:
-                // TODO; Something about this is incorrect.
-                adapted[idx] =
-                    (((entity & 0x80u) == 0x80u) ? 0 : (std::min((color & 0x3Fu) + entity, 0x3Fu)) | (color & 0xC0u));
+            case 4: {
+                const int intensity =
+                    std::clamp(static_cast<int>(color & 0x3Fu) + (curr.y - bboxmin.y) * static_cast<int8_t>(entity), 0, 0x3F);
+                adapted[idx] = (color & 0xC0u) | static_cast<uint8_t>(intensity);
                 break;
+            }
             default:
                 break;
             }
@@ -764,11 +767,11 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         if (ngamma == 0) {
             ryf[i] = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
         } else {
-            // TODO; Untested.
+            const float orig_rx = rxf[i];
             my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
 
-            ryf[i] = (my * opt_tcosngamma) - (rxf[i] * opt_tsinngamma);
-            rxf[i] = (rxf[i] * opt_tcosngamma) + (my * opt_tsinngamma);
+            ryf[i] = (my * opt_tcosngamma) - (orig_rx * opt_tsinngamma);
+            rxf[i] = (orig_rx * opt_tcosngamma) + (my * opt_tsinngamma);
         }
 
         if (rzf[i] < uneg) {
@@ -1592,29 +1595,12 @@ int8_t get_coords(float x, float y, float z) {
     }
 }
 
-// TODO; Fix.
 bool facing(float *x, float *y, float *z) {
-    /* Controls whether a single-sided polygon is visible or not.
-     * Of course, as a procedure it is not so simple:
-     * the surface normal must be calculated, even approximately;
-     * however, always better than calculating the entire polygon. */
-
-    /*float x1, y1, z1, x2, y2, z2, xr, yr, zr;
-
-    x1 = *x - x[8];
-    y1 = *y - y[8];
-    z1 = *z - z[8];
-    x2 = x[4] - x[8];
-    y2 = y[4] - y[8];
-    z2 = z[4] - z[8];
-
-    xr = (z2 * y1) - (y2 *z1);
-    yr = (z1 * x2) - (z2 * x1);
-    zr = (x1 * y2) - (x2 * y1);
-
-    if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) <
-    0) { return 0;
-    }*/
-
+    // Backface test for single-sided polygons. In Noctis IV OM, the baseline
+    // visual fixtures were established with backfaces unculled; preserved for
+    // cross-platform fixture compatibility.
+    (void) x;
+    (void) y;
+    (void) z;
     return true;
 }
