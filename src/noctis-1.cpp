@@ -5549,7 +5549,7 @@ nosecondarysun:
         }
 
         // il fotogramma ? finito. ora lo visualizza.
-        noctis::apply_suit_torch(adapted, adapted_width, adapted_height, suit_torch != 0);
+        // Suit torch is rendered via 32-bit RGBA screen blend in noctis.cpp (apply_suit_torch_rgba)
         draw_plus_overlay(true);
         if (fcs_status_delay > 0 && draw_hud) {
             noctis::draw_surface_status_text(adapted, adapted_width, adapted_height,

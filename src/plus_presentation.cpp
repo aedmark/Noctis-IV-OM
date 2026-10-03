@@ -127,14 +127,31 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
 
             constexpr float max_beam = 180.0f;
             const float beam = intensity * surface_mod * max_beam;
-            const int beam_r = static_cast<int>(beam);
-            const int beam_g = static_cast<int>(beam * 0.96f);
-            const int beam_b = static_cast<int>(beam * 0.90f);
 
             const std::size_t rgba_idx = (row_pixel_offset + x) * 4;
-            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 0] + beam_r));
-            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 1] + beam_g));
-            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(std::min(255, rgba[rgba_idx + 2] + beam_b));
+            const int cur_r = rgba[rgba_idx + 0];
+            const int cur_g = rgba[rgba_idx + 1];
+            const int cur_b = rgba[rgba_idx + 2];
+
+            // Ambient awareness: full beam on dark/nightside planets,
+            // subtle fill-light on sunlit surfaces to prevent wash-out
+            const float lum = cur_r * 0.299f + cur_g * 0.587f + cur_b * 0.114f;
+            const float ambient_scale = 1.0f - std::clamp((lum - 20.0f) / 160.0f, 0.0f, 0.80f);
+            const float effective_beam = beam * ambient_scale;
+
+            const float beam_r = effective_beam;
+            const float beam_g = effective_beam * 0.96f;
+            const float beam_b = effective_beam * 0.90f;
+
+            // Screen blending: 255 - ((255 - cur) * (255 - beam)) / 255
+            // Preserves surface detail, normal shading, and contrast without hard clipping
+            const int out_r = 255 - static_cast<int>((255 - cur_r) * (255.0f - std::min(255.0f, beam_r)) / 255.0f);
+            const int out_g = 255 - static_cast<int>((255 - cur_g) * (255.0f - std::min(255.0f, beam_g)) / 255.0f);
+            const int out_b = 255 - static_cast<int>((255 - cur_b) * (255.0f - std::min(255.0f, beam_b)) / 255.0f);
+
+            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::clamp(out_r, 0, 255));
+            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(std::clamp(out_g, 0, 255));
+            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(std::clamp(out_b, 0, 255));
         }
     }
 }

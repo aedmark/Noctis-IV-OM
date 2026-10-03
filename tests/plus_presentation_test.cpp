@@ -90,6 +90,13 @@ int main() {
     ok &= require(test_rgba[visor_offset + 0] == 16, "RGBA torch should preserve visor margin");
     ok &= require(test_rgba[outside_offset + 0] == 16, "RGBA torch should not modify pixels outside beam");
 
+    // Lit surface washout prevention test: verify torch adds soft fill without clipping to 255
+    std::vector<std::uint8_t> lit_rgba(320 * 200 * 4, 180);
+    std::vector<std::uint8_t> lit_indices(320 * 200, 30);
+    noctis::apply_suit_torch_rgba(lit_rgba.data(), lit_indices.data(), 320, 200);
+    ok &= require(lit_rgba[hotspot_offset + 0] < 240, "torch on lit surface should not blow out to 255");
+    ok &= require(lit_rgba[hotspot_offset + 0] > 180, "torch on lit surface should still add subtle fill light");
+
     // Surface HUD status text test
     std::vector<std::uint8_t> hud_frame(320 * 200, 0);
     noctis::draw_surface_status_text(hud_frame.data(), 320, 200, "TORCH ON");
