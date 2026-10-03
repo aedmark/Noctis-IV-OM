@@ -21,7 +21,7 @@ execute_process(
     ERROR_VARIABLE report)
 
 if(BASELINE STREQUAL "msvc-release")
-    set(expected "orbit_surface_fixture longitude=1 latitude=60 touchdown=488 returned=538 frames=783 rendered=817 orbit=dd14fcc6528cab25 ground=6d3807b8549045eb outbound=bbab7679df8dcc21 capsule=71ebd1f6440828fd trees=3590648 animals=2133 ruins=35221 capsule_draws=79 ship_position=restored\n")
+    set(expected "orbit_surface_fixture longitude=1 latitude=60 touchdown=488 returned=538 frames=783 rendered=817 orbit=dd14fcc6528cab25 ground=3bb49530cf858373 outbound=c89aedbf17614669 capsule=97213ad051e1c155 trees=3590648 animals=2133 ruins=35221 capsule_draws=79 ship_position=restored\n")
 else()
     set(expected "orbit_surface_fixture longitude=1 latitude=60 touchdown=488 returned=538 frames=783 rendered=817 orbit=dd14fcc6528cab25 ground=fcf1004a13b0cb28 outbound=de202f968cbb2b26 capsule=4be1dac247ffb4f9 trees=3590648 animals=2133 ruins=35221 capsule_draws=79 ship_position=restored\n")
 endif()

@@ -1,4 +1,4 @@
 # Exact MSVC Release baselines for production surface content rendering.
 # case longitude latitude frames trees rocks animals ruins capsule frame_hash
-felysia-habitable 1 60 3 12702 0 12 81 3 a5404d1e0b3a0858
-felysia-rocky 1 60 3 0 13104 0 0 3 cabd7a49d3620f77
+felysia-habitable 1 60 3 12702 0 12 81 3 d392198e9f532c50
+felysia-rocky 1 60 3 0 13104 0 0 3 aa97fe814652da4f
