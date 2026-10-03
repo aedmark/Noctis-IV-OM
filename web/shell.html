@@ -94,7 +94,8 @@
       <p id="status">Loading the Stardrifter…</p>
       <div class="bar"><div id="progress"></div></div>
       <p>Explore with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and the mouse. <kbd>F1</kbd> lists shortcuts,
-        <kbd>F4</kbd> opens your image archive, and <kbd>F10</kbd> captures the mouse for mouselook.
+        <kbd>F4</kbd> opens your image archive, <kbd>F11</kbd> toggles fullscreen, and <kbd>F10</kbd> toggles mouselook.
+        <kbd>Esc</kbd> releases the mouse; click the game to capture it again.
         Your progress autosaves in this browser; just close the tab when you are done.</p>
       <button id="start" disabled>LAUNCH</button>
     </div>
@@ -116,7 +117,65 @@
       if (launch.hidden && gameKeys.has(event.code)) event.preventDefault();
     }, { capture: true });
 
+    // Browsers only grant pointer lock and fullscreen from inside a user
+    // gesture (click / keydown handler). The game loop never runs inside one,
+    // so the page performs these requests itself and the game just observes
+    // the result (raylib tracks pointerlockchange; the game reads
+    // Module.nivlrFullscreen for its status badge).
+    var wantPointerLock = true; // mouselook is on by default, F10 toggles it
+
+    function lockPointer() {
+      if (document.pointerLockElement === canvas || !canvas.requestPointerLock) return;
+      try {
+        var result = canvas.requestPointerLock();
+        // Chrome returns a promise and rejects e.g. during the short cooldown
+        // after the player pressed Esc; the next click simply tries again.
+        if (result && result.catch) result.catch(function () {});
+      } catch (e) {}
+    }
+
+    function unlockPointer() {
+      if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+    }
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement) {
+        Module.nivlrFullscreen = false;
+        if (document.exitFullscreen) document.exitFullscreen().catch(function () {});
+      } else if (document.documentElement.requestFullscreen) {
+        // Fullscreen the whole page so the canvas keeps following the window
+        // size and the game keeps doing its own letterboxing.
+        Module.nivlrFullscreen = true;
+        document.documentElement.requestFullscreen({ navigationUI: 'hide' })
+          .then(function () { if (wantPointerLock) lockPointer(); })
+          .catch(function () { Module.nivlrFullscreen = !!document.fullscreenElement; });
+      }
+    }
+
+    window.addEventListener('keydown', function (event) {
+      if (!launch.hidden || event.repeat) return;
+      var isEnter = event.code === 'Enter' || event.code === 'NumpadEnter';
+      if (event.code === 'F11' || (event.altKey && isEnter)) {
+        event.preventDefault();
+        toggleFullscreen();
+      } else if (event.code === 'F10') {
+        wantPointerLock = !wantPointerLock;
+        if (wantPointerLock) lockPointer(); else unlockPointer();
+      }
+    }, { capture: true });
+
+    // Esc (or alt-tab) releases the lock in every browser; clicking the game
+    // captures the mouse again unless the player turned mouselook off.
+    canvas.addEventListener('mousedown', function () {
+      if (launch.hidden && wantPointerLock) lockPointer();
+    });
+
+    document.addEventListener('fullscreenchange', function () {
+      Module.nivlrFullscreen = !!document.fullscreenElement;
+    });
+
     var Module = {
+      nivlrFullscreen: false,
       canvas: canvas,
       print: function (text) { console.log(text); },
       printErr: function (text) { console.warn(text); },
@@ -136,6 +195,7 @@
     startButton.addEventListener('click', function () {
       launch.hidden = true;
       canvas.focus();
+      if (wantPointerLock) lockPointer();
     });
     window.addEventListener('error', function () {
       statusText.textContent = 'The game stopped unexpectedly. See the browser console for details.';

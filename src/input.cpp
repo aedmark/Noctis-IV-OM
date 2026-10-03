@@ -79,7 +79,6 @@ noctis::DisplayToggleHandler aspect_toggle_handler     = nullptr;
 noctis::DisplayToggleHandler upscale_toggle_handler    = nullptr;
 noctis::DisplayToggleHandler crt_toggle_handler        = nullptr;
 noctis::OverlayInputHandler overlay_input_handler      = nullptr;
-bool cursor_captured                                   = false;
 
 void push_extended_key(std::int16_t scan_code) {
     keys.push(scan_code);
@@ -188,7 +187,6 @@ void reset_input_state() {
     mdltx = mdlty = mouse_x = mouse_y = 0;
     mpul                              = 0;
     key_move_dir                      = {};
-    cursor_captured                   = false;
 }
 
 void set_audio_toggle_handler(AudioToggleHandler handler) { audio_toggle_handler = handler; }
@@ -207,14 +205,19 @@ void handle_input() {
     } else {
         noctis::apply_input_frame(frame);
     }
+#ifndef __EMSCRIPTEN__
+    // Toggle from raylib's real cursor state rather than a shadow flag, so the
+    // first F10 after startup (which locks the cursor) always releases it.
+    // On the web, web/shell.html toggles pointer lock inside the F10 keydown
+    // handler instead (browsers require a user gesture for it).
     if (frame.toggle_cursor_pressed) {
-        cursor_captured = !cursor_captured;
-        if (cursor_captured) {
-            DisableCursor();
-        } else {
+        if (IsCursorHidden()) {
             EnableCursor();
+        } else {
+            DisableCursor();
         }
     }
+#endif
     if (frame.toggle_audio_pressed && audio_toggle_handler) {
         audio_toggle_handler();
     }

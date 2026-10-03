@@ -2939,8 +2939,8 @@ int main(int argc, char **argv) {
         SetWindowMinSize(160, 100);
 #else
         SetWindowMinSize(640, 480);
-#endif
         DisableCursor();
+#endif
         auto image     = GenImageColor(adapted_width, adapted_height, {});
         screen_texture = LoadTextureFromImage(image);
         SetTextureFilter(screen_texture, TEXTURE_FILTER_POINT);

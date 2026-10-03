@@ -3,6 +3,10 @@
 
 #include <raylib.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -89,23 +93,38 @@ void set_aspect_ratio_mode(AspectRatioMode mode) {
 }
 
 bool is_fullscreen() {
+#ifdef __EMSCRIPTEN__
+    // web/shell.html owns browser fullscreen (it must be requested inside a
+    // user-gesture handler) and mirrors the target state here.
+    return EM_ASM_INT({ return Module.nivlrFullscreen ? 1 : 0; }) != 0;
+#else
     return IsWindowReady() ? IsWindowFullscreen() : g_fullscreen_configured;
+#endif
 }
 
 void toggle_fullscreen() {
+#ifdef __EMSCRIPTEN__
+    // The page already toggled fullscreen in its F11 / Alt+Enter handler.
+    g_fullscreen_configured = is_fullscreen();
+#else
     if (IsWindowReady()) {
         ToggleFullscreen();
         g_fullscreen_configured = IsWindowFullscreen();
     } else {
         g_fullscreen_configured = !g_fullscreen_configured;
     }
+#endif
 }
 
 void set_fullscreen(bool enabled) {
     g_fullscreen_configured = enabled;
+#ifndef __EMSCRIPTEN__
+    // Browsers refuse fullscreen without a user gesture, so a saved
+    // preference cannot be restored on page load.
     if (IsWindowReady() && (IsWindowFullscreen() != enabled)) {
         ToggleFullscreen();
     }
+#endif
 }
 
 std::int8_t get_setting_draw_hud() { return g_draw_hud; }
