@@ -5564,8 +5564,12 @@ nosecondarysun:
             telemetry.scene              = noctis::AudioScene::surface;
             telemetry.atmosphere_density = atmosphere ? std::clamp<float>(pp_pressure, 0.05f, 5.0f) : 0.0f;
             telemetry.weather_rain       = rainy;
-            telemetry.travel_active      = false;
-            telemetry.player_walking = (landed != 0) && (std::fabs(step) > 0.1f || std::fabs(shift) > 0.1f) && !jumping;
+            const bool active_walking_input =
+                (key_move_dir.forward || key_move_dir.backward || key_move_dir.left || key_move_dir.right ||
+                 (mpul & 1U) != 0 || fixed_step > 0 ||
+                 (!option_mouse_look && std::abs(mdlty) > 2));
+            telemetry.player_walking = (landed != 0) && active_walking_input &&
+                                       (std::fabs(step) > 5.0f || std::fabs(shift) > 5.0f) && !jumping;
             telemetry.jetpack_active = jetpack;
             noctis::update_audio_telemetry(telemetry);
         }
