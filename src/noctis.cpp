@@ -5956,9 +5956,7 @@ resynctoplanet:
         telemetry.player_walking     = false;
         telemetry.jetpack_active     = false;
         const bool attitude_maneuver = (std::abs(dlt_nav_beta) > 0.05f) ||
-                                       (dsd < (0.44 + (double) (2 * anti_rad)) * nearstar_ray) ||
-                                       (ontheroof && (std::abs(dlt_beta) > 0.25f || std::abs(dlt_alfa) > 0.25f ||
-                                                      std::abs(shift) > 0.5f || std::abs(step) > 0.5f));
+                                       (dsd < (0.44 + (double) (2 * anti_rad)) * nearstar_ray);
         telemetry.rcs_active         = !telemetry.travel_active && attitude_maneuver;
         telemetry.entry_buffeting    = 0.0f;
         noctis::update_audio_telemetry(telemetry);
