@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 1.7.1 Release
+# Noctis IV OM — Linux 1.8.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.7.1 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.8.0 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -79,9 +79,11 @@ building the game from source.
 
 ## Release status
 
-This is the 1.7.1 Maintenance Release, adding native Wayland support on Linux,
-fixing browser mouselook and fullscreen in the web build, resolving the desktop F10
-cursor capture toggle, and correcting polygon vertical gradient rasterization.
+This is the 1.8.0 Feature Release (The Acoustics & Surface Exploration Update),
+introducing procedural sublight RCS attitude thrusters, dynamic atmospheric entry
+buffeting, physical touchdown clunk acoustics, vintage mechanical keyboard and GOESnet
+foley, albedo luminance surface torch lighting, synchronized footsteps, and rebalanced
+jetpack flight dynamics.
 Please keep the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

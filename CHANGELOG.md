@@ -5,6 +5,29 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.8.0 (2026-10-04) — The Acoustics & Surface Exploration Update
+
+### Features
+* **Flight & Maneuvering Acoustics:**
+  * Sublight attitude navigation steering and collision avoidance now trigger procedural cold-gas RCS thrusters, featuring an onset valve pop and continuous stereo thruster hiss.
+  * Atmospheric descent now produces physical aerodynamic buffeting turbulence, driven dynamically by descent velocity and planetary atmospheric pressure through resonant low-pass filtering.
+  * Planetary touchdown now features a dual-stage physical clunk combining low-frequency hull resonance, metallic landing gear latch rings, and regolith compression crunch on impact and rebound.
+* **Cockpit & GOESnet Foley:**
+  * Mechanical vintage solenoid/spring keyboard clacks with three round-robin procedural variations for GOESnet console typing, star catalog prompts, and celestial labeling.
+  * Optical telemetry transmit burst chirps on GOESnet command submission (<kbd>Enter</kbd>).
+  * Dual-harmonic bell acknowledge chimes for successful commands and valid locks vs retro dual square/sine error buzzes on command errors or out-of-range targets.
+  * Tactile dashboard rocker switches and console button clicks for cockpit instrument interaction, FCS commands, and bulkhead screen selection.
+  * Linefeed scroll taps for Guide browsing and landing target coordinate cursor adjustments.
+  * Observation deck hydraulic elevator carriage servo glide when ascending or descending to the deck.
+* **Surface Exploration & Visual Fidelity:**
+  * Planetary suit torch / headlamp (<kbd>L</kbd>) overhauled with direct albedo luminance scaling, naturally illuminating terrain textures and polygon meshes without an artificial white overlay.
+  * Planetary exploration footsteps now synchronize strictly to active movement inputs, preventing ghost steps during standing turns or idle frames.
+  * Airless worlds now feature a soothing spacesuit life-support ventilation hum instead of vacuum silence buzzing.
+  * Jetpack flight dynamics rebalanced with a 1,200-unit flight ceiling and smooth vertical velocity damping, preventing infinite space escape while eliminating uphill mid-air collision hitches ("invisible walls").
+
+### Fixes
+* **Observation Deck Camera Rotation:** Decoupled observation deck player camera look and steps from spacecraft attitude RCS thrusters, preventing cold-gas valve bursts when looking around the deck.
+
 ## 1.7.1 (2026-10-03) — Native Wayland & Controls Update
 
 ### Features

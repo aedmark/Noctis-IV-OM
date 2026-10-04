@@ -4,10 +4,10 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Session identity
 
-- Date: 2026-10-01.
+- Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M8 (Stabilization and 1.0 GA) in progress.
-- Status: Milestone M8 (Stabilization and 1.0 GA) is **DONE**; 1.0 General Availability published.
+- Branch: `master`; Milestone M11 (In-Engine Media Export & Exploration Ergonomics) in progress.
+- Status: Release 1.8.0 ("The Acoustics & Surface Exploration Update") published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -107,7 +107,13 @@ Replace this document at the end of every session; Git holds older versions.
     - `play_terminal_scroll()`: Subtle linefeed scroll tap on Guide browsing and landing target coordinate cursor adjustments.
     - `play_deck_lift()`: Hydraulic motor servo whine (180 -> 240 Hz with 40 Hz PWM) on observation deck elevator movement.
   - Verified 100% test pass rate across all 45 automated test suites.
-  - Web release re-built and served live on port 8090.
+- **Release 1.8.0 (Feature Release — The Acoustics & Surface Exploration Update):**
+  - Synthesized flight & maneuvering acoustics: sublight RCS thrusters (onset cold-gas valve pop + continuous stereo hiss), dynamic atmospheric entry buffeting turbulence, dual-stage physical touchdown clunk.
+  - Decoupled observation deck camera look/step from spacecraft attitude thrusters.
+  - Synthesized tactile cockpit & GOESnet foley: mechanical keyboard clacks (3 procedural variations), telemetry transmit chirps, dual-harmonic acknowledge / buzz cues, console rocker buttons, linefeed scroll taps, deck elevator servo.
+  - Surface exploration polish: true albedo luminance scaling for suit torch (`L`), strictly synchronized footstep pacing, soothing spacesuit life-support ventilation hum on airless worlds, and 1,200-unit ceiling jetpack flight dynamics without uphill collision hitches.
+  - Rebuilt and packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.8.0/`.
+  - Updated all documentation, manifests, and websites.
 
 ## Test suite and package status
 
