@@ -53,6 +53,13 @@ int main() {
     noctis::play_surface_footstep();
     noctis::play_rcs_burst();
     noctis::play_touchdown_clunk();
+    noctis::play_cockpit_button();
+    noctis::play_terminal_keystroke();
+    noctis::play_goesnet_transmit();
+    noctis::play_goesnet_chime(true);
+    noctis::play_goesnet_chime(false);
+    noctis::play_terminal_scroll();
+    noctis::play_deck_lift();
     noctis::shutdown_audio(); // Safe double-shutdown check
 
     std::printf("audio_test: all unit checks passed successfully\n");

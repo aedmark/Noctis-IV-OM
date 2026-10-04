@@ -96,10 +96,17 @@ Replace this document at the end of every session; Git holds older versions.
   - Packaged, checksummed, verified, and tagged `v1.3.0`.
 
 - **M11-W02 (Flight & Maneuvering Acoustics):**
-  - Synthesized sublight RCS attitude thruster acoustics: crisp cold-gas valve pop on maneuver onset (`play_rcs_burst()`, 0.12s, 2100 Hz bandpass) plus continuous subtle stereo thruster hiss (`filter_rcs_hiss_l/r` at 1900 Hz, gain ~0.22 smoothed) engaged during spacecraft navigation pitch/yaw steering (`dlt_nav_beta`), collision avoidance corrections, and observation deck attitude movement.
+  - Synthesized sublight RCS attitude thruster acoustics: crisp cold-gas valve pop on maneuver onset (`play_rcs_burst()`, 0.12s, 2100 Hz bandpass) plus continuous subtle stereo thruster hiss (`filter_rcs_hiss_l/r` at 1900 Hz, gain ~0.22 smoothed) engaged during spacecraft navigation pitch/yaw steering (`dlt_nav_beta`) and collision avoidance corrections.
   - Synthesized atmospheric entry buffeting turbulence: physical descent velocity (`gravity`) and air pressure (`pp_pressure`) dynamically drive pink noise through 2-pole resonant lowpass filter (65–125 Hz, $Q=1.8$) modulated by a 6.5 Hz turbulent LFO during planetary descent.
   - Synthesized dual-stage physical touchdown clunk (`play_touchdown_clunk()`): 0.40s duration featuring low-frequency hull thud with pitch dropping from 85 Hz to 35 Hz, dual damped metallic latch rings (720 Hz and 1150 Hz), and surface regolith compression crunch on landing impact and ground bounce.
-  - Verified 100% test pass rate across all 45 automated test suites (including expanded `audio_test`).
+  - Synthesized tactile Cockpit & GOESnet Foley:
+    - `play_cockpit_button()`: Tactile dashboard rocker switch / console button click on console operations, FCS commands, and bulkhead screen selection.
+    - `play_terminal_keystroke()`: Mechanical vintage solenoid/spring keyboard typing clacks (3 round-robin procedural variations) for GOESnet typing, star catalog prompts, and celestial labeling.
+    - `play_goesnet_transmit()`: Stepped frequency telemetry chirp (1050 -> 1680 -> 2520 Hz) on command submission (`Enter`).
+    - `play_goesnet_chime(bool)`: Dual-harmonic bell acknowledge chime (880 + 1320 Hz) on success/locks vs retro dual square/sine buzz (185 + 245 Hz) on error/rejection/out-of-range.
+    - `play_terminal_scroll()`: Subtle linefeed scroll tap on Guide browsing and landing target coordinate cursor adjustments.
+    - `play_deck_lift()`: Hydraulic motor servo whine (180 -> 240 Hz with 40 Hz PWM) on observation deck elevator movement.
+  - Verified 100% test pass rate across all 45 automated test suites.
   - Web release re-built and served live on port 8090.
 
 ## Test suite and package status

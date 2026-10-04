@@ -102,12 +102,20 @@ Sound g_sound_visor{};
 Sound g_sound_jetpack{};
 Sound g_sound_rcs_burst{};
 Sound g_sound_touchdown{};
+Sound g_sound_cockpit_button{};
+std::array<Sound, 3> g_sound_terminal_keys{};
+Sound g_sound_goes_transmit{};
+Sound g_sound_goes_ack{};
+Sound g_sound_goes_nack{};
+Sound g_sound_terminal_scroll{};
+Sound g_sound_deck_lift{};
 std::array<Sound, 3> g_sound_footsteps{};
 
-// Footstep & RCS timing
-float g_footstep_timer = 0.2f;
-int g_footstep_index   = 0;
-bool g_last_rcs_active = false;
+// Footstep, terminal, and RCS timing
+float g_footstep_timer   = 0.2f;
+int g_footstep_index     = 0;
+int g_terminal_key_index = 0;
+bool g_last_rcs_active   = false;
 std::chrono::steady_clock::time_point g_last_telemetry_time{};
 
 // Thunder rumble trigger for weather
@@ -716,6 +724,105 @@ void initialize_audio() {
     UnloadWave(wave_touchdown);
     SetSoundVolume(g_sound_touchdown, 0.70f);
 
+    // Cockpit Push-Button: crisp contact transient + dashboard body thud
+    auto wave_btn = make_procedural_wave(1764, [](int /*i*/, float t) {
+        float click = std::exp(-t / 0.003f) * std::sin(TWO_PI * 1400.0f * t) * 0.7f;
+        float body  = std::exp(-t / 0.018f) * std::sin(TWO_PI * 220.0f * t) * 0.5f;
+        return (click + body) * 0.75f;
+    });
+    g_sound_cockpit_button = LoadSoundFromWave(wave_btn);
+    UnloadWave(wave_btn);
+    SetSoundVolume(g_sound_cockpit_button, 0.55f);
+
+    // Terminal Keyboard Keystrokes: 3 subtle mechanical variations
+    constexpr std::array<float, 3> key_high_freqs{2400.0f, 2750.0f, 2550.0f};
+    constexpr std::array<float, 3> key_low_freqs{360.0f, 390.0f, 340.0f};
+    for (std::size_t k = 0; k < 3; ++k) {
+        float f_high = key_high_freqs[k];
+        float f_low  = key_low_freqs[k];
+        auto wave_key = make_procedural_wave(1543, [f_high, f_low](int /*i*/, float t) {
+            float snap = std::exp(-t / 0.0022f) * std::sin(TWO_PI * f_high * t) * 0.75f;
+            float thud = std::exp(-t / 0.012f) * std::sin(TWO_PI * f_low * t) * 0.45f;
+            return (snap + thud) * 0.55f;
+        });
+        g_sound_terminal_keys[k] = LoadSoundFromWave(wave_key);
+        UnloadWave(wave_key);
+        SetSoundVolume(g_sound_terminal_keys[k], 0.45f);
+    }
+
+    // GOESnet Transmit Burst: stepped frequency packet chirp (1050 -> 1680 -> 2520 Hz)
+    auto wave_xmit = make_procedural_wave(3748, [](int /*i*/, float t) {
+        float freq = 1050.0f;
+        if (t >= 0.050f) {
+            freq = 2520.0f;
+        } else if (t >= 0.025f) {
+            freq = 1680.0f;
+        }
+        float env = 1.0f;
+        if (t < 0.005f) {
+            env = t / 0.005f;
+        } else if (t > 0.080f) {
+            env = (0.085f - t) / 0.005f;
+        }
+        float tone = std::sin(TWO_PI * freq * t) + 0.3f * std::sin(TWO_PI * freq * 2.0f * t);
+        return tone * env * 0.45f;
+    });
+    g_sound_goes_transmit = LoadSoundFromWave(wave_xmit);
+    UnloadWave(wave_xmit);
+    SetSoundVolume(g_sound_goes_transmit, 0.50f);
+
+    // GOESnet Acknowledge Chime: dual-harmonic pleasant chime (880 Hz + 1320 Hz)
+    auto wave_ack = make_procedural_wave(5292, [](int /*i*/, float t) {
+        float env   = std::exp(-t / 0.035f);
+        float tone1 = std::sin(TWO_PI * 880.0f * t);
+        float tone2 = 0.45f * std::sin(TWO_PI * 1320.0f * t);
+        return (tone1 + tone2) * env * 0.45f;
+    });
+    g_sound_goes_ack = LoadSoundFromWave(wave_ack);
+    UnloadWave(wave_ack);
+    SetSoundVolume(g_sound_goes_ack, 0.45f);
+
+    // GOESnet Error / Reject Buzzer: dual lower square/sine buzz (185 Hz + 245 Hz)
+    auto wave_nack = make_procedural_wave(6174, [](int /*i*/, float t) {
+        float env   = std::exp(-t / 0.045f);
+        float tone1 = std::sin(TWO_PI * 185.0f * t);
+        float tone2 = std::sin(TWO_PI * 245.0f * t);
+        float buzz  = (tone1 + tone2 >= 0.0f ? 0.7f : -0.7f) * 0.5f + (tone1 + tone2) * 0.5f;
+        return buzz * env * 0.50f;
+    });
+    g_sound_goes_nack = LoadSoundFromWave(wave_nack);
+    UnloadWave(wave_nack);
+    SetSoundVolume(g_sound_goes_nack, 0.45f);
+
+    // Terminal Linefeed / Scroll Click: subtle 2800 Hz transient + 550 Hz body
+    auto wave_scroll = make_procedural_wave(661, [](int /*i*/, float t) {
+        float tick = std::exp(-t / 0.0018f) * std::sin(TWO_PI * 2800.0f * t);
+        float tap  = std::exp(-t / 0.006f) * std::sin(TWO_PI * 550.0f * t) * 0.5f;
+        return (tick + tap) * 0.35f;
+    });
+    g_sound_terminal_scroll = LoadSoundFromWave(wave_scroll);
+    UnloadWave(wave_scroll);
+    SetSoundVolume(g_sound_terminal_scroll, 0.30f);
+
+    // Observation Deck Lifter Servo: hydraulic motor whine (180 -> 240 Hz with 40 Hz PWM)
+    auto wave_lift = make_procedural_wave(15435, [](int /*i*/, float t) {
+        constexpr float duration = 0.35f;
+        float progress           = t / duration;
+        float phase              = TWO_PI * (180.0f * t + 30.0f * t * progress);
+        float mod                = 0.75f + 0.25f * std::sin(TWO_PI * 40.0f * t);
+        float env                = 1.0f;
+        if (t < 0.03f) {
+            env = t / 0.03f;
+        } else if (t > duration - 0.05f) {
+            env = (duration - t) / 0.05f;
+        }
+        float tone = (std::sin(phase) + 0.3f * std::sin(phase * 2.0f)) * mod;
+        return tone * env * 0.50f;
+    });
+    g_sound_deck_lift = LoadSoundFromWave(wave_lift);
+    UnloadWave(wave_lift);
+    SetSoundVolume(g_sound_deck_lift, 0.45f);
+
     // 2. Continuous Procedural Ambient Stream:
     g_ambient_stream = LoadAudioStream(AUDIO_SAMPLE_RATE, 32, 2);
     if (IsAudioStreamValid(g_ambient_stream)) {
@@ -749,6 +856,22 @@ void shutdown_audio() {
         UnloadSound(g_sound_rcs_burst);
     if (IsSoundValid(g_sound_touchdown))
         UnloadSound(g_sound_touchdown);
+    if (IsSoundValid(g_sound_cockpit_button))
+        UnloadSound(g_sound_cockpit_button);
+    for (auto &snd : g_sound_terminal_keys) {
+        if (IsSoundValid(snd))
+            UnloadSound(snd);
+    }
+    if (IsSoundValid(g_sound_goes_transmit))
+        UnloadSound(g_sound_goes_transmit);
+    if (IsSoundValid(g_sound_goes_ack))
+        UnloadSound(g_sound_goes_ack);
+    if (IsSoundValid(g_sound_goes_nack))
+        UnloadSound(g_sound_goes_nack);
+    if (IsSoundValid(g_sound_terminal_scroll))
+        UnloadSound(g_sound_terminal_scroll);
+    if (IsSoundValid(g_sound_deck_lift))
+        UnloadSound(g_sound_deck_lift);
     for (auto &snd : g_sound_footsteps) {
         if (IsSoundValid(snd))
             UnloadSound(snd);
@@ -838,6 +961,43 @@ void play_touchdown_clunk() {
     if (!g_audio_ready || g_muted.load())
         return;
     PlaySound(g_sound_touchdown);
+}
+
+void play_cockpit_button() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_cockpit_button);
+}
+
+void play_terminal_keystroke() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_terminal_keys[g_terminal_key_index]);
+    g_terminal_key_index = (g_terminal_key_index + 1) % 3;
+}
+
+void play_goesnet_transmit() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_goes_transmit);
+}
+
+void play_goesnet_chime(bool positive) {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(positive ? g_sound_goes_ack : g_sound_goes_nack);
+}
+
+void play_terminal_scroll() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_terminal_scroll);
+}
+
+void play_deck_lift() {
+    if (!g_audio_ready || g_muted.load())
+        return;
+    PlaySound(g_sound_deck_lift);
 }
 
 void set_audio_muted(bool muted) { g_muted.store(muted); }

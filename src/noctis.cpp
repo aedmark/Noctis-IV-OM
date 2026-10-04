@@ -65,6 +65,7 @@ static float g_active_travel_speed               = 0.0f;
 // Set the autopilot travel parameters.
 void fix_remote_target() {
     status("TGT FIXED", 105);
+    noctis::play_goesnet_chime(true);
     const noctis::TravelPosition position{dzat_x, dzat_y, dzat_z};
     const noctis::TravelPosition target{ap_target_x, ap_target_y, ap_target_z};
     const auto guidance          = noctis::begin_travel(position, target);
@@ -76,6 +77,7 @@ void fix_remote_target() {
 
     if (!noctis::remote_target_in_range(target)) {
         status("OUTOFRANGE", 105);
+        noctis::play_goesnet_chime(false);
         ap_targetted = 0;
     } else {
         ap_targetted = 1;
@@ -84,6 +86,7 @@ void fix_remote_target() {
 
 void fix_local_target() {
     status("TGT FIXED", 105);
+    noctis::play_goesnet_chime(true);
     planet_xyz(ip_targetted);
     const auto guidance            = noctis::begin_travel({dzat_x, dzat_y, dzat_z}, {plx, ply, plz});
     ip_target_initial_d            = guidance.initial_distance;
@@ -646,6 +649,7 @@ void run_goesnet_module() {
                                              paths.gallery_dir};
     auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
     goes_output_cells = std::move(answer.cells);
+    noctis::play_goesnet_chime(answer.status == noctis::GoesResultStatus::ok);
 
     if (answer.target && answer.action == noctis::GoesResultAction::set_remote_target) {
         ap_target_x   = answer.target->x;
@@ -953,6 +957,7 @@ void vehicle(float opencapcount) {
                     goesnet_command[1] = 0;
                     gnc_pos            = 0;
                     goesk_e            = -1;
+                    noctis::play_terminal_keystroke();
                 }
             } else {
                 if (c == 27) {
@@ -961,7 +966,9 @@ void vehicle(float opencapcount) {
                     goesnet_command[gnc_pos - 1] = '_';
                     goesnet_command[gnc_pos]     = 0;
                     gnc_pos--;
+                    noctis::play_terminal_keystroke();
                 } else if (c == 13) {
+                    noctis::play_goesnet_transmit();
                     run_goesnet_module();
                     n = 0;
 
@@ -1000,6 +1007,7 @@ void vehicle(float opencapcount) {
                         goesnet_command[gnc_pos + 1] = '_';
                         goesnet_command[gnc_pos + 2] = 0;
                         gnc_pos++;
+                        noctis::play_terminal_keystroke();
                     }
                 }
             }
@@ -1030,6 +1038,7 @@ void vehicle(float opencapcount) {
                     goesfile_pos =
                         noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::end);
                     goesk_e = -1;
+                    noctis::play_terminal_scroll();
                     break;
                 }
                 case 0x47:
@@ -1037,11 +1046,13 @@ void vehicle(float opencapcount) {
                 case 0x8D:
                     goesfile_pos = noctis::goes_scroll_offset(goesfile_pos, 0, noctis::GoesScroll::home);
                     goesk_e      = -1;
+                    noctis::play_terminal_scroll();
                     break;
 
                 case 80:
                     goesfile_pos += noctis::goes_screen_columns;
                     goesk_e = -1;
+                    noctis::play_terminal_scroll();
                     break;
 
                 case 72:
@@ -1052,11 +1063,13 @@ void vehicle(float opencapcount) {
                     }
 
                     goesk_e = -1;
+                    noctis::play_terminal_scroll();
                     break;
 
                 case 0x51:
                     goesfile_pos += noctis::goes_screen_bytes;
                     goesk_e = -1;
+                    noctis::play_terminal_scroll();
                     break;
 
                 case 0x49:
@@ -1067,6 +1080,7 @@ void vehicle(float opencapcount) {
                     }
 
                     goesk_e = -1;
+                    noctis::play_terminal_scroll();
                     break;
                 default:
                     break;
@@ -1183,18 +1197,23 @@ void vehicle(float opencapcount) {
                 default:
                     break;
                 }
+                if (goesk_e == -1) {
+                    noctis::play_terminal_scroll();
+                }
             }
         } else {
             if (landing_point) {
                 if (c == 13) {
                     land_now = 1;
                     goesk_a  = -1;
+                    noctis::play_goesnet_chime(true);
                 }
 
                 if (c == 27) {
                     landing_point = 0;
                     status("CANCELLED", 50);
                     goesk_a = -1;
+                    noctis::play_goesnet_chime(false);
                 }
 
                 /*  Unit� di debugging dell'albedo
@@ -1595,14 +1614,17 @@ void fcs() {
 /* FCS Commands. */
 
 void fcs_commands() {
+    noctis::play_cockpit_button();
     switch (s_command) {
     case 1:
         if (stspeed || manual_target) {
             status("CONFLICT", 50);
+            noctis::play_goesnet_chime(false);
             break;
         }
 
         status("TGT-REMOTE", 50);
+        noctis::play_goesnet_chime(true);
         ap_targetting = 1;
         ap_targetted  = 0;
         break;
@@ -1616,6 +1638,7 @@ void fcs_commands() {
         } else {
             if (lithium_collector || manual_target) {
                 status("CONFLICT", 50);
+                noctis::play_goesnet_chime(false);
                 break;
             }
 
@@ -1639,6 +1662,7 @@ void fcs_commands() {
         if (ip_reached || ip_targetted == -1) {
             if (ap_reached) {
                 status("TGT-LOCAL", 50);
+                noctis::play_goesnet_chime(true);
                 ip_targetted  = -1;
                 ip_targetting = 1;
                 ip_reaching   = 0;
@@ -1646,6 +1670,7 @@ void fcs_commands() {
                 iptargetchar  = 0;
             } else {
                 status("NEED RECAL", 75);
+                noctis::play_goesnet_chime(false);
             }
         } else {
             if (ip_reaching) {
@@ -1661,6 +1686,7 @@ void fcs_commands() {
                     g_active_travel_phase = noctis::TravelPhase::warming_up;
                     g_active_travel_speed = 0.0f;
                     status("CONFIRM", 50);
+                    noctis::play_goesnet_chime(true);
                 }
             }
         }
@@ -1672,6 +1698,7 @@ void fcs_commands() {
             if (!ip_reached) {
                 ip_targetted = -1;
                 status("TGT REJECT", 50);
+                noctis::play_goesnet_chime(false);
             } else {
                 landing_point = 1 - landing_point;
 
@@ -1679,9 +1706,11 @@ void fcs_commands() {
                     if (nearstar_p_type[ip_targetted] == 0 || nearstar_p_type[ip_targetted] == 6 ||
                         nearstar_p_type[ip_targetted] >= 9) {
                         status("IMPOSSIBLE", 50);
+                        noctis::play_goesnet_chime(false);
                         landing_point = 0;
                     } else {
                         status("SURFACE", 50);
+                        noctis::play_goesnet_chime(true);
                         landing_pt_lon = 0;
                         landing_pt_lat = 60;
                     }
@@ -1948,6 +1977,7 @@ int8_t dummy_identity[9] = "Removed:";
 int8_t comp_data[32];
 
 void dev_commands() {
+    noctis::play_cockpit_button();
     int16_t n;
     float dist;
 
@@ -4144,6 +4174,11 @@ void swapBuffers() {
 void loop() {
     // Check the flag that indicates when you are on the "observation deck",
     // the roof of the Stardrifter.
+    static int16_t prev_lifter = 0;
+    if (lifter != 0 && prev_lifter == 0) {
+        noctis::play_deck_lift();
+    }
+    prev_lifter = lifter;
     pos_y += lifter;
 
     if (lifter > 0) {
@@ -4760,9 +4795,11 @@ jpr:
                 if (active_screen == -1) {
                     active_screen = (int8_t) ((pos_z + 104 * 15) / (-54 * 15));
                     status("SELECTED", 50);
+                    noctis::play_cockpit_button();
                 } else {
                     active_screen = -1;
                     status("DESELECTED", 50);
+                    noctis::play_cockpit_button();
                 }
             }
         } else {
@@ -6509,11 +6546,13 @@ resynctoplanet:
 
                         star_label[labstar_char] = mc;
                         labstar_char++;
+                        noctis::play_terminal_keystroke();
                     }
 
                     if (mc == 8 && labstar_char > 0) {
                         labstar_char--;
                         star_label[labstar_char] = 32;
+                        noctis::play_terminal_keystroke();
                     }
 
                     if (mc == 13) {
@@ -6540,11 +6579,13 @@ resynctoplanet:
 
                         planet_label[labplanet_char] = mc;
                         labplanet_char++;
+                        noctis::play_terminal_keystroke();
                     }
 
                     if (mc == 8 && labplanet_char > 0) {
                         labplanet_char--;
                         planet_label[labplanet_char] = 32;
+                        noctis::play_terminal_keystroke();
                     }
 
                     if (mc == 13) {

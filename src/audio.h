@@ -39,6 +39,14 @@ void play_surface_footstep();
 void play_rcs_burst();
 void play_touchdown_clunk();
 
+// Cockpit & GOESnet Foley triggers
+void play_cockpit_button();
+void play_terminal_keystroke();
+void play_goesnet_transmit();
+void play_goesnet_chime(bool positive = true);
+void play_terminal_scroll();
+void play_deck_lift();
+
 // Audio settings & controls
 void set_audio_muted(bool muted);
 bool is_audio_muted();
