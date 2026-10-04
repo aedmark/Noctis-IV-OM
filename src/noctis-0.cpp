@@ -54,6 +54,7 @@
 #include "upscale.h"
 #include "panorama.h"
 #include "noctis.h"
+#include "audio.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -5639,7 +5640,7 @@ void draw_plus_overlay(bool surface) {
             wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0,
                      std::string(lines[index]).c_str());
         }
-    } else if (graphics_menu_status) {
+    } else if (graphics_menu_status == 1) {
         const auto lines = noctis::plus_visual_menu_lines(draw_hud != 0, lens_flare_mode,
                                                           seamless_border != 0,
                                                           noctis::get_timewarp_multiplier(),
@@ -5647,6 +5648,21 @@ void draw_plus_overlay(bool surface) {
                                                           noctis::is_crt_shader_enabled(),
                                                           noctis::get_subpixel_fidelity(),
                                                           true);
+        const int box_h = static_cast<int>(lines.size()) * 8 + 8;
+        const int box_y = std::max(10, 185 - box_h);
+        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
+        for (std::size_t index = 0; index < lines.size(); ++index) {
+            wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
+        }
+    } else if (graphics_menu_status == 2) {
+        const auto lines = noctis::plus_audio_menu_lines(
+            noctis::get_selected_audio_category_index(),
+            noctis::get_audio_category_volume(noctis::AudioCategory::master),
+            noctis::get_audio_category_volume(noctis::AudioCategory::cabin),
+            noctis::get_audio_category_volume(noctis::AudioCategory::propulsion),
+            noctis::get_audio_category_volume(noctis::AudioCategory::weather),
+            noctis::get_audio_category_volume(noctis::AudioCategory::foley),
+            noctis::is_audio_muted());
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);

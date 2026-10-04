@@ -2941,6 +2941,7 @@ int main(int argc, char **argv) {
     }
     configure_runtime_file_paths();
     noctis::load_display_settings(noctis::runtime_paths().config_dir);
+    noctis::load_audio_settings(noctis::runtime_paths().config_dir);
     draw_hud        = noctis::get_setting_draw_hud();
     lens_flare_mode = noctis::get_setting_lens_flare_mode();
     seamless_border = noctis::get_setting_seamless_border();
@@ -4121,6 +4122,8 @@ void swapBuffers() {
                                     fcs_status_delay, render_w, render_h, viewport);
     }
     noctis::render_timewarp_slider(render_w, render_h, viewport, fcs_status_delay);
+    noctis::render_volume_slider_overlay(render_w, render_h, viewport, fcs_status_delay,
+                                         graphics_menu_status == 2);
     noctis::render_gallery_viewer(render_w, render_h, viewport);
 
     // Frame limiter: 18.2 FPS canonical simulation tick (55 ms);
@@ -4390,6 +4393,13 @@ void loop() {
             step += z_dir * WASD_speed;
             shift += x_dir * WASD_speed;
         }
+    }
+
+    if (!noctis::is_mouse_locked_and_focused()) {
+        dlt_alfa = 0.0f;
+        dlt_beta = 0.0f;
+        shift    = 0;
+        step     = 0;
     }
 
     // Mouse input for double left and right click.
@@ -6256,13 +6266,51 @@ resynctoplanet:
                     graphics_menu_status = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3C) {
-                    graphics_menu_status = !graphics_menu_status;
+                    graphics_menu_status = (graphics_menu_status + 1) % 3;
                     about                = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3D || mc == 142 || mc == 144) {
                     handle_movie_extended_key(mc);
                 } else if (mc == 0x3E) {
                     open_cockpit_gallery({});
+                } else if (graphics_menu_status == 2) {
+                    if (mc == 72) {
+                        noctis::select_previous_audio_category();
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()));
+                        status(msg, 50);
+                    } else if (mc == 80) {
+                        noctis::select_next_audio_category();
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()));
+                        status(msg, 50);
+                    } else if (mc == 75) {
+                        float v = noctis::step_selected_audio_category_volume(-0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                    } else if (mc == 77) {
+                        float v = noctis::step_selected_audio_category_volume(+0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                    }
                 } else if (mc == 75) {
                     dlt_nav_beta += 1.5;
                     status("PITCH - R", 25);
@@ -6279,8 +6327,14 @@ resynctoplanet:
                            50);
                 }
             } else if (handle_movie_key(mc, false)) {
-            } else if (graphics_menu_status) {
-                if (mc == 't') {
+            } else if (graphics_menu_status == 1) {
+                if (mc == 9 || mc == 'a' || mc == 'A') {
+                    graphics_menu_status = 2;
+                    noctis::touch_volume_slider();
+                    noctis::play_cockpit_button();
+                } else if (mc == 27) {
+                    graphics_menu_status = 0;
+                } else if (mc == 't') {
                     draw_hud = !draw_hud;
                     status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
                     save_display_settings_current();
@@ -6308,6 +6362,47 @@ resynctoplanet:
                     const bool active = noctis::toggle_subpixel_fidelity();
                     status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
                     save_display_settings_current();
+                }
+            } else if (graphics_menu_status == 2) {
+                if (mc == 9 || mc == 'v' || mc == 'V') {
+                    graphics_menu_status = 1;
+                    noctis::play_cockpit_button();
+                } else if (mc == 27) {
+                    graphics_menu_status = 0;
+                } else if (mc >= '1' && mc <= '5') {
+                    noctis::set_selected_audio_category(static_cast<noctis::AudioCategory>(mc - '1'));
+                    noctis::touch_volume_slider();
+                    noctis::play_cockpit_button();
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "%s",
+                                  noctis::audio_category_name(noctis::get_selected_audio_category()));
+                    status(msg, 50);
+                } else if (mc == 'm' || mc == 'M') {
+                    noctis::toggle_audio_mute();
+                    noctis::touch_volume_slider();
+                    noctis::play_cockpit_button();
+                    noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                    status(noctis::is_audio_muted() ? "AUDIO MUTED" : "AUDIO UNMUTED", 50);
+                } else if (mc == '+' || mc == '=' || mc == ']' || mc == '.' || mc == '>') {
+                    float v = noctis::step_selected_audio_category_volume(+0.05f);
+                    noctis::touch_volume_slider();
+                    noctis::play_cockpit_button();
+                    noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                  noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                  static_cast<int>(std::round(v * 100.0f)));
+                    status(msg, 50);
+                } else if (mc == '-' || mc == '_' || mc == '[' || mc == ',' || mc == '<') {
+                    float v = noctis::step_selected_audio_category_volume(-0.05f);
+                    noctis::touch_volume_slider();
+                    noctis::play_cockpit_button();
+                    noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                  noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                  static_cast<int>(std::round(v * 100.0f)));
+                    status(msg, 50);
                 }
             } else if (noctis::is_roof_speed_key(mc)) {
                 noctis::toggle_timewarp();
@@ -6364,7 +6459,7 @@ resynctoplanet:
                 }
 
                 if (mc == 0x3C) {
-                    graphics_menu_status = !graphics_menu_status;
+                    graphics_menu_status = (graphics_menu_status + 1) % 3;
                     about                = 0;
                     movie_recorder.close_menu();
                     goto endmain;
@@ -6378,6 +6473,53 @@ resynctoplanet:
                 if (mc == 0x3E) {
                     open_cockpit_gallery({});
                     goto endmain;
+                }
+
+                if (graphics_menu_status == 2) {
+                    if (mc == 72) {
+                        noctis::select_previous_audio_category();
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    if (mc == 80) {
+                        noctis::select_next_audio_category();
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    if (mc == 75) {
+                        float v = noctis::step_selected_audio_category_volume(-0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    if (mc == 77) {
+                        float v = noctis::step_selected_audio_category_volume(+0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                        goto endmain;
+                    }
                 }
 
                 if (targets_in_range) {
@@ -6435,7 +6577,17 @@ resynctoplanet:
                 if (handle_movie_key(mc, labstar || labplanet))
                     goto endmain;
 
-                if (graphics_menu_status) {
+                if (graphics_menu_status == 1) {
+                    if (mc == 9 || mc == 'a' || mc == 'A') {
+                        graphics_menu_status = 2;
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 27) {
+                        graphics_menu_status = 0;
+                        goto endmain;
+                    }
                     if (mc == 't') {
                         draw_hud = !draw_hud;
                         status(draw_hud ? "TEXT ON" : "TEXT OFF", 100);
@@ -6476,6 +6628,59 @@ resynctoplanet:
                         save_display_settings_current();
                         goto endmain;
                     }
+                } else if (graphics_menu_status == 2) {
+                    if (mc == 9 || mc == 'v' || mc == 'V') {
+                        graphics_menu_status = 1;
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 27) {
+                        graphics_menu_status = 0;
+                        goto endmain;
+                    }
+                    if (mc >= '1' && mc <= '5') {
+                        noctis::set_selected_audio_category(static_cast<noctis::AudioCategory>(mc - '1'));
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    if (mc == 'm' || mc == 'M') {
+                        noctis::toggle_audio_mute();
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        status(noctis::is_audio_muted() ? "AUDIO MUTED" : "AUDIO UNMUTED", 50);
+                        goto endmain;
+                    }
+                    if (mc == '+' || mc == '=' || mc == ']' || mc == '.' || mc == '>') {
+                        float v = noctis::step_selected_audio_category_volume(+0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    if (mc == '-' || mc == '_' || mc == '[' || mc == ',' || mc == '<') {
+                        float v = noctis::step_selected_audio_category_volume(-0.05f);
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        noctis::save_audio_settings(noctis::runtime_paths().config_dir);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "%s %d%%",
+                                      noctis::audio_category_name(noctis::get_selected_audio_category()),
+                                      static_cast<int>(std::round(v * 100.0f)));
+                        status(msg, 50);
+                        goto endmain;
+                    }
+                    goto endmain;
                 }
 
                 const auto snapshot_command = noctis::snapshot_action(mc, false, labstar || labplanet, false);

@@ -49,6 +49,19 @@ int main() {
     ok &= require(surface[2].find("TORCH") != std::string_view::npos,
                   "F1 surface help should include torch");
 
+    // F2 Page 2: Audio Volume Controls presentation test
+    const auto audio_menu = noctis::plus_audio_menu_lines(0, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f, false);
+    ok &= require(audio_menu.size() == 8, "audio menu line count");
+    ok &= require(audio_menu[0] == "NOCTIS IV OM AUDIO VOLUME SETTINGS", "audio menu title");
+    ok &= require(audio_menu[1].find("> 1. MASTER:") != std::string::npos, "audio menu line 1 selected pointer");
+    ok &= require(audio_menu[1].find("80%") != std::string::npos, "audio menu line 1 percentage");
+    ok &= require(audio_menu[2].find("2. CABIN:") != std::string::npos, "audio menu line 2");
+    ok &= require(audio_menu[6].find("ACTIVE") != std::string::npos, "audio menu active status");
+    ok &= require(audio_menu[7].find("TAB: VIDEO") != std::string::npos, "audio menu footer");
+
+    const auto audio_muted = noctis::plus_audio_menu_lines(1, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f, true);
+    ok &= require(audio_muted[6].find("MUTED") != std::string::npos, "audio menu muted status");
+
     // Suit torch presentation test
     std::vector<std::uint8_t> test_frame(320 * 200, 0);
     test_frame[108 * 320 + 160] = 0;   // Dark terrain at center of beam

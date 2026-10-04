@@ -8,6 +8,7 @@
 namespace noctis {
 
 struct InputFrame {
+    bool mouse_locked     = true;
     bool move_forward     = false;
     bool move_backward    = false;
     bool move_left        = false;
@@ -24,6 +25,7 @@ struct InputFrame {
     bool arrow_right_pressed   = false;
     bool backspace_pressed     = false;
     bool enter_pressed         = false;
+    bool tab_pressed           = false;
     bool apostrophe_pressed    = false;
     bool space_pressed         = false;
     bool space_down            = false;
@@ -56,6 +58,10 @@ using DisplayToggleHandler = void (*)();
 // A modal overlay that returns true has consumed the frame; the game then sees
 // no keys, mouse motion, or movement for it.
 using OverlayInputHandler  = bool (*)(const InputFrame &);
+
+bool is_mouse_locked_and_focused();
+bool is_cursor_lock_wanted();
+void set_cursor_lock_wanted(bool wanted);
 
 void apply_input_frame(const InputFrame &frame);
 void set_input_provider(InputProvider provider);

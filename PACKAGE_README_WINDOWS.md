@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.8.0 Release
+# Noctis IV OM — Windows 1.9.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.8.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.9.0 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -73,17 +73,17 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 - **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
 - **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
-- **Image Archive:** Press `F4` in the Stardrifter (or type `GALLERY` / `VIEW n` on the GOES console) to browse past snapshots and panoramas. `Left`/`Right` browse, `Z` zooms and pans panoramas, `Esc` closes.
-- **Audio Mute:** Press `F9` or `Ctrl+M` to toggle procedural audio mute.
+- **Audio Volume & Categories:** Press `F2` then `Tab` or `A` to open Audio Options. Use `1`–`5` to switch category (Master, Flight/RCS, Cockpit Foley, Visor/Suit, Surface/Environment), `+` / `-` to step volume, or click/drag the on-screen slider. Volumes persist across launches in `config.ini`.
+- **Audio Mute:** Press `F9` or `Ctrl+M` (or `M` in Audio Options) to toggle procedural audio mute.
+- **Cursor Unlock & Screenshots:** Press `F10` to unlock/lock mouse cursor. Unlocking immediately freezes camera and player movement with zero drift or inertia, ideal for external screenshot utilities.
 - **Jetpack:** Press `Space` to burst thrusters while airborne on low-gravity worlds.
 
 ## Release status
 
-This is the 1.8.0 Feature Release (The Acoustics & Surface Exploration Update),
-introducing procedural sublight RCS attitude thrusters, dynamic atmospheric entry
-buffeting, physical touchdown clunk acoustics, vintage mechanical keyboard and GOESnet
-foley, albedo luminance surface torch lighting, synchronized footsteps, and rebalanced
-jetpack flight dynamics. The Microsoft
+This is the 1.9.0 Feature Release (The Audio Controls & Exploration Ergonomics Update),
+introducing five independent persistent audio volume categories with an interactive
+High-DPI graphics/audio menu overlay, alongside camera freezing and input gating during
+mouse unlocking (<kbd>F10</kbd>) for perfect external screenshots. The Microsoft
 C/C++ runtime is statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

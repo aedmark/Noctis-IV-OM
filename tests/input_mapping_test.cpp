@@ -135,6 +135,52 @@ int main() {
     noctis::set_aspect_toggle_handler(nullptr);
     noctis::set_upscale_toggle_handler(nullptr);
     noctis::set_crt_toggle_handler(nullptr);
+
+    // Test that when mouse is unlocked, apply_input_frame rejects deltas, movement, and keys
+    noctis::InputFrame unlocked_frame;
+    unlocked_frame.mouse_locked = false;
+    unlocked_frame.mouse_delta_x = 20.0f;
+    unlocked_frame.mouse_delta_y = 20.0f;
+    unlocked_frame.move_forward = true;
+    unlocked_frame.move_left = true;
+    unlocked_frame.space_down = true;
+    unlocked_frame.mouse_left_down = true;
+    unlocked_frame.text = {'x'};
+    unlocked_frame.arrow_up_pressed = true;
+    noctis::apply_input_frame(unlocked_frame);
+    ok &= (mdltx == 0 && mdlty == 0);
+    ok &= (mpul == 0);
+    ok &= (!key_move_dir.forward && !key_move_dir.left);
+    ok &= (!key_space_down);
+    ok &= !is_key();
+
+    // Test F10 cursor lock toggle
+    noctis::reset_input_state();
+    ok &= noctis::is_cursor_lock_wanted();
+    noctis::set_input_provider([]() {
+        noctis::InputFrame f;
+        f.toggle_cursor_pressed = true;
+        return f;
+    });
+    handle_input();
+    ok &= !noctis::is_cursor_lock_wanted();
+    handle_input();
+    ok &= noctis::is_cursor_lock_wanted();
+
+    // Test that handle_input with mouse_locked == false scrubs movement, deltas, and keys
+    noctis::set_input_provider([]() {
+        noctis::InputFrame f;
+        f.mouse_locked = false;
+        f.mouse_delta_x = 15.0f;
+        f.move_forward = true;
+        f.text = {'z'};
+        return f;
+    });
+    handle_input();
+    ok &= (mdltx == 0 && mdlty == 0);
+    ok &= !key_move_dir.forward;
+    ok &= !is_key();
+
     noctis::reset_input_provider();
     return ok ? 0 : 1;
 }

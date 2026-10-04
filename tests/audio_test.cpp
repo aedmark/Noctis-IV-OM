@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
+#include <string>
 
 namespace {
 bool require(bool condition, const char *message) {
@@ -61,6 +63,103 @@ int main() {
     noctis::play_terminal_scroll();
     noctis::play_deck_lift();
     noctis::shutdown_audio(); // Safe double-shutdown check
+
+    // 4. Verify category volume controls and category selection
+    noctis::set_audio_category_volume(noctis::AudioCategory::cabin, 0.45f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::cabin) - 0.45f) < 0.001f,
+                  "cabin volume should be 0.45");
+
+    noctis::set_audio_category_volume(noctis::AudioCategory::propulsion, 1.25f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::propulsion) - 1.00f) < 0.001f,
+                  "propulsion volume should clamp to 1.00");
+
+    noctis::set_audio_category_volume(noctis::AudioCategory::weather, -0.25f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::weather) - 0.00f) < 0.001f,
+                  "weather volume should clamp to 0.00");
+
+    noctis::set_audio_category_volume(noctis::AudioCategory::foley, 0.60f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::foley) - 0.60f) < 0.001f,
+                  "foley volume should be 0.60");
+
+    // Stepping
+    noctis::step_audio_category_volume(noctis::AudioCategory::foley, 0.05f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::foley) - 0.65f) < 0.001f,
+                  "foley volume stepped by +0.05");
+
+    noctis::step_audio_category_volume(noctis::AudioCategory::foley, -0.10f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::foley) - 0.55f) < 0.001f,
+                  "foley volume stepped by -0.10");
+
+    // Category names
+    ok &= require(std::string(noctis::audio_category_name(noctis::AudioCategory::master)) == "MASTER", "master name");
+    ok &= require(std::string(noctis::audio_category_name(noctis::AudioCategory::cabin)) == "CABIN", "cabin name");
+    ok &= require(std::string(noctis::audio_category_name(noctis::AudioCategory::propulsion)) == "PROPULSION", "propulsion name");
+    ok &= require(std::string(noctis::audio_category_name(noctis::AudioCategory::weather)) == "WEATHER", "weather name");
+    ok &= require(std::string(noctis::audio_category_name(noctis::AudioCategory::foley)) == "FOLEY", "foley name");
+
+    // Selection
+    noctis::set_selected_audio_category(noctis::AudioCategory::weather);
+    ok &= require(noctis::get_selected_audio_category() == noctis::AudioCategory::weather, "selected should be weather");
+    ok &= require(noctis::get_selected_audio_category_index() == 3, "selected index should be 3");
+
+    noctis::select_next_audio_category();
+    ok &= require(noctis::get_selected_audio_category() == noctis::AudioCategory::foley, "next after weather should be foley");
+
+    noctis::select_next_audio_category();
+    ok &= require(noctis::get_selected_audio_category() == noctis::AudioCategory::master, "next after foley should wrap to master");
+
+    noctis::select_previous_audio_category();
+    ok &= require(noctis::get_selected_audio_category() == noctis::AudioCategory::foley, "previous after master should wrap to foley");
+
+    // Stepping selected
+    noctis::set_audio_category_volume(noctis::AudioCategory::foley, 0.50f);
+    noctis::step_selected_audio_category_volume(0.10f);
+    ok &= require(std::fabs(noctis::get_audio_category_volume(noctis::AudioCategory::foley) - 0.60f) < 0.001f, "step selected volume");
+
+    // 5. Verify Settings capture, apply, and INI roundtrip
+    noctis::AudioSettings custom_settings{};
+    custom_settings.muted              = true;
+    custom_settings.master_volume     = 0.40f;
+    custom_settings.cabin_volume      = 0.50f;
+    custom_settings.propulsion_volume = 0.60f;
+    custom_settings.weather_volume    = 0.70f;
+    custom_settings.foley_volume      = 0.80f;
+    noctis::apply_audio_settings(custom_settings);
+
+    auto captured = noctis::capture_audio_settings();
+    ok &= require(captured.muted == true, "captured muted");
+    ok &= require(std::fabs(captured.master_volume - 0.40f) < 0.001f, "captured master");
+    ok &= require(std::fabs(captured.cabin_volume - 0.50f) < 0.001f, "captured cabin");
+    ok &= require(std::fabs(captured.propulsion_volume - 0.60f) < 0.001f, "captured propulsion");
+    ok &= require(std::fabs(captured.weather_volume - 0.70f) < 0.001f, "captured weather");
+    ok &= require(std::fabs(captured.foley_volume - 0.80f) < 0.001f, "captured foley");
+
+    // Test INI file roundtrip
+    const auto test_config_dir = std::filesystem::temp_directory_path() / "noctis_audio_test_cfg";
+    std::filesystem::remove_all(test_config_dir);
+
+    ok &= require(noctis::save_audio_settings(test_config_dir), "save_audio_settings should succeed");
+
+    // Reset settings to defaults
+    noctis::AudioSettings reset_settings{};
+    reset_settings.muted              = false;
+    reset_settings.master_volume     = 1.0f;
+    reset_settings.cabin_volume      = 1.0f;
+    reset_settings.propulsion_volume = 1.0f;
+    reset_settings.weather_volume    = 1.0f;
+    reset_settings.foley_volume      = 1.0f;
+    noctis::apply_audio_settings(reset_settings);
+
+    ok &= require(noctis::load_audio_settings(test_config_dir), "load_audio_settings should succeed");
+    auto reloaded = noctis::capture_audio_settings();
+    ok &= require(reloaded.muted == true, "reloaded muted");
+    ok &= require(std::fabs(reloaded.master_volume - 0.40f) < 0.001f, "reloaded master");
+    ok &= require(std::fabs(reloaded.cabin_volume - 0.50f) < 0.001f, "reloaded cabin");
+    ok &= require(std::fabs(reloaded.propulsion_volume - 0.60f) < 0.001f, "reloaded propulsion");
+    ok &= require(std::fabs(reloaded.weather_volume - 0.70f) < 0.001f, "reloaded weather");
+    ok &= require(std::fabs(reloaded.foley_volume - 0.80f) < 0.001f, "reloaded foley");
+
+    std::filesystem::remove_all(test_config_dir);
 
     std::printf("audio_test: all unit checks passed successfully\n");
     return ok ? 0 : 1;

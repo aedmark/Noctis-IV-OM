@@ -7,7 +7,7 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
 - Branch: `master`; Milestone M11 (In-Engine Media Export & Exploration Ergonomics) in progress.
-- Status: Release 1.8.0 ("The Acoustics & Surface Exploration Update") published.
+- Status: Release 1.9.0 ("The Audio Controls & Exploration Ergonomics Update") published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -114,10 +114,17 @@ Replace this document at the end of every session; Git holds older versions.
   - Surface exploration polish: true albedo luminance scaling for suit torch (`L`), strictly synchronized footstep pacing, soothing spacesuit life-support ventilation hum on airless worlds, and 1,200-unit ceiling jetpack flight dynamics without uphill collision hitches.
   - Rebuilt and packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.8.0/`.
   - Updated all documentation, manifests, and websites.
+- **Release 1.9.0 (Feature Release — The Audio Controls & Exploration Ergonomics Update):**
+  - Implemented 5 independent audio volume categories: Master, Spaceflight & Maneuvering, Cockpit Foley, Visor & Suit, Environment & Surface.
+  - Designed interactive High-DPI Audio Options overlay in graphics menu (`F2` or `Tab`/`A`), with mouse slider dragging, keyboard stepping (`+`/`-`), number keys (`1`–`5`), mute toggle (`M`), and automatic persistence in `config.ini`.
+  - Resolved cursor unlocking and screenshot ergonomics: pressing `F10` immediately freezes camera and player locomotion, clearing residual rotational momentum (`dlt_alfa`, `dlt_beta`) and translation (`shift`, `step`) so external screenshot apps capture stable views.
+  - Gated inputs while unfocused or unlocked, and eliminated cursor recentering warp jump on focus restoration or `F10` re-lock.
+  - Verified 100% test pass rate across all 45 automated test suites.
+  - Rebuilt and packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.9.0/`.
 
 ## Test suite and package status
 
-- **Clang Release:** 45/45 passed (4.10s).
+- **Clang Release:** 45/45 passed (4.33s).
 - **Web Release:** Built cleanly (`nivlr.html`, `nivlr.wasm`, `nivlr.data`).
 - **Live Server:** Python 3 daemon serving `build/web-release` at `http://localhost:8090/nivlr.html`.
 
@@ -127,4 +134,3 @@ Replace this document at the end of every session; Git holds older versions.
    - M11-W01: In-engine screenshot & panorama download/export from the F4 Image Archive Viewer (direct browser file download on web, gallery reveal on desktop).
    - M11-W03: Native gamepad / joystick flight and surface movement.
    - M11-W04: Configurable keybindings and sensitivity persistence.
-   - M11-W05: Audio category volume controls in HUD / F2 menu.

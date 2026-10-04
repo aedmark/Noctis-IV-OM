@@ -5,6 +5,18 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.9.0 (2026-10-04) — The Audio Controls & Exploration Ergonomics Update
+
+### Features
+* **Audio Category Volume Controls:**
+  * Added five independent, persistent volume categories: Master, Spaceflight & Maneuvering, Cockpit Foley, Visor / Suit, and Environment / Surface.
+  * Interactive High-DPI Audio Options overlay in the graphics menu (<kbd>F2</kbd> or <kbd>Tab</kbd>/<kbd>A</kbd>) supporting tab clicking, mouse slider dragging, keyboard stepping (<kbd>+</kbd>/<kbd>-</kbd> or arrow keys), number keys (<kbd>1</kbd>–<kbd>5</kbd>), and global mute (<kbd>M</kbd>).
+  * Persistent volume levels saved across game sessions to `config.ini` in the user configuration directory.
+* **Cursor Unlock & Screenshot Ergonomics:**
+  * Pressing <kbd>F10</kbd> to unlock the mouse now immediately freezes player and camera movement, zeroing residual rotational inertia (`dlt_alfa`, `dlt_beta`) and translation momentum so external screenshot utilities capture perfectly stable views.
+  * Mouse and keyboard motion inputs are gated while the window is unfocused or cursor is unlocked, preventing accidental character movement when interacting with overlays or external apps.
+  * Eliminated cursor recentering/warp jerks when restoring window focus or re-locking the cursor with <kbd>F10</kbd>.
+
 ## 1.8.0 (2026-10-04) — The Acoustics & Surface Exploration Update
 
 ### Features

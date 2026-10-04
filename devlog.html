@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 1.8.0</a>
+        <a class="nav-cta" href="index.html#download">Get 1.9.0</a>
       </nav>
     </div>
   </header>
@@ -153,6 +153,13 @@
     <p>In flight, sublight attitude maneuvers now engage procedural cold-gas RCS thrusters with distinct valve pops and continuous directional hiss. Atmospheric descents produce deep resonant aerodynamic turbulence buffeting scaled dynamically to velocity and planetary air pressure, culminating in a heavy, dual-stage touchdown clunk when the landing gear contacts the ground.</p>
     <p>Aboard the Stardrifter, the cockpit comes alive with vintage mechanical keyboard clacks while typing on the GOES console, stepped telemetry transmission chirps, harmonic acknowledge chimes, tactile dashboard rocker switches, linefeed scroll ticks, and observation deck elevator servo whines.</p>
     <p>On planetary surfaces, the suit torch now directly illuminates terrain albedo and surfaces with realistic lighting rather than a flat overlay, footstep rhythms accurately track active walking locomotion, airless worlds feature tranquil spacesuit ventilation humming, and jetpack flight dynamics have been refined with smooth vertical velocity ceiling dampening and frictionless terrain clearance.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 1.9.0: The Audio Controls &amp; Exploration Ergonomics Update — Category Volume Sliders, Overlay Navigation, and Screenshot Ergonomics</h2>
+    <p>Version 1.9.0 introduces comprehensive category-specific volume controls and critical exploration ergonomics across desktop and browser environments.</p>
+    <p>A new interactive High-DPI Audio Options overlay has been integrated into the graphics menu (<kbd>F2</kbd> or <kbd>Tab</kbd>/<kbd>A</kbd>), providing five independent volume channels: Master, Spaceflight &amp; Maneuvering (RCS, buffeting, touchdowns), Cockpit Foley (mechanical keyboard clacks, chirps, rocker switches, elevator servo), Visor &amp; Suit (visor servos, breathing, ventilation), and Environment &amp; Surface (wind, thunder, waves, footsteps). Players can seamlessly switch channels using mouse clicks, numeric shortcuts (<kbd>1</kbd>–<kbd>5</kbd>), or arrow keys, adjust levels with mouse drag or <kbd>+</kbd>/<kbd>-</kbd> keys, toggle global mute with <kbd>M</kbd>, and rely on automatic persistence in <code>config.ini</code>.</p>
+    <p>For astrophotographers and cartographers, cursor unlocking via <kbd>F10</kbd> has been completely redesigned: releasing the mouse now instantly halts player locomotion and zeroes residual camera rotational momentum (<code>dlt_alfa</code> / <code>dlt_beta</code>), completely eliminating camera drift and ensuring external screenshot utilities capture perfectly framed views. All player inputs and keystrokes are safely gated while unfocused or unlocked, and cursor recentering warp jumps have been eliminated upon re-locking.</p>
   </section>
 </article>
 </body>

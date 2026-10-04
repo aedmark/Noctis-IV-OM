@@ -26,6 +26,13 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        bool crt_shader = false,
                                                        bool subpixel_fidelity = false,
                                                        bool show_advanced_fx = false);
+const std::vector<std::string> plus_audio_menu_lines(int selected_category,
+                                                     float master_vol,
+                                                     float cabin_vol,
+                                                     float propulsion_vol,
+                                                     float weather_vol,
+                                                     float foley_vol,
+                                                     bool muted);
 const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
                                                       std::uint16_t cadence,
                                                       bool black_flash,

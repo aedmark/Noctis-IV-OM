@@ -62,6 +62,13 @@ bool render_overlay_notice(int render_width, int render_height, const DisplayVie
 void render_timewarp_slider(int render_width, int render_height, const DisplayViewport &viewport,
                             int status_delay = 0);
 void touch_timewarp_slider();
+bool is_timewarp_slider_visible();
+
+// High-DPI Volume slider widget rendering and mouse interaction
+void render_volume_slider_overlay(int render_width, int render_height, const DisplayViewport &viewport,
+                                  int status_delay = 0, bool pinned = false);
+void touch_volume_slider();
+bool is_volume_slider_visible();
 
 // CRT Shader Pipeline (M10-W02)
 bool is_crt_shader_enabled();

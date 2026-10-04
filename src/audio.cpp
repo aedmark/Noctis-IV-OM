@@ -9,8 +9,10 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <mutex>
+#include <sstream>
 
 namespace noctis {
 
@@ -89,7 +91,12 @@ Wave make_procedural_wave(int sample_count, const std::function<float(int, float
 // Global audio state
 bool g_audio_ready = false;
 std::atomic<bool> g_muted{false};
-std::atomic<float> g_master_volume{0.75f};
+std::atomic<float> g_master_volume{0.80f};
+std::atomic<float> g_cabin_volume{1.00f};
+std::atomic<float> g_propulsion_volume{1.00f};
+std::atomic<float> g_weather_volume{1.00f};
+std::atomic<float> g_foley_volume{1.00f};
+std::atomic<int> g_selected_category{0};
 
 AudioStream g_ambient_stream{};
 std::mutex g_telemetry_mutex{};
@@ -185,6 +192,9 @@ struct SynthesizerState {
     float cur_rcs_gain       = 0.0f;
     float cur_buffet_gain    = 0.0f;
     float cur_master_gain    = 0.0f;
+    float cur_cabin_vol_gain   = 1.0f;
+    float cur_prop_vol_gain    = 1.0f;
+    float cur_weather_vol_gain = 1.0f;
 };
 
 SynthesizerState g_synth{};
@@ -203,6 +213,9 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
 
     const bool muted       = g_muted.load(std::memory_order_relaxed);
     const float target_vol = muted ? 0.0f : g_master_volume.load(std::memory_order_relaxed);
+    const float target_cabin_vol   = g_cabin_volume.load(std::memory_order_relaxed);
+    const float target_prop_vol    = g_propulsion_volume.load(std::memory_order_relaxed);
+    const float target_weather_vol = g_weather_volume.load(std::memory_order_relaxed);
 
     constexpr float dt                  = 1.0f / static_cast<float>(AUDIO_SAMPLE_RATE);
     constexpr float smooth_k            = 0.003f; // Parameter smoothing speed per sample
@@ -276,6 +289,9 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         g_synth.cur_rcs_gain += smooth_k * (target_rcs - g_synth.cur_rcs_gain);
         g_synth.cur_buffet_gain += smooth_k * (target_buffet - g_synth.cur_buffet_gain);
         g_synth.cur_master_gain += smooth_k * (target_vol - g_synth.cur_master_gain);
+        g_synth.cur_cabin_vol_gain += smooth_k * (target_cabin_vol - g_synth.cur_cabin_vol_gain);
+        g_synth.cur_prop_vol_gain += smooth_k * (target_prop_vol - g_synth.cur_prop_vol_gain);
+        g_synth.cur_weather_vol_gain += smooth_k * (target_weather_vol - g_synth.cur_weather_vol_gain);
 
         // Advance LFOs
         g_synth.lfo_cabin += TWO_PI * 0.04f * dt; // Slow 25s life-support cycle
@@ -445,6 +461,8 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         // -----------------------------------------------------------------
         float surface_l = 0.0f;
         float surface_r = 0.0f;
+        float jetpack_l = 0.0f;
+        float jetpack_r = 0.0f;
         if (g_synth.cur_surface_gain > 0.001f) {
             if (g_synth.cur_atmo_density <= 0.001f) {
                 // VACUUM (Airless Moon / Asteroid): Silence outside;
@@ -522,8 +540,8 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
                 float jl = 0.0f, jb = 0.0f, jh = 0.0f;
                 g_synth.filter_jetpack_hiss.process(thruster_noise, 1350.0f, 1.2f, AUDIO_SAMPLE_RATE, jl, jb, jh);
                 float hiss = (jb * 0.7f + jh * 0.3f) * g_synth.cur_jetpack_gain * 0.40f;
-                surface_l += hiss;
-                surface_r += hiss;
+                jetpack_l = hiss;
+                jetpack_r = hiss;
             }
         }
 
@@ -562,23 +580,65 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         }
 
         // -----------------------------------------------------------------
-        // 7. Final Stereo Mix & Soft Limiter
+        // 7. Category Volume Gains, Final Stereo Mix & Soft Limiter
         // -----------------------------------------------------------------
-        float mix_l = cabin_l * g_synth.cur_cabin_gain + roof_l * g_synth.cur_roof_gain +
-                      surface_l * g_synth.cur_surface_gain + drive_l * g_synth.cur_drive_gain +
-                      rcs_l + buffet_l;
+        float cabin_comp_l = (cabin_l * g_synth.cur_cabin_gain + roof_l * g_synth.cur_roof_gain) * g_synth.cur_cabin_vol_gain;
+        float cabin_comp_r = (cabin_r * g_synth.cur_cabin_gain + roof_r * g_synth.cur_roof_gain) * g_synth.cur_cabin_vol_gain;
 
-        float mix_r = cabin_r * g_synth.cur_cabin_gain + roof_r * g_synth.cur_roof_gain +
-                      surface_r * g_synth.cur_surface_gain + drive_r * g_synth.cur_drive_gain +
-                      rcs_r + buffet_r;
+        float prop_comp_l = (drive_l * g_synth.cur_drive_gain + rcs_l + buffet_l + jetpack_l) * g_synth.cur_prop_vol_gain;
+        float prop_comp_r = (drive_r * g_synth.cur_drive_gain + rcs_r + buffet_r + jetpack_r) * g_synth.cur_prop_vol_gain;
 
-        mix_l *= g_synth.cur_master_gain;
-        mix_r *= g_synth.cur_master_gain;
+        float weather_comp_l = surface_l * g_synth.cur_surface_gain * g_synth.cur_weather_vol_gain;
+        float weather_comp_r = surface_r * g_synth.cur_surface_gain * g_synth.cur_weather_vol_gain;
+
+        float mix_l = (cabin_comp_l + prop_comp_l + weather_comp_l) * g_synth.cur_master_gain;
+        float mix_r = (cabin_comp_r + prop_comp_r + weather_comp_r) * g_synth.cur_master_gain;
 
         // Limiter
         out[i * 2 + 0] = std::tanh(mix_l);
         out[i * 2 + 1] = std::tanh(mix_r);
     }
+}
+
+void apply_sound_effect_volumes() {
+    if (!g_audio_ready)
+        return;
+    const float vf = g_foley_volume.load();
+    const float vp = g_propulsion_volume.load();
+
+    if (IsSoundValid(g_sound_torch_on))
+        SetSoundVolume(g_sound_torch_on, 0.70f * vf);
+    if (IsSoundValid(g_sound_torch_off))
+        SetSoundVolume(g_sound_torch_off, 0.70f * vf);
+    if (IsSoundValid(g_sound_visor))
+        SetSoundVolume(g_sound_visor, 0.60f * vf);
+    if (IsSoundValid(g_sound_touchdown))
+        SetSoundVolume(g_sound_touchdown, 0.70f * vf);
+    if (IsSoundValid(g_sound_cockpit_button))
+        SetSoundVolume(g_sound_cockpit_button, 0.55f * vf);
+    for (auto &snd : g_sound_terminal_keys) {
+        if (IsSoundValid(snd))
+            SetSoundVolume(snd, 0.45f * vf);
+    }
+    if (IsSoundValid(g_sound_goes_transmit))
+        SetSoundVolume(g_sound_goes_transmit, 0.50f * vf);
+    if (IsSoundValid(g_sound_goes_ack))
+        SetSoundVolume(g_sound_goes_ack, 0.45f * vf);
+    if (IsSoundValid(g_sound_goes_nack))
+        SetSoundVolume(g_sound_goes_nack, 0.45f * vf);
+    if (IsSoundValid(g_sound_terminal_scroll))
+        SetSoundVolume(g_sound_terminal_scroll, 0.30f * vf);
+    if (IsSoundValid(g_sound_deck_lift))
+        SetSoundVolume(g_sound_deck_lift, 0.45f * vf);
+    for (auto &snd : g_sound_footsteps) {
+        if (IsSoundValid(snd))
+            SetSoundVolume(snd, 0.35f * vf);
+    }
+
+    if (IsSoundValid(g_sound_jetpack))
+        SetSoundVolume(g_sound_jetpack, 0.55f * vp);
+    if (IsSoundValid(g_sound_rcs_burst))
+        SetSoundVolume(g_sound_rcs_burst, 0.45f * vp);
 }
 
 } // namespace
@@ -832,6 +892,7 @@ void initialize_audio() {
 
     g_last_telemetry_time = std::chrono::steady_clock::now();
     g_audio_ready         = true;
+    apply_sound_effect_volumes();
 }
 
 void shutdown_audio() {
@@ -1007,13 +1068,215 @@ bool is_audio_muted() { return g_muted.load(); }
 void toggle_audio_mute() { g_muted.store(!g_muted.load()); }
 
 void set_master_volume_level(float volume) {
+    set_audio_category_volume(AudioCategory::master, volume);
+}
+
+float get_master_volume_level() {
+    return get_audio_category_volume(AudioCategory::master);
+}
+
+const char *audio_category_name(AudioCategory category) {
+    switch (category) {
+    case AudioCategory::master:
+        return "MASTER";
+    case AudioCategory::cabin:
+        return "CABIN";
+    case AudioCategory::propulsion:
+        return "PROPULSION";
+    case AudioCategory::weather:
+        return "WEATHER";
+    case AudioCategory::foley:
+        return "FOLEY";
+    }
+    return "UNKNOWN";
+}
+
+void set_audio_category_volume(AudioCategory category, float volume) {
     float clamped = std::clamp(volume, 0.0f, 1.0f);
-    g_master_volume.store(clamped);
-    if (g_audio_ready && IsAudioDeviceReady()) {
-        SetMasterVolume(clamped);
+    switch (category) {
+    case AudioCategory::master:
+        g_master_volume.store(clamped);
+        if (g_audio_ready && IsAudioDeviceReady()) {
+            SetMasterVolume(clamped);
+        }
+        break;
+    case AudioCategory::cabin:
+        g_cabin_volume.store(clamped);
+        break;
+    case AudioCategory::propulsion:
+        g_propulsion_volume.store(clamped);
+        apply_sound_effect_volumes();
+        break;
+    case AudioCategory::weather:
+        g_weather_volume.store(clamped);
+        break;
+    case AudioCategory::foley:
+        g_foley_volume.store(clamped);
+        apply_sound_effect_volumes();
+        break;
     }
 }
 
-float get_master_volume_level() { return g_master_volume.load(); }
+float get_audio_category_volume(AudioCategory category) {
+    switch (category) {
+    case AudioCategory::master:
+        return g_master_volume.load();
+    case AudioCategory::cabin:
+        return g_cabin_volume.load();
+    case AudioCategory::propulsion:
+        return g_propulsion_volume.load();
+    case AudioCategory::weather:
+        return g_weather_volume.load();
+    case AudioCategory::foley:
+        return g_foley_volume.load();
+    }
+    return 1.0f;
+}
+
+float step_audio_category_volume(AudioCategory category, float delta) {
+    float cur = get_audio_category_volume(category);
+    float next = std::clamp(std::round((cur + delta) * 100.0f) / 100.0f, 0.0f, 1.0f);
+    set_audio_category_volume(category, next);
+    return next;
+}
+
+void set_selected_audio_category(AudioCategory category) {
+    g_selected_category.store(static_cast<int>(category));
+}
+
+AudioCategory get_selected_audio_category() {
+    int idx = std::clamp(g_selected_category.load(), 0, 4);
+    return static_cast<AudioCategory>(idx);
+}
+
+int get_selected_audio_category_index() {
+    return std::clamp(g_selected_category.load(), 0, 4);
+}
+
+void select_next_audio_category() {
+    int cur = g_selected_category.load();
+    g_selected_category.store((cur + 1) % 5);
+}
+
+void select_previous_audio_category() {
+    int cur = g_selected_category.load();
+    g_selected_category.store((cur + 4) % 5);
+}
+
+float step_selected_audio_category_volume(float delta) {
+    return step_audio_category_volume(get_selected_audio_category(), delta);
+}
+
+AudioSettings capture_audio_settings() {
+    AudioSettings s{};
+    s.muted              = is_audio_muted();
+    s.master_volume     = get_audio_category_volume(AudioCategory::master);
+    s.cabin_volume      = get_audio_category_volume(AudioCategory::cabin);
+    s.propulsion_volume = get_audio_category_volume(AudioCategory::propulsion);
+    s.weather_volume    = get_audio_category_volume(AudioCategory::weather);
+    s.foley_volume      = get_audio_category_volume(AudioCategory::foley);
+    return s;
+}
+
+void apply_audio_settings(const AudioSettings &settings) {
+    set_audio_muted(settings.muted);
+    set_audio_category_volume(AudioCategory::master, settings.master_volume);
+    set_audio_category_volume(AudioCategory::cabin, settings.cabin_volume);
+    set_audio_category_volume(AudioCategory::propulsion, settings.propulsion_volume);
+    set_audio_category_volume(AudioCategory::weather, settings.weather_volume);
+    set_audio_category_volume(AudioCategory::foley, settings.foley_volume);
+}
+
+namespace {
+std::string trim_str(const std::string &s) {
+    auto start = s.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return "";
+    auto end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
+}
+
+std::string to_lower_str(std::string s) {
+    for (char &c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return s;
+}
+} // namespace
+
+bool save_audio_settings(const std::filesystem::path &config_dir) {
+    std::error_code ec;
+    std::filesystem::create_directories(config_dir, ec);
+    const auto file_path = config_dir / "audio_settings.ini";
+    const auto tmp_path  = config_dir / "audio_settings.ini.tmp";
+
+    std::ofstream out(tmp_path, std::ios::trunc);
+    if (!out.is_open()) return false;
+
+    const auto settings = capture_audio_settings();
+
+    out << "[Audio]\n";
+    out << "muted = " << (settings.muted ? 1 : 0) << "\n";
+    out << "master = " << settings.master_volume << "\n";
+    out << "cabin = " << settings.cabin_volume << "\n";
+    out << "propulsion = " << settings.propulsion_volume << "\n";
+    out << "weather = " << settings.weather_volume << "\n";
+    out << "foley = " << settings.foley_volume << "\n";
+
+    out.close();
+    if (!out) return false;
+
+    std::filesystem::rename(tmp_path, file_path, ec);
+    if (ec) {
+        std::filesystem::copy_file(tmp_path, file_path, std::filesystem::copy_options::overwrite_existing, ec);
+        std::filesystem::remove(tmp_path, ec);
+    }
+    return !ec;
+}
+
+bool load_audio_settings(const std::filesystem::path &config_dir) {
+    const auto file_path = config_dir / "audio_settings.ini";
+    std::error_code ec;
+    if (!std::filesystem::exists(file_path, ec)) {
+        return false;
+    }
+
+    std::ifstream in(file_path);
+    if (!in.is_open()) return false;
+
+    AudioSettings settings = capture_audio_settings();
+    std::string line;
+
+    while (std::getline(in, line)) {
+        const auto comment_pos = line.find_first_of(";#");
+        if (comment_pos != std::string::npos) {
+            line = line.substr(0, comment_pos);
+        }
+        std::string trimmed = trim_str(line);
+        if (trimmed.empty() || trimmed.front() == '[') continue;
+
+        const auto eq_pos = trimmed.find('=');
+        if (eq_pos == std::string::npos) continue;
+
+        std::string key = to_lower_str(trim_str(trimmed.substr(0, eq_pos)));
+        std::string val = to_lower_str(trim_str(trimmed.substr(eq_pos + 1)));
+
+        try {
+            if (key == "muted") {
+                settings.muted = (val == "1" || val == "true" || val == "on" || val == "yes");
+            } else if (key == "master" || key == "master_volume") {
+                settings.master_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "cabin" || key == "cabin_volume") {
+                settings.cabin_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "propulsion" || key == "propulsion_volume") {
+                settings.propulsion_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "weather" || key == "weather_volume") {
+                settings.weather_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "foley" || key == "foley_volume") {
+                settings.foley_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            }
+        } catch (...) {}
+    }
+
+    apply_audio_settings(settings);
+    return true;
+}
 
 } // namespace noctis

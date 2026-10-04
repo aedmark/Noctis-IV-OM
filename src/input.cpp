@@ -3,14 +3,49 @@
 
 #include <raylib.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <algorithm>
 #include <stack>
+
+namespace noctis {
+static bool g_cursor_lock_wanted = true;
+
+bool is_cursor_lock_wanted() {
+    return g_cursor_lock_wanted;
+}
+
+void set_cursor_lock_wanted(bool wanted) {
+    g_cursor_lock_wanted = wanted;
+}
+
+bool is_mouse_locked_and_focused() {
+#ifdef __EMSCRIPTEN__
+    int locked = EM_ASM_INT({
+        if (typeof document === 'undefined') return 1;
+        var wantLock = (typeof window !== 'undefined' && typeof window.wantPointerLock !== 'undefined') ? window.wantPointerLock : true;
+        var canvas = (typeof Module !== 'undefined' && Module.canvas) ? Module.canvas : document.querySelector('canvas');
+        var isLocked = (document.pointerLockElement === canvas || (document.pointerLockElement !== null && document.pointerLockElement !== undefined));
+        return (wantLock && isLocked && document.hasFocus()) ? 1 : 0;
+    });
+    return locked != 0;
+#else
+    if (!IsWindowReady()) {
+        return g_cursor_lock_wanted;
+    }
+    return g_cursor_lock_wanted && IsCursorHidden() && IsWindowFocused();
+#endif
+}
+} // namespace noctis
 
 namespace {
 std::stack<std::int16_t> keys;
 
 noctis::InputFrame poll_raylib_input() {
     noctis::InputFrame frame;
+    frame.mouse_locked     = noctis::is_mouse_locked_and_focused();
     frame.move_forward     = IsKeyDown(KEY_W);
     frame.move_backward    = IsKeyDown(KEY_S);
     frame.move_left        = IsKeyDown(KEY_A);
@@ -19,8 +54,8 @@ noctis::InputFrame poll_raylib_input() {
     frame.mouse_left_down  = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     frame.mouse_right_down = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
     const auto mouse_delta = GetMouseDelta();
-    frame.mouse_delta_x    = mouse_delta.x;
-    frame.mouse_delta_y    = mouse_delta.y;
+    frame.mouse_delta_x    = frame.mouse_locked ? mouse_delta.x : 0.0f;
+    frame.mouse_delta_y    = frame.mouse_locked ? mouse_delta.y : 0.0f;
 
     std::int32_t key;
     while ((key = GetCharPressed()) != 0) {
@@ -44,6 +79,7 @@ noctis::InputFrame poll_raylib_input() {
     frame.arrow_right_pressed = pressed(KEY_RIGHT);
     frame.backspace_pressed   = pressed(KEY_BACKSPACE);
     frame.enter_pressed       = pressed(KEY_ENTER);
+    frame.tab_pressed         = pressed(KEY_TAB);
     frame.apostrophe_pressed  = pressed(KEY_APOSTROPHE);
     frame.space_pressed       = pressed(KEY_SPACE);
     frame.space_down          = IsKeyDown(KEY_SPACE);
@@ -106,6 +142,15 @@ bool is_key() { return !keys.empty(); }
 namespace noctis {
 
 void apply_input_frame(const InputFrame &frame) {
+    if (!frame.mouse_locked) {
+        mdltx = 0;
+        mdlty = 0;
+        mpul  = 0;
+        key_move_dir   = {};
+        key_space_down = false;
+        return;
+    }
+
     mdltx = static_cast<std::int16_t>(frame.mouse_delta_x / 5.0F);
     mdlty = static_cast<std::int16_t>(frame.mouse_delta_y / 5.0F);
     mouse_x += mdltx;
@@ -151,6 +196,8 @@ void apply_input_frame(const InputFrame &frame) {
         keys.push(8);
     if (frame.enter_pressed)
         keys.push(13);
+    if (frame.tab_pressed)
+        keys.push(9);
     if (frame.apostrophe_pressed && !has_text('\''))
         keys.push(39);
     if (frame.space_pressed && !has_text(' '))
@@ -191,6 +238,7 @@ void reset_input_state() {
     mpul                              = 0;
     key_move_dir                      = {};
     key_space_down                    = false;
+    g_cursor_lock_wanted              = true;
 }
 
 void set_audio_toggle_handler(AudioToggleHandler handler) { audio_toggle_handler = handler; }
@@ -203,25 +251,74 @@ void set_overlay_input_handler(OverlayInputHandler handler) { overlay_input_hand
 } // namespace noctis
 
 void handle_input() {
-    const auto frame = input_provider();
+    auto frame = input_provider();
+
+#ifndef __EMSCRIPTEN__
+    if (IsWindowReady()) {
+        const bool is_focused = IsWindowFocused();
+        static bool s_was_window_focused = true;
+        if (!s_was_window_focused && is_focused) {
+            if (noctis::is_cursor_lock_wanted() && !IsCursorHidden()) {
+                DisableCursor();
+            }
+        }
+        s_was_window_focused = is_focused;
+    }
+#endif
+
+    if (frame.toggle_cursor_pressed) {
+#ifndef __EMSCRIPTEN__
+        noctis::set_cursor_lock_wanted(!noctis::is_cursor_lock_wanted());
+        if (noctis::is_cursor_lock_wanted()) {
+            if (IsWindowReady()) {
+                DisableCursor();
+            }
+        } else {
+            if (IsWindowReady()) {
+                EnableCursor();
+            }
+        }
+#else
+        noctis::set_cursor_lock_wanted(!noctis::is_cursor_lock_wanted());
+#endif
+    }
+
+    if (IsWindowReady()) {
+        frame.mouse_locked = noctis::is_mouse_locked_and_focused();
+    }
+
+    static bool s_was_locked = false;
+    if (!s_was_locked && frame.mouse_locked) {
+        // Just transitioned into locked state; suppress any warp/re-center delta
+        frame.mouse_delta_x = 0.0f;
+        frame.mouse_delta_y = 0.0f;
+    }
+    s_was_locked = frame.mouse_locked;
+
+    if (!frame.mouse_locked) {
+        frame.mouse_delta_x       = 0.0f;
+        frame.mouse_delta_y       = 0.0f;
+        frame.move_forward        = false;
+        frame.move_backward       = false;
+        frame.move_left           = false;
+        frame.move_right          = false;
+        frame.space_down          = false;
+        frame.space_pressed       = false;
+        frame.mouse_left_down     = false;
+        frame.mouse_right_down    = false;
+        frame.arrow_up_pressed    = false;
+        frame.arrow_down_pressed  = false;
+        frame.arrow_left_pressed  = false;
+        frame.arrow_right_pressed = false;
+        frame.text.clear();
+    }
+
     if (overlay_input_handler && overlay_input_handler(frame)) {
         noctis::apply_input_frame({});
     } else {
         noctis::apply_input_frame(frame);
     }
-#ifndef __EMSCRIPTEN__
-    // Toggle from raylib's real cursor state rather than a shadow flag, so the
-    // first F10 after startup (which locks the cursor) always releases it.
-    // On the web, web/shell.html toggles pointer lock inside the F10 keydown
-    // handler instead (browsers require a user gesture for it).
-    if (frame.toggle_cursor_pressed) {
-        if (IsCursorHidden()) {
-            EnableCursor();
-        } else {
-            DisableCursor();
-        }
-    }
-#endif
+
     if (frame.toggle_audio_pressed && audio_toggle_handler) {
         audio_toggle_handler();
     }

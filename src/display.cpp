@@ -1,4 +1,6 @@
 #include "display.h"
+#include "audio.h"
+#include "runtime_paths.h"
 #include "simulation_clock.h"
 
 #include <raylib.h>
@@ -201,6 +203,22 @@ void touch_timewarp_slider() {
     g_timewarp_slider_cooldown = 120; // Keep visible for ~2 seconds after interaction
 }
 
+bool is_timewarp_slider_visible() {
+    return is_timewarp_active() || g_timewarp_slider_cooldown > 0;
+}
+
+namespace {
+int g_volume_slider_cooldown = 0;
+}
+
+void touch_volume_slider() {
+    g_volume_slider_cooldown = 120;
+}
+
+bool is_volume_slider_visible() {
+    return g_volume_slider_cooldown > 0;
+}
+
 void render_timewarp_slider(int render_width, int render_height, const DisplayViewport &viewport,
                             int status_delay) {
     if (g_timewarp_slider_cooldown > 0) {
@@ -311,6 +329,210 @@ void render_timewarp_slider(int render_width, int render_height, const DisplayVi
         const int new_mult = timewarp_multiplier_from_fraction(new_frac);
         set_timewarp_multiplier(new_mult);
         touch_timewarp_slider();
+    }
+}
+
+void render_volume_slider_overlay(int render_width, int render_height, const DisplayViewport &viewport,
+                                  int status_delay, bool pinned) {
+    if (g_volume_slider_cooldown > 0) {
+        --g_volume_slider_cooldown;
+    }
+
+    if (!pinned && g_volume_slider_cooldown <= 0) {
+        return;
+    }
+
+    const int font_size     = std::clamp(static_cast<int>(viewport.height * 0.024f), 11, 20);
+    const float scale       = static_cast<float>(font_size) / 16.0f;
+    const int tab_font_size = std::max(10, static_cast<int>(font_size * 0.82f));
+
+    const float widget_w  = std::clamp(490.0f * scale, 340.0f, viewport.width * 0.94f);
+    const float row1_h    = 22.0f * scale;
+    const float row2_h    = 30.0f * scale;
+    const float padding_y = 6.0f * scale;
+    const float widget_h  = row1_h + row2_h + padding_y * 2.0f;
+
+    const float widget_x = viewport.x + (viewport.width - widget_w) * 0.5f;
+    float widget_y       = viewport.y + std::max(12.0f, viewport.height * 0.022f);
+    if (status_delay > 0) {
+        widget_y += static_cast<float>(font_size + font_size / 2 * 2 + 10);
+    }
+    if (is_timewarp_slider_visible()) {
+        const float tw_widget_h = 36.0f * scale;
+        widget_y += tw_widget_h + 8.0f * scale;
+    }
+
+    const Rectangle pill{widget_x, widget_y, widget_w, widget_h};
+    const Color bg_color{6, 12, 20, 220};
+    const Color border_color{0, 185, 220, pinned ? static_cast<uint8_t>(220) : static_cast<uint8_t>(140)};
+
+    DrawRectangleRounded(pill, 0.25f, 6, bg_color);
+    DrawRectangleRoundedLines(pill, 0.25f, 6, border_color);
+
+    const Vector2 mouse       = GetMousePosition();
+    const bool mouse_down     = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    const bool mouse_pressed  = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    const bool mouse_released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+
+    const bool muted            = is_audio_muted();
+    const AudioCategory cur_cat = get_selected_audio_category();
+
+    // -------------------------------------------------------------
+    // Row 1: Category tabs and MUTE toggle button
+    // -------------------------------------------------------------
+    const float row1_y     = widget_y + padding_y;
+    const float mute_btn_w = 56.0f * scale;
+    const float tab_gap    = 4.0f * scale;
+    const float pad_x      = 10.0f * scale;
+    const float tabs_w     = widget_w - pad_x * 2.0f - mute_btn_w - 8.0f * scale;
+    const float tab_w      = (tabs_w - tab_gap * 4.0f) / 5.0f;
+    const float tab_h      = row1_h;
+
+    for (int i = 0; i < 5; ++i) {
+        const AudioCategory cat = static_cast<AudioCategory>(i);
+        const bool selected     = (cat == cur_cat);
+        const float tab_x       = widget_x + pad_x + i * (tab_w + tab_gap);
+        const Rectangle tab_rec{tab_x, row1_y, tab_w, tab_h};
+
+        if (selected) {
+            DrawRectangleRounded(tab_rec, 0.3f, 4, Color{0, 140, 175, 200});
+            DrawRectangleRoundedLines(tab_rec, 0.3f, 4, Color{0, 230, 255, 240});
+        } else {
+            DrawRectangleRounded(tab_rec, 0.3f, 4, Color{15, 26, 40, 160});
+            DrawRectangleRoundedLines(tab_rec, 0.3f, 4, Color{0, 110, 140, 110});
+        }
+
+        const char *name = audio_category_name(cat);
+        const int text_w = MeasureText(name, tab_font_size);
+        const int text_x = static_cast<int>(tab_x + (tab_w - text_w) * 0.5f);
+        const int text_y = static_cast<int>(row1_y + (tab_h - tab_font_size) * 0.5f);
+
+        DrawText(name, text_x, text_y, tab_font_size,
+                 selected ? Color{240, 255, 255, 255} : Color{140, 175, 200, 200});
+
+        if (mouse_pressed && CheckCollisionPointRec(mouse, tab_rec)) {
+            set_selected_audio_category(cat);
+            touch_volume_slider();
+            play_cockpit_button();
+            save_audio_settings(runtime_paths().config_dir);
+        }
+    }
+
+    // MUTE Button
+    const float mute_x = widget_x + widget_w - pad_x - mute_btn_w;
+    const Rectangle mute_rec{mute_x, row1_y, mute_btn_w, tab_h};
+    if (muted) {
+        DrawRectangleRounded(mute_rec, 0.3f, 4, Color{180, 40, 40, 220});
+        DrawRectangleRoundedLines(mute_rec, 0.3f, 4, Color{255, 90, 90, 240});
+        const int mtext_w = MeasureText("MUTED", tab_font_size);
+        DrawText("MUTED", static_cast<int>(mute_x + (mute_btn_w - mtext_w) * 0.5f),
+                 static_cast<int>(row1_y + (tab_h - tab_font_size) * 0.5f), tab_font_size, Color{255, 235, 235, 255});
+    } else {
+        DrawRectangleRounded(mute_rec, 0.3f, 4, Color{20, 36, 52, 180});
+        DrawRectangleRoundedLines(mute_rec, 0.3f, 4, Color{0, 170, 200, 130});
+        const int mtext_w = MeasureText("MUTE", tab_font_size);
+        DrawText("MUTE", static_cast<int>(mute_x + (mute_btn_w - mtext_w) * 0.5f),
+                 static_cast<int>(row1_y + (tab_h - tab_font_size) * 0.5f), tab_font_size, Color{190, 220, 240, 220});
+    }
+
+    if (mouse_pressed && CheckCollisionPointRec(mouse, mute_rec)) {
+        toggle_audio_mute();
+        touch_volume_slider();
+        play_cockpit_button();
+        save_audio_settings(runtime_paths().config_dir);
+    }
+
+    // -------------------------------------------------------------
+    // Row 2: Selected Category Volume Slider
+    // -------------------------------------------------------------
+    const float row2_y = row1_y + row1_h + 4.0f * scale;
+
+    // Glowing status dot
+    const float dot_cx = widget_x + pad_x + 6.0f * scale;
+    const float dot_cy = row2_y + row2_h * 0.5f;
+    const float dot_r  = 4.5f * scale;
+    DrawCircle(static_cast<int>(dot_cx), static_cast<int>(dot_cy), dot_r,
+               muted ? Color{160, 50, 50, 220} : Color{0, 240, 200, 255});
+
+    // Label: "VOL:"
+    const char *label = "VOL:";
+    const int label_x = static_cast<int>(dot_cx + 10.0f * scale);
+    const int label_y = static_cast<int>(row2_y + (row2_h - font_size) * 0.5f);
+    DrawText(label, label_x, label_y, font_size, Color{200, 230, 250, 230});
+    const int label_w = MeasureText(label, font_size);
+
+    // Step button [-]
+    const float btn_w     = 20.0f * scale;
+    const float btn_h     = 20.0f * scale;
+    const float btn_dec_x = label_x + label_w + 10.0f * scale;
+    const float btn_y     = row2_y + (row2_h - btn_h) * 0.5f;
+    const Rectangle dec_rec{btn_dec_x, btn_y, btn_w, btn_h};
+
+    DrawRectangleRounded(dec_rec, 0.3f, 4, Color{20, 35, 50, 180});
+    DrawRectangleRoundedLines(dec_rec, 0.3f, 4, Color{0, 180, 210, 130});
+    DrawText("-", static_cast<int>(btn_dec_x + 6.0f * scale), static_cast<int>(btn_y + 2.0f * scale), font_size,
+             Color{220, 240, 255, 230});
+
+    // Step button [+] & Percentage text placement
+    const float text_val_w = 54.0f * scale;
+    const float track_x    = btn_dec_x + btn_w + 8.0f * scale;
+    const float track_w    = std::max(60.0f, widget_x + widget_w - pad_x - text_val_w - btn_w - 12.0f * scale - track_x);
+    const float track_h    = 6.0f * scale;
+    const float track_y    = row2_y + (row2_h - track_h) * 0.5f;
+
+    const float btn_inc_x = track_x + track_w + 8.0f * scale;
+    const Rectangle inc_rec{btn_inc_x, btn_y, btn_w, btn_h};
+
+    DrawRectangleRounded(inc_rec, 0.3f, 4, Color{20, 35, 50, 180});
+    DrawRectangleRoundedLines(inc_rec, 0.3f, 4, Color{0, 180, 210, 130});
+    DrawText("+", static_cast<int>(btn_inc_x + 5.0f * scale), static_cast<int>(btn_y + 2.0f * scale), font_size,
+             Color{220, 240, 255, 230});
+
+    const float cur_vol = get_audio_category_volume(cur_cat);
+    char vol_str[16];
+    std::snprintf(vol_str, sizeof(vol_str), "%d%%", static_cast<int>(std::round(cur_vol * 100.0f)));
+    const int val_text_x = static_cast<int>(btn_inc_x + btn_w + 8.0f * scale);
+    DrawText(vol_str, val_text_x, label_y, font_size,
+             muted ? Color{170, 170, 170, 180} : Color{0, 240, 210, 255});
+
+    // Draw track
+    DrawRectangleRounded(Rectangle{track_x, track_y, track_w, track_h}, 0.5f, 4, Color{15, 30, 45, 200});
+    const float fill_w = track_w * std::clamp(cur_vol, 0.0f, 1.0f);
+    if (fill_w > 1.0f) {
+        DrawRectangleRounded(Rectangle{track_x, track_y, fill_w, track_h}, 0.5f, 4,
+                             muted ? Color{140, 140, 140, 160} : Color{0, 200, 210, 220});
+    }
+
+    // Knob
+    const float knob_cx = track_x + fill_w;
+    const float knob_cy = track_y + track_h * 0.5f;
+    const float knob_r  = 6.0f * scale;
+    DrawCircle(static_cast<int>(knob_cx), static_cast<int>(knob_cy), knob_r,
+               muted ? Color{160, 160, 160, 200} : Color{0, 230, 240, 255});
+    DrawCircle(static_cast<int>(knob_cx), static_cast<int>(knob_cy), knob_r * 0.45f, Color{255, 255, 255, 255});
+
+    // Row 2 interaction
+    const Rectangle track_hitbox{track_x - 8.0f, row2_y, track_w + 16.0f, row2_h};
+
+    if (mouse_pressed && CheckCollisionPointRec(mouse, dec_rec)) {
+        step_audio_category_volume(cur_cat, -0.05f);
+        touch_volume_slider();
+        play_cockpit_button();
+        save_audio_settings(runtime_paths().config_dir);
+    } else if (mouse_pressed && CheckCollisionPointRec(mouse, inc_rec)) {
+        step_audio_category_volume(cur_cat, +0.05f);
+        touch_volume_slider();
+        play_cockpit_button();
+        save_audio_settings(runtime_paths().config_dir);
+    } else if (mouse_down && CheckCollisionPointRec(mouse, track_hitbox)) {
+        const float new_frac = std::clamp((mouse.x - track_x) / track_w, 0.0f, 1.0f);
+        const float new_vol  = std::clamp(std::round(new_frac * 20.0f) / 20.0f, 0.0f, 1.0f);
+        set_audio_category_volume(cur_cat, new_vol);
+        touch_volume_slider();
+    }
+
+    if (mouse_released && CheckCollisionPointRec(mouse, track_hitbox)) {
+        save_audio_settings(runtime_paths().config_dir);
     }
 }
 

@@ -334,12 +334,54 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
         lines.emplace_back(std::string("UPSCALE: ") + upscale_label);
         lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
         lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
+        lines.emplace_back("TAB / A: AUDIO SETTINGS");
     }
     if (timewarp_multiplier > 0) {
         char buf[48];
         std::snprintf(buf, sizeof(buf), "TIMEWARP %dx ([ / ] ADJUST)", timewarp_multiplier);
         lines.emplace_back(buf);
     }
+    return lines;
+}
+
+namespace {
+std::string format_audio_slider_row(int index, const char *name, float vol, bool selected) {
+    int pct = static_cast<int>(std::round(vol * 100.0f));
+    int ticks = std::clamp(static_cast<int>(std::round(vol * 10.0f)), 0, 10);
+    char bar[13];
+    bar[0] = '[';
+    for (int i = 0; i < 10; ++i) {
+        bar[1 + i] = (i < ticks) ? '=' : ' ';
+    }
+    bar[11] = ']';
+    bar[12] = '\0';
+
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%c %d. %-10s %s %3d%%%c",
+                  selected ? '>' : ' ',
+                  index, name, bar, pct,
+                  selected ? '<' : ' ');
+    return std::string(buf);
+}
+} // namespace
+
+const std::vector<std::string> plus_audio_menu_lines(int selected_category,
+                                                     float master_vol,
+                                                     float cabin_vol,
+                                                     float propulsion_vol,
+                                                     float weather_vol,
+                                                     float foley_vol,
+                                                     bool muted) {
+    std::vector<std::string> lines = {
+        "NOCTIS IV OM AUDIO VOLUME SETTINGS",
+        format_audio_slider_row(1, "MASTER:", master_vol, selected_category == 0),
+        format_audio_slider_row(2, "CABIN:", cabin_vol, selected_category == 1),
+        format_audio_slider_row(3, "PROPULSION:", propulsion_vol, selected_category == 2),
+        format_audio_slider_row(4, "WEATHER:", weather_vol, selected_category == 3),
+        format_audio_slider_row(5, "FOLEY:", foley_vol, selected_category == 4),
+        muted ? "MUTE: AUDIO MUTED (M / F9)" : "MUTE: AUDIO ACTIVE (M / F9)",
+        "1-5: SELECT  -/+: ADJUST  TAB: VIDEO"
+    };
     return lines;
 }
 

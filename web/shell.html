@@ -123,6 +123,7 @@
     // the result (raylib tracks pointerlockchange; the game reads
     // Module.nivlrFullscreen for its status badge).
     var wantPointerLock = true; // mouselook is on by default, F10 toggles it
+    window.wantPointerLock = true;
 
     function lockPointer() {
       if (document.pointerLockElement === canvas || !canvas.requestPointerLock) return;
@@ -160,6 +161,7 @@
         toggleFullscreen();
       } else if (event.code === 'F10') {
         wantPointerLock = !wantPointerLock;
+        window.wantPointerLock = wantPointerLock;
         if (wantPointerLock) lockPointer(); else unlockPointer();
       }
     }, { capture: true });
