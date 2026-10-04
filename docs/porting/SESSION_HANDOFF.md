@@ -6,8 +6,8 @@ Replace this document at the end of every session; Git holds older versions.
 
 - Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M11 (In-Engine Media Export & Exploration Ergonomics) in progress.
-- Status: Release 1.9.0 ("The Audio Controls & Exploration Ergonomics Update") published.
+- Branch: `master`; Milestone M11 (In-Engine Media Export & Exploration Ergonomics) completed.
+- Status: Release 1.9.1 ("The Gamepad Flight & Media Export Update") published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -121,16 +121,35 @@ Replace this document at the end of every session; Git holds older versions.
   - Gated inputs while unfocused or unlocked, and eliminated cursor recentering warp jump on focus restoration or `F10` re-lock.
   - Verified 100% test pass rate across all 45 automated test suites.
   - Rebuilt and packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.9.0/`.
+- **M11-W01 (In-Engine Media Export):**
+  - Added direct in-engine media export in the <kbd>F4</kbd> Image Archive Viewer: pressing <kbd>D</kbd> or clicking the Export button immediately triggers export.
+  - Web: triggers browser download via Emscripten JavaScript bridge to user's Downloads folder.
+  - Desktop: exports snapshot or panorama to system Downloads folder or reveals gallery in file explorer.
+- **M11-W03 (Native Gamepad & Joystick Flight Controls):**
+  - Integrated dual-stick analog flight and surface locomotion via Raylib Gamepad API.
+  - Analog camera yaw and pitch with customizable deadzone filtering (`0.05`–`0.50`, default `0.15`) and sensitivity scaling.
+  - Trigger thrusters: left trigger (<kbd>LT</kbd>) decelerates / reverses, right trigger (<kbd>RT</kbd>) accelerates.
+  - Attitude maneuvering: left bumper (<kbd>LB</kbd>) and right bumper (<kbd>RB</kbd>) roll the spacecraft in flight, or activate vertical jetpack thrust on planetary surfaces.
+  - Haptic dual-motor rumble feedback responding to propulsion burn onset, cold-gas RCS thruster bursts, atmospheric descent buffeting turbulence, touchdown impacts, and collision contacts. Toggleable with <kbd>R</kbd> or via the controls menu overlay.
+- **M11-W04 (Configurable Controls & Sensitivity Persistence):**
+  - Corrected mouse pitch inversion default so push-forward looks UP by default. Toggled with <kbd>I</kbd> or in Controls menu.
+  - Mouse sensitivity scaling (0.1x to 5.0x, default 1.0x).
+  - Interactive High-DPI Controls Options overlay in the graphics menu (<kbd>F2</kbd> or <kbd>Tab</kbd>/<kbd>C</kbd>) showing connected gamepad name, rumble status, sensitivity, deadzones, and input bindings.
+  - Settings persist across launches in `controls.ini` in user config directory.
+- **Bug Fixes:**
+  - Isolated arrow keys from `WASD` character movement during planetary landing zone coordinate selection (`active_screen == 2`), preventing coordinate adjustments from moving the character or triggering the observation deck elevator.
+  - Re-mapped gamepad <kbd>B</kbd> button to context-sensitive cancel / right-click deselect instead of raw <kbd>Escape</kbd>, preventing accidental immediate exits to desktop.
+- **Release 1.9.1 (Feature Release — The Gamepad Flight & Media Export Update):**
+  - Packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.9.1/`.
+  - Full automated test suite passing at 100% (47/47 tests).
 
 ## Test suite and package status
 
-- **Clang Release:** 45/45 passed (4.33s).
+- **Clang Release:** 47/47 passed.
 - **Web Release:** Built cleanly (`nivlr.html`, `nivlr.wasm`, `nivlr.data`).
 - **Live Server:** Python 3 daemon serving `build/web-release` at `http://localhost:8090/nivlr.html`.
 
 ## Next steps
 
-1. Milestone M11 (In-Engine Media Export & Exploration Ergonomics):
-   - M11-W01: In-engine screenshot & panorama download/export from the F4 Image Archive Viewer (direct browser file download on web, gallery reveal on desktop).
-   - M11-W03: Native gamepad / joystick flight and surface movement.
-   - M11-W04: Configurable keybindings and sensitivity persistence.
+1. Milestone M12 planning:
+   - Identify next targets for galaxy exploration fidelity, stellar physics, or community features.

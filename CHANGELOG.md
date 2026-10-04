@@ -5,6 +5,31 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 1.9.1 (2026-10-04) — The Gamepad Flight & Media Export Update
+
+### Features
+* **Native Gamepad & Joystick Flight Controls:**
+  * Analog dual-stick flight and surface locomotion using the Raylib Gamepad API.
+  * Analog camera yaw and pitch with customizable deadzone filtering (`0.05`–`0.50`, default `0.15`) and sensitivity scaling.
+  * Trigger thrusters: left trigger (<kbd>LT</kbd>) decelerates / reverses, right trigger (<kbd>RT</kbd>) accelerates.
+  * Attitude maneuvering: left bumper (<kbd>LB</kbd>) and right bumper (<kbd>RB</kbd>) roll the spacecraft in flight, or activate vertical jetpack thrust on planetary surfaces.
+  * Haptic dual-motor rumble feedback responding to propulsion burn onset, cold-gas RCS thruster bursts, atmospheric descent buffeting turbulence, touchdown impacts, and collision contacts. Toggleable with <kbd>R</kbd> or via the controls menu overlay.
+* **Configurable Controls & Sensitivity Persistence:**
+  * Fixed mouse pitch inversion default: pushing the mouse forward now looks UP by default (authentic modern convention). Pitch inversion can be toggled via <kbd>I</kbd> or through the controls menu overlay.
+  * Mouse look sensitivity scaling (0.1x to 5.0x, default 1.0x) with keyboard stepping (<kbd>+</kbd>/<kbd>-</kbd>).
+  * Interactive High-DPI Controls Options overlay in the graphics menu (<kbd>F2</kbd> or <kbd>Tab</kbd>/<kbd>C</kbd>) showing connected gamepad name, rumble status, sensitivity, deadzones, and input bindings.
+  * Settings persist across launches in `controls.ini` in the user configuration directory.
+* **In-Engine Screenshot & Panorama Media Export:**
+  * Added direct in-engine media export in the <kbd>F4</kbd> Image Archive Viewer: press <kbd>D</kbd> or click the Export button to export the currently viewed snapshot or panorama.
+  * Web: triggers immediate browser file download to the user's Downloads folder via the Emscripten JavaScript bridge.
+  * Desktop: exports image directly to the system Downloads folder (or opens the gallery folder).
+
+### Fixes
+* **Landing Zone Coordinate Navigation:**
+  * Isolated arrow keys from character locomotion (`WASD`) during planetary landing zone coordinate selection (`active_screen == 2`), ensuring arrow keys adjust coordinates without inadvertently moving the character left/right or triggering the observation deck elevator carriage.
+* **Accidental Exit Protection:**
+  * Re-mapped gamepad <kbd>B</kbd> button to context-sensitive cancel / right-click deselect instead of raw <kbd>Escape</kbd>, preventing accidental immediate exits to desktop while in the cockpit or exploring planetary surfaces.
+
 ## 1.9.0 (2026-10-04) — The Audio Controls & Exploration Ergonomics Update
 
 ### Features

@@ -150,7 +150,40 @@ int main(int argc, char **argv) {
     ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::close, "Escape does not close exclusively");
     commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.f4_pressed = true; }), false);
     ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::close, "F4 does not close");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'d'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::download, "d does not trigger download");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'D'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::download, "D does not trigger download");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'o'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::open_folder, "o does not trigger open_folder");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'O'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::open_folder, "O does not trigger open_folder");
     ok &= require(gallery_commands_for_frame({}, false).empty(), "idle frame produced commands");
+
+    state.open = true;
+    ok &= require(!apply_gallery_command(state, GalleryCommand::download), "download command reported image change");
+    ok &= require(!apply_gallery_command(state, GalleryCommand::open_folder), "open_folder command reported image change");
+
+#if !defined(__EMSCRIPTEN__)
+    const auto downloads = user_downloads_directory();
+    ok &= require(!downloads.empty(), "user_downloads_directory returned empty on desktop");
+#endif
+
+    const auto export_dir = root / "downloads_test";
+    ok &= require(export_gallery_image(entries[0], export_dir), "export_gallery_image failed");
+    ok &= require(std::filesystem::exists(export_dir / "SNAP0003.BMP"), "exported file does not exist");
+    ok &= require(std::filesystem::file_size(export_dir / "SNAP0003.BMP") == std::filesystem::file_size(entries[0].path),
+                  "exported file size mismatch");
+    // Overwrite test
+    ok &= require(export_gallery_image(entries[0], export_dir), "re-export overwrite failed");
+
+    GalleryEntry missing_entry;
+    missing_entry.path = root / "NONEXISTENT.BMP";
+    missing_entry.id = "NONEXISTENT";
+    ok &= require(!export_gallery_image(missing_entry, export_dir), "exporting missing file succeeded");
+
+    ok &= require(!open_gallery_folder(""), "open_gallery_folder empty path succeeded");
+    ok &= require(!open_gallery_folder(root / "nonexistent_dir"), "open_gallery_folder nonexistent path succeeded");
 
     std::filesystem::remove_all(root, ignored);
     if (ok) std::puts("gallery: ok");

@@ -40,5 +40,15 @@ const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
                                                       bool recording,
                                                       bool paused,
                                                       double captured_fps);
+const std::vector<std::string> plus_controls_menu_lines(bool invert_y,
+                                                        float sensitivity,
+                                                        int mouselook_mode,
+                                                        std::string_view forward_key,
+                                                        std::string_view backward_key,
+                                                        std::string_view left_key,
+                                                        std::string_view right_key,
+                                                        bool gamepad_connected = false,
+                                                        std::string_view gamepad_name = {},
+                                                        bool rumble_enabled = true);
 
 } // namespace noctis

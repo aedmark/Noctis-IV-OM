@@ -55,6 +55,8 @@
 #include "panorama.h"
 #include "noctis.h"
 #include "audio.h"
+#include "controls_config.h"
+#include "gamepad.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -5663,6 +5665,25 @@ void draw_plus_overlay(bool surface) {
             noctis::get_audio_category_volume(noctis::AudioCategory::weather),
             noctis::get_audio_category_volume(noctis::AudioCategory::foley),
             noctis::is_audio_muted());
+        const int box_h = static_cast<int>(lines.size()) * 8 + 8;
+        const int box_y = std::max(10, 185 - box_h);
+        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
+        for (std::size_t index = 0; index < lines.size(); ++index) {
+            wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
+        }
+    } else if (graphics_menu_status == 3) {
+        const auto &ctrl = noctis::get_controls_settings();
+        const auto lines = noctis::plus_controls_menu_lines(
+            ctrl.invert_mouse_y,
+            ctrl.mouse_sensitivity,
+            option_mouse_look,
+            noctis::key_name_from_code(ctrl.key_forward),
+            noctis::key_name_from_code(ctrl.key_backward),
+            noctis::key_name_from_code(ctrl.key_left),
+            noctis::key_name_from_code(ctrl.key_right),
+            noctis::is_gamepad_connected(0),
+            noctis::get_gamepad_name(0),
+            ctrl.rumble_enabled);
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);

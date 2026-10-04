@@ -57,10 +57,27 @@ int main() {
     ok &= require(audio_menu[1].find("80%") != std::string::npos, "audio menu line 1 percentage");
     ok &= require(audio_menu[2].find("2. CABIN:") != std::string::npos, "audio menu line 2");
     ok &= require(audio_menu[6].find("ACTIVE") != std::string::npos, "audio menu active status");
-    ok &= require(audio_menu[7].find("TAB: VIDEO") != std::string::npos, "audio menu footer");
+    ok &= require(audio_menu[7].find("TAB: CONTROLS") != std::string::npos, "audio menu footer");
 
     const auto audio_muted = noctis::plus_audio_menu_lines(1, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f, true);
     ok &= require(audio_muted[6].find("MUTED") != std::string::npos, "audio menu muted status");
+
+    // F2 Page 3: Controls & Input Settings presentation test
+    const auto ctrl_menu = noctis::plus_controls_menu_lines(false, 1.0f, 1, "W", "S", "A", "D");
+    ok &= require(ctrl_menu.size() == 8, "controls menu line count");
+    ok &= require(ctrl_menu[0] == "NOCTIS IV OM CONTROLS & INPUT SETTINGS", "controls menu title");
+    ok &= require(ctrl_menu[1].find("NORMAL (LOOK UP)") != std::string::npos, "controls menu normal inversion");
+    ok &= require(ctrl_menu[2].find("1.0X") != std::string::npos, "controls menu sensitivity");
+    ok &= require(ctrl_menu[3].find("ON (ALWAYS)") != std::string::npos, "controls menu mouselook mode");
+    ok &= require(ctrl_menu[4].find("MOVE: W A S D") != std::string::npos, "controls menu keybindings");
+    ok &= require(ctrl_menu[5].find("GAMEPAD:") != std::string::npos, "controls menu gamepad line");
+    ok &= require(ctrl_menu[6].find("RUMBLE HAPTICS:") != std::string::npos, "controls menu rumble line");
+    ok &= require(ctrl_menu[7].find("TAB: VIDEO") != std::string::npos, "controls menu footer");
+
+    const auto ctrl_inverted = noctis::plus_controls_menu_lines(true, 2.5f, 0, "W", "S", "A", "D");
+    ok &= require(ctrl_inverted[1].find("INVERTED (LOOK DOWN)") != std::string::npos, "controls menu inverted");
+    ok &= require(ctrl_inverted[2].find("2.5X") != std::string::npos, "controls menu sensitivity 2.5X");
+    ok &= require(ctrl_inverted[3].find("OFF (HOLD RMB)") != std::string::npos, "controls menu mouselook off");
 
     // Suit torch presentation test
     std::vector<std::uint8_t> test_frame(320 * 200, 0);

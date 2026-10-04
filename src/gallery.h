@@ -55,7 +55,26 @@ enum class GalleryCommand : std::uint8_t {
     toggle_zoom,
     pan_left,
     pan_right,
+    download,
+    open_folder,
 };
+
+// Returns the user's standard Downloads directory.
+std::filesystem::path user_downloads_directory();
+
+// Exports or downloads the given gallery image:
+// - On Web (Emscripten): triggers an HTML5 Blob download via a virtual link click.
+// - On Desktop: copies the BMP to destination_override if set, or user's Downloads directory.
+// Returns true on success, false on failure.
+bool export_gallery_image(const GalleryEntry &entry,
+                          const std::optional<std::filesystem::path> &destination_override = std::nullopt);
+
+// Opens the specified directory (or file's parent folder) in the system file explorer:
+// - On Windows: explorer.exe / ShellExecute.
+// - On Linux: xdg-open.
+// - On Web: no-op (returns false).
+// Returns true if successfully launched.
+bool open_gallery_folder(const std::filesystem::path &path);
 
 // Browsing state for the cockpit image viewer. Pan is the left edge of the
 // visible window as a fraction of the image's horizontal travel (0..1).

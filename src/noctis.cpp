@@ -5,6 +5,8 @@
 
 #include "noctis.h"
 #include "audio.h"
+#include "controls_config.h"
+#include "gamepad.h"
 #include "brtl.h"
 #include "display.h"
 #include "gallery_viewer.h"
@@ -2942,6 +2944,7 @@ int main(int argc, char **argv) {
     configure_runtime_file_paths();
     noctis::load_display_settings(noctis::runtime_paths().config_dir);
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
+    noctis::load_controls_settings(noctis::runtime_paths().config_dir);
     draw_hud        = noctis::get_setting_draw_hud();
     lens_flare_mode = noctis::get_setting_lens_flare_mode();
     seamless_border = noctis::get_setting_seamless_border();
@@ -4350,6 +4353,45 @@ void loop() {
     p_mpul = mpul;
     handle_input();
 
+    if (noctis::consume_cancel()) {
+        if (graphics_menu_status != 0) {
+            graphics_menu_status = 0;
+            noctis::play_cockpit_button();
+        } else if (movie_recorder.menu_open()) {
+            movie_recorder.close_menu();
+            noctis::play_cockpit_button();
+        } else if (about != 0) {
+            about = 0;
+            noctis::play_cockpit_button();
+        } else if (landing_point != 0) {
+            landing_point = 0;
+            status("CANCELLED", 50);
+            noctis::play_goesnet_chime(false);
+        } else if (manual_target != 0) {
+            manual_target = 0;
+            ap_targetted = 0;
+            status("CANCELLED", 50);
+            noctis::play_goesnet_chime(false);
+        } else if (ap_targetting || ip_targetting) {
+            ap_targetting = 0;
+            ip_targetting = 0;
+            status("CANCELLED", 50);
+            noctis::play_goesnet_chime(false);
+        } else if (labstar) {
+            labstar = 0;
+            ap_target_previd = -1;
+        } else if (labplanet) {
+            labplanet = 0;
+            prev_planet_id = -1;
+        } else if (data) {
+            datasheetdelta = -2;
+        } else if (active_screen == 0 && gnc_pos > 0) {
+            gnc_pos = 0;
+            goesnet_command[0] = 0;
+            status("CANCELLED", 50);
+        }
+    }
+
     // Dev Bryce: Mouse Currently only rotates camera
     /*if (mpul & 2u) {
         //shift += 3 * mdltx;
@@ -4383,7 +4425,7 @@ void loop() {
 
     const int WASD_speed = 20;
 
-    if ((active_screen != 0) && ((labstar == 0) && (labplanet == 0))) {
+    if ((active_screen == -1) && ((labstar == 0) && (labplanet == 0))) {
         // +X / -X Direction
         int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
         // +Z / -Z Direction
@@ -6266,7 +6308,7 @@ resynctoplanet:
                     graphics_menu_status = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3C) {
-                    graphics_menu_status = (graphics_menu_status + 1) % 3;
+                    graphics_menu_status = (graphics_menu_status + 1) % 4;
                     about                = 0;
                     movie_recorder.close_menu();
                 } else if (mc == 0x3D || mc == 142 || mc == 144) {
@@ -6311,6 +6353,27 @@ resynctoplanet:
                                       static_cast<int>(std::round(v * 100.0f)));
                         status(msg, 50);
                     }
+                } else if (graphics_menu_status == 3) {
+                    if (mc == 72 || mc == 80) {
+                        const bool inv = noctis::toggle_mouse_inversion();
+                        status(inv ? "MOUSE PITCH: INVERTED" : "MOUSE PITCH: NORMAL", 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                    } else if (mc == 75) {
+                        const float s = noctis::adjust_mouse_sensitivity(-0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                    } else if (mc == 77) {
+                        const float s = noctis::adjust_mouse_sensitivity(+0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                    }
                 } else if (mc == 75) {
                     dlt_nav_beta += 1.5;
                     status("PITCH - R", 25);
@@ -6325,6 +6388,7 @@ resynctoplanet:
                            : option_mouse_look == 1 ? "MOUSELOOK ON"
                                                     : "INV. Y AXIS",
                            50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                 }
             } else if (handle_movie_key(mc, false)) {
             } else if (graphics_menu_status == 1) {
@@ -6364,7 +6428,10 @@ resynctoplanet:
                     save_display_settings_current();
                 }
             } else if (graphics_menu_status == 2) {
-                if (mc == 9 || mc == 'v' || mc == 'V') {
+                if (mc == 9) {
+                    graphics_menu_status = 3;
+                    noctis::play_cockpit_button();
+                } else if (mc == 'v' || mc == 'V') {
                     graphics_menu_status = 1;
                     noctis::play_cockpit_button();
                 } else if (mc == 27) {
@@ -6403,6 +6470,46 @@ resynctoplanet:
                                   noctis::audio_category_name(noctis::get_selected_audio_category()),
                                   static_cast<int>(std::round(v * 100.0f)));
                     status(msg, 50);
+                }
+            } else if (graphics_menu_status == 3) {
+                if (mc == 9 || mc == 'v' || mc == 'V') {
+                    graphics_menu_status = 1;
+                    noctis::play_cockpit_button();
+                } else if (mc == 'a' || mc == 'A') {
+                    graphics_menu_status = 2;
+                    noctis::play_cockpit_button();
+                } else if (mc == 27) {
+                    graphics_menu_status = 0;
+                } else if (mc == 'i' || mc == 'I') {
+                    const bool inv = noctis::toggle_mouse_inversion();
+                    status(inv ? "MOUSE PITCH: INVERTED" : "MOUSE PITCH: NORMAL", 50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                    noctis::play_cockpit_button();
+                } else if (mc == '-' || mc == '_') {
+                    const float s = noctis::adjust_mouse_sensitivity(-0.1f);
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                    status(msg, 50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                    noctis::play_cockpit_button();
+                } else if (mc == '+' || mc == '=') {
+                    const float s = noctis::adjust_mouse_sensitivity(+0.1f);
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                    status(msg, 50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                    noctis::play_cockpit_button();
+                } else if (mc == 'm' || mc == 'M') {
+                    option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
+                    status(option_mouse_look == 0 ? "MOUSELOOK OFF" : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                    noctis::play_cockpit_button();
+                } else if (mc == 'r' || mc == 'R') {
+                    const bool r = noctis::toggle_rumble();
+                    status(r ? "RUMBLE HAPTICS: ON" : "RUMBLE HAPTICS: OFF", 50);
+                    if (r) noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::click, 1.0f);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                    noctis::play_cockpit_button();
                 }
             } else if (noctis::is_roof_speed_key(mc)) {
                 noctis::toggle_timewarp();
@@ -6459,7 +6566,7 @@ resynctoplanet:
                 }
 
                 if (mc == 0x3C) {
-                    graphics_menu_status = (graphics_menu_status + 1) % 3;
+                    graphics_menu_status = (graphics_menu_status + 1) % 4;
                     about                = 0;
                     movie_recorder.close_menu();
                     goto endmain;
@@ -6518,6 +6625,32 @@ resynctoplanet:
                                       noctis::audio_category_name(noctis::get_selected_audio_category()),
                                       static_cast<int>(std::round(v * 100.0f)));
                         status(msg, 50);
+                        goto endmain;
+                    }
+                } else if (graphics_menu_status == 3) {
+                    if (mc == 72 || mc == 80) {
+                        const bool inv = noctis::toggle_mouse_inversion();
+                        status(inv ? "MOUSE PITCH: INVERTED" : "MOUSE PITCH: NORMAL", 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 75) {
+                        const float s = noctis::adjust_mouse_sensitivity(-0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 77) {
+                        const float s = noctis::adjust_mouse_sensitivity(+0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
                         goto endmain;
                     }
                 }
@@ -6629,7 +6762,12 @@ resynctoplanet:
                         goto endmain;
                     }
                 } else if (graphics_menu_status == 2) {
-                    if (mc == 9 || mc == 'v' || mc == 'V') {
+                    if (mc == 9) {
+                        graphics_menu_status = 3;
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 'v' || mc == 'V') {
                         graphics_menu_status = 1;
                         noctis::play_cockpit_button();
                         goto endmain;
@@ -6678,6 +6816,63 @@ resynctoplanet:
                                       noctis::audio_category_name(noctis::get_selected_audio_category()),
                                       static_cast<int>(std::round(v * 100.0f)));
                         status(msg, 50);
+                        goto endmain;
+                    }
+                    goto endmain;
+                } else if (graphics_menu_status == 3) {
+                    if (mc == 9 || mc == 'v' || mc == 'V') {
+                        graphics_menu_status = 1;
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 'a' || mc == 'A') {
+                        graphics_menu_status = 2;
+                        noctis::touch_volume_slider();
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 27) {
+                        graphics_menu_status = 0;
+                        goto endmain;
+                    }
+                    if (mc == 'i' || mc == 'I') {
+                        const bool inv = noctis::toggle_mouse_inversion();
+                        status(inv ? "MOUSE PITCH: INVERTED" : "MOUSE PITCH: NORMAL", 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == '-' || mc == '_') {
+                        const float s = noctis::adjust_mouse_sensitivity(-0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == '+' || mc == '=') {
+                        const float s = noctis::adjust_mouse_sensitivity(+0.1f);
+                        char msg[32];
+                        std::snprintf(msg, sizeof(msg), "SENSITIVITY: %.1fX", s);
+                        status(msg, 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 'm' || mc == 'M') {
+                        option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
+                        status(option_mouse_look == 0 ? "MOUSELOOK OFF" : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 'r' || mc == 'R') {
+                        const bool r = noctis::toggle_rumble();
+                        status(r ? "RUMBLE HAPTICS: ON" : "RUMBLE HAPTICS: OFF", 50);
+                        if (r) noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::click, 1.0f);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
                         goto endmain;
                     }
                     goto endmain;

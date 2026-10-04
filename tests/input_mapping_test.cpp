@@ -181,6 +181,21 @@ int main() {
     ok &= !key_move_dir.forward;
     ok &= !is_key();
 
+    // Test that arrow keys alone do NOT activate player movement (key_move_dir)
+    noctis::reset_input_state();
+    noctis::InputFrame arrow_frame;
+    arrow_frame.mouse_locked = true;
+    arrow_frame.arrow_up_pressed = true;
+    arrow_frame.arrow_down_pressed = true;
+    arrow_frame.arrow_left_pressed = true;
+    arrow_frame.arrow_right_pressed = true;
+    noctis::apply_input_frame(arrow_frame);
+    ok &= (!key_move_dir.forward && !key_move_dir.backward &&
+           !key_move_dir.left && !key_move_dir.right);
+    constexpr std::array<std::int16_t, 8> expected_arrows{0, 77, 0, 75, 0, 80, 0, 72};
+    for (const auto value : expected_arrows) ok &= get_key() == value;
+    ok &= !is_key();
+
     noctis::reset_input_provider();
     return ok ? 0 : 1;
 }

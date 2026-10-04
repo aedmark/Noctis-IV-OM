@@ -380,7 +380,7 @@ const std::vector<std::string> plus_audio_menu_lines(int selected_category,
         format_audio_slider_row(4, "WEATHER:", weather_vol, selected_category == 3),
         format_audio_slider_row(5, "FOLEY:", foley_vol, selected_category == 4),
         muted ? "MUTE: AUDIO MUTED (M / F9)" : "MUTE: AUDIO ACTIVE (M / F9)",
-        "1-5: SELECT  -/+: ADJUST  TAB: VIDEO"
+        "1-5: SELECT  -/+: ADJUST  TAB: CONTROLS"
     };
     return lines;
 }
@@ -404,6 +404,60 @@ const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
     return {"NOCTIS IV+ MOVIEMAKER", deck_line, cadence_line,
             black_flash ? "BLACK FLASH WHEN CAPTURING (F)" : "NO BLACK FLASH WHEN CAPTURING (F)",
             action_line};
+}
+
+const std::vector<std::string> plus_controls_menu_lines(bool invert_y,
+                                                        float sensitivity,
+                                                        int mouselook_mode,
+                                                        std::string_view forward_key,
+                                                        std::string_view backward_key,
+                                                        std::string_view left_key,
+                                                        std::string_view right_key,
+                                                        bool gamepad_connected,
+                                                        std::string_view gamepad_name,
+                                                        bool rumble_enabled) {
+    char sens_buf[48];
+    int ticks = std::clamp(static_cast<int>(std::round(sensitivity * 5.0f)), 0, 15);
+    char bar[18];
+    bar[0] = '[';
+    for (int i = 0; i < 15; ++i) bar[1 + i] = (i < ticks) ? '=' : ' ';
+    bar[16] = ']';
+    bar[17] = '\0';
+    std::snprintf(sens_buf, sizeof(sens_buf), "MOUSE SENSITIVITY: %s %3.1fX (-/+)", bar, sensitivity);
+
+    const char *look_mode_str = (mouselook_mode == 0) ? "OFF (HOLD RMB) (M)"
+                              : (mouselook_mode == 1) ? "ON (ALWAYS) (M)"
+                                                      : "INV. Y AXIS (M)";
+
+    char move_buf[48];
+    std::snprintf(move_buf, sizeof(move_buf), "MOVE: %.*s %.*s %.*s %.*s   JUMP: SPACE",
+                  static_cast<int>(forward_key.size()), forward_key.data(),
+                  static_cast<int>(left_key.size()), left_key.data(),
+                  static_cast<int>(backward_key.size()), backward_key.data(),
+                  static_cast<int>(right_key.size()), right_key.data());
+
+    std::string gamepad_line;
+    if (gamepad_connected) {
+        char gp_buf[64];
+        std::snprintf(gp_buf, sizeof(gp_buf), "GAMEPAD: %.*s (CONNECTED)",
+                      static_cast<int>(std::min<std::size_t>(gamepad_name.size(), 28)), gamepad_name.data());
+        gamepad_line = gp_buf;
+    } else {
+        gamepad_line = "GAMEPAD: NO CONTROLLER DETECTED";
+    }
+
+    const char *rumble_str = rumble_enabled ? "RUMBLE HAPTICS: ACTIVE (R)" : "RUMBLE HAPTICS: MUTED (R)";
+
+    return {
+        "NOCTIS IV OM CONTROLS & INPUT SETTINGS",
+        invert_y ? "MOUSE PITCH: INVERTED (LOOK DOWN) (I)" : "MOUSE PITCH: NORMAL (LOOK UP) (I)",
+        std::string(sens_buf),
+        std::string("MOUSELOOK: ") + look_mode_str,
+        std::string(move_buf),
+        gamepad_line,
+        std::string(rumble_str),
+        "I: INVERT  -/+: SENS  M: MOUSELOOK  R: RUMBLE  TAB: VIDEO"
+    };
 }
 
 } // namespace noctis

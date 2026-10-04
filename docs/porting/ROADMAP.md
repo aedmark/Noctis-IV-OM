@@ -23,7 +23,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M8 | Stabilization and 1.0 General Availability | DONE |
 | M9 | Modern Presentation & Display Enhancements | DONE |
 | M10 | Deterministic Upscaling & Fidelity Increase | DONE |
-| M11 | In-Engine Media Export & Exploration Ergonomics | IN PROGRESS |
+| M11 | In-Engine Media Export & Exploration Ergonomics | DONE |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -255,18 +255,18 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M11-W01 | In-engine screenshot & panorama download/export | PLANNED | Provide direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (e.g. key `D` to download/export the active image to the user's Downloads folder in Web via Emscripten JavaScript bridge, and open/reveal in file explorer on desktop) |
-| M11-W02 | Flight & maneuvering acoustics | DONE | Procedural sublight RCS attitude thrusters (onset cold-gas valve burst + continuous bandpass hiss during attitude changes), atmospheric descent buffeting turbulence scaled with entry velocity and air density, and dual-stage mechanical touchdown clunk on planetary landing impact/bounce; verified in `tests/audio_test.cpp` and 45/45 passing CTest suites |
-| M11-W03 | Gamepad and joystick flight controls | PLANNED | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, rumble feedback) |
-| M11-W04 | Configurable controls & sensitivity persistence | PLANNED | User-configurable keybindings, mouse sensitivity sliders, and pitch invert toggles persisted in `settings.ini` |
-| M11-W05 | Audio category volume controls | DONE | Implemented 5 independent volume categories (Master, Spaceflight & RCS, Cockpit Foley, Visor & Suit, Environment & Surface) with High-DPI graphics/audio menu overlay (`F2` or `Tab`/`A`), mouse drag/click and keyboard controls (`+`/`-`, `1`–`5`, `M`), and persistence in `config.ini`; verified in `tests/audio_test.cpp` and 45/45 passing CTest suites |
-| M11-W06 | Cockpit & GOESnet tactile foley | DONE | Tactile procedural dashboard rocker switches and console buttons, 3-variation mechanical vintage terminal keystroke clacks, telemetry transmit chirps, dual-harmonic acknowledge bell / error buzz, linefeed scroll taps, and observation deck elevator carriage servo; verified in `tests/audio_test.cpp` and 45/45 passing CTest suites |
+| M11-W01 | In-engine screenshot & panorama download/export | DONE | Direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (key `D` or Export button: browser file download in Web via Emscripten JavaScript bridge, system Downloads export on desktop); verified in `tests/gallery_test.cpp` and 47/47 passing CTest suites |
+| M11-W02 | Flight & maneuvering acoustics | DONE | Procedural sublight RCS attitude thrusters (onset cold-gas valve burst + continuous bandpass hiss during attitude changes), atmospheric descent buffeting turbulence scaled with entry velocity and air density, and dual-stage mechanical touchdown clunk on planetary landing impact/bounce; verified in `tests/audio_test.cpp` and 47/47 passing CTest suites |
+| M11-W03 | Gamepad and joystick flight controls | DONE | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, context-sensitive B-button cancellation, dual-motor rumble feedback); verified in `tests/gamepad_test.cpp` and 47/47 passing CTest suites |
+| M11-W04 | Configurable controls & sensitivity persistence | DONE | User-configurable keybindings, mouse sensitivity sliders, mouse pitch inversion (push-forward = look-up default), gamepad deadzones, and settings persistence in `controls.ini`; verified in `tests/controls_test.cpp` and 47/47 passing CTest suites |
+| M11-W05 | Audio category volume controls | DONE | Implemented 5 independent volume categories (Master, Spaceflight & RCS, Cockpit Foley, Visor & Suit, Environment & Surface) with High-DPI graphics/audio menu overlay (`F2` or `Tab`/`A`), mouse drag/click and keyboard controls (`+`/`-`, `1`–`5`, `M`), and persistence in `config.ini`; verified in `tests/audio_test.cpp` and 47/47 passing CTest suites |
+| M11-W06 | Cockpit & GOESnet tactile foley | DONE | Tactile procedural dashboard rocker switches and console buttons, 3-variation mechanical vintage terminal keystroke clacks, telemetry transmit chirps, dual-harmonic acknowledge bell / error buzz, linefeed scroll taps, and observation deck elevator carriage servo; verified in `tests/audio_test.cpp` and 47/47 passing CTest suites |
 
 **Exit criteria**
 
 - Web players can download captured screenshots and panoramas directly to their computer with a single in-engine keypress or button in the F4 Image Archive without opening developer tools.
 - Desktop players can open the gallery folder or export captures directly from within the game.
-- All existing 45 automated test suites continue passing with 100% determinism.
+- All existing 47 automated test suites continue passing with 100% determinism.
 
 ## Work item template
 

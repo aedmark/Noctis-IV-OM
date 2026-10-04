@@ -2,10 +2,49 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <knownfolders.h>
+#elif defined(__linux__)
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 namespace noctis {
+
+#if defined(__EMSCRIPTEN__)
+EM_JS(int, emscripten_download_file, (const char *path_str, const char *name_str), {
+    var vpath = UTF8ToString(path_str);
+    var name = UTF8ToString(name_str);
+    try {
+        if (typeof FS === 'undefined') return 0;
+        var data = FS.readFile(vpath);
+        var blob = new Blob([data], { type: 'image/bmp' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+        return 1;
+    } catch (err) {
+        console.error('Noctis IV OM: Failed to download ' + vpath, err);
+        return 0;
+    }
+});
+#endif
 namespace {
 constexpr std::size_t file_header_size = 14;
 constexpr std::size_t info_header_size = 40;
@@ -174,7 +213,7 @@ const char *gallery_kind_name(GalleryImageKind kind) {
 
 std::vector<GalleryCommand> gallery_commands_for_frame(const InputFrame &frame, bool zoomed) {
     std::vector<GalleryCommand> commands;
-    if (frame.escape_down || frame.enter_pressed || frame.f4_pressed) {
+    if (frame.escape_down || frame.cancel_pressed || frame.enter_pressed || frame.f4_pressed) {
         commands.push_back(GalleryCommand::close);
         return commands;
     }
@@ -187,6 +226,12 @@ std::vector<GalleryCommand> gallery_commands_for_frame(const InputFrame &frame, 
     const bool zoom_text = std::any_of(frame.text.begin(), frame.text.end(),
                                        [](std::int32_t key) { return key == 'z' || key == 'Z' || key == ' '; });
     if (zoom_text || frame.space_pressed) commands.push_back(GalleryCommand::toggle_zoom);
+    const bool download_text = std::any_of(frame.text.begin(), frame.text.end(),
+                                           [](std::int32_t key) { return key == 'd' || key == 'D'; });
+    if (download_text) commands.push_back(GalleryCommand::download);
+    const bool open_folder_text = std::any_of(frame.text.begin(), frame.text.end(),
+                                              [](std::int32_t key) { return key == 'o' || key == 'O'; });
+    if (open_folder_text) commands.push_back(GalleryCommand::open_folder);
     return commands;
 }
 
@@ -213,10 +258,124 @@ bool apply_gallery_command(GalleryViewerState &state, GalleryCommand command) {
     case GalleryCommand::pan_right:
         if (state.zoomed) state.pan = std::min(1.0F, state.pan + gallery_pan_step);
         return false;
+    case GalleryCommand::download:
+    case GalleryCommand::open_folder:
+        return false;
     }
     if (state.index == previous_index) return false;
     state.pan = 0.5F;
     return true;
+}
+
+std::filesystem::path user_downloads_directory() {
+#if defined(__EMSCRIPTEN__)
+    return {};
+#elif defined(_WIN32)
+    PWSTR value = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Downloads, KF_FLAG_DEFAULT, nullptr, &value))) {
+        std::filesystem::path result(value);
+        CoTaskMemFree(value);
+        if (!result.empty()) return result;
+    }
+    const char *userprofile = std::getenv("USERPROFILE");
+    if (userprofile != nullptr && *userprofile != '\0') {
+        return std::filesystem::path(userprofile) / "Downloads";
+    }
+    return {};
+#elif defined(__linux__)
+    const char *xdg_download = std::getenv("XDG_DOWNLOAD_DIR");
+    if (xdg_download != nullptr && *xdg_download != '\0') {
+        return std::filesystem::path(xdg_download);
+    }
+    const char *home = std::getenv("HOME");
+    if (home != nullptr && *home != '\0') {
+        return std::filesystem::path(home) / "Downloads";
+    }
+    return {};
+#else
+    const char *home = std::getenv("HOME");
+    if (home != nullptr && *home != '\0') {
+        return std::filesystem::path(home) / "Downloads";
+    }
+    return {};
+#endif
+}
+
+bool export_gallery_image(const GalleryEntry &entry,
+                          const std::optional<std::filesystem::path> &destination_override) {
+#ifdef __EMSCRIPTEN__
+    if (!destination_override) {
+        std::error_code ec;
+        if (!std::filesystem::is_regular_file(entry.path, ec) || ec) {
+            return false;
+        }
+        std::string filename = entry.path.filename().string();
+        if (filename.empty()) filename = entry.id + ".BMP";
+        return emscripten_download_file(entry.path.string().c_str(), filename.c_str()) != 0;
+    }
+#endif
+    const auto dest_dir = destination_override.value_or(user_downloads_directory());
+    if (dest_dir.empty()) return false;
+    std::error_code ec;
+    std::filesystem::create_directories(dest_dir, ec);
+    if (ec) return false;
+    if (!std::filesystem::is_regular_file(entry.path, ec) || ec) return false;
+    std::string filename = entry.path.filename().string();
+    if (filename.empty()) filename = entry.id + ".BMP";
+    const auto target = dest_dir / filename;
+    if (std::filesystem::equivalent(entry.path, target, ec)) return true;
+    ec.clear();
+    std::filesystem::copy_file(entry.path, target, std::filesystem::copy_options::overwrite_existing, ec);
+    return !ec;
+}
+
+bool open_gallery_folder(const std::filesystem::path &path) {
+#if defined(__EMSCRIPTEN__)
+    (void)path;
+    return false;
+#elif defined(_WIN32)
+    if (path.empty()) return false;
+    std::error_code ec;
+    std::filesystem::path folder = path;
+    if (std::filesystem::is_regular_file(path, ec)) {
+        folder = path.parent_path();
+    }
+    if (!std::filesystem::is_directory(folder, ec)) return false;
+    const auto folder_native = folder.wstring();
+    HINSTANCE res = ShellExecuteW(nullptr, L"open", folder_native.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+    return reinterpret_cast<INT_PTR>(res) > 32;
+#elif defined(__linux__)
+    if (path.empty()) return false;
+    std::error_code ec;
+    std::filesystem::path folder = path;
+    if (std::filesystem::is_regular_file(path, ec)) {
+        folder = path.parent_path();
+    }
+    if (!std::filesystem::is_directory(folder, ec)) return false;
+    pid_t pid = fork();
+    if (pid == 0) {
+        pid_t grandchild = fork();
+        if (grandchild == 0) {
+            int devnull = open("/dev/null", O_RDWR);
+            if (devnull >= 0) {
+                dup2(devnull, STDOUT_FILENO);
+                dup2(devnull, STDERR_FILENO);
+                close(devnull);
+            }
+            execlp("xdg-open", "xdg-open", folder.c_str(), static_cast<char *>(nullptr));
+            _exit(127);
+        }
+        _exit(0);
+    }
+    if (pid > 0) {
+        waitpid(pid, nullptr, 0);
+        return true;
+    }
+    return false;
+#else
+    (void)path;
+    return false;
+#endif
 }
 
 } // namespace noctis

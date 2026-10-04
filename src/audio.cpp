@@ -1,4 +1,5 @@
 #include "audio.h"
+#include "gamepad.h"
 
 #include <raylib.h>
 
@@ -985,6 +986,7 @@ void update_audio_telemetry(const AudioTelemetry &telemetry) {
         std::lock_guard<std::mutex> lock(g_telemetry_mutex);
         g_target_telemetry = telemetry;
     }
+    noctis::update_gamepad_rumble(telemetry);
 }
 
 void play_torch_click(bool turning_on) {
@@ -1000,6 +1002,7 @@ void play_visor_servo() {
 }
 
 void play_jetpack_burst() {
+    noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::jetpack);
     if (!g_audio_ready || g_muted.load())
         return;
     PlaySound(g_sound_jetpack);
@@ -1013,18 +1016,21 @@ void play_surface_footstep() {
 }
 
 void play_rcs_burst() {
+    noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::rcs_burst);
     if (!g_audio_ready || g_muted.load())
         return;
     PlaySound(g_sound_rcs_burst);
 }
 
 void play_touchdown_clunk() {
+    noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::touchdown);
     if (!g_audio_ready || g_muted.load())
         return;
     PlaySound(g_sound_touchdown);
 }
 
 void play_cockpit_button() {
+    noctis::trigger_gamepad_rumble(noctis::GamepadRumbleType::click, 0.4F);
     if (!g_audio_ready || g_muted.load())
         return;
     PlaySound(g_sound_cockpit_button);

@@ -14,6 +14,7 @@ struct InputFrame {
     bool move_left        = false;
     bool move_right       = false;
     bool escape_down      = false;
+    bool cancel_pressed   = false;
     bool mouse_left_down  = false;
     bool mouse_right_down = false;
     float mouse_delta_x   = 0.0F;
@@ -73,6 +74,8 @@ void set_aspect_toggle_handler(DisplayToggleHandler handler);
 void set_upscale_toggle_handler(DisplayToggleHandler handler);
 void set_crt_toggle_handler(DisplayToggleHandler handler);
 void set_overlay_input_handler(OverlayInputHandler handler);
+bool is_cancel_requested();
+bool consume_cancel();
 
 } // namespace noctis
 
