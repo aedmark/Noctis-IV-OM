@@ -12,6 +12,7 @@
 #include "plus_controls.h"
 #include "controls_config.h"
 #include "gamepad.h"
+#include "flight_log.h"
 #include "plus_presentation.h"
 #include "runtime_paths.h"
 #include "simulation_clock.h"
@@ -4025,6 +4026,20 @@ void planetary_main() {
         }
         return true;
     };
+
+    {
+        std::string sname(reinterpret_cast<const char *>(star_label), 20);
+        while (!sname.empty() && sname.back() == ' ') sname.pop_back();
+        std::string pname(reinterpret_cast<const char *>(planet_label), 20);
+        while (!pname.empty() && pname.back() == ' ') pname.pop_back();
+        const double lat_deg = (landing_pt_lat - 60) * 1.5;
+        const double lon_deg = static_cast<double>(landing_pt_lon);
+        noctis::active_flight_log().record_surface_landing(
+            nearstar_x, nearstar_y, nearstar_z, sname,
+            ip_targetted, pname, lat_deg, lon_deg);
+        noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
+    }
+
     int8_t widesnapping     = 0;
     int8_t raw_widesnap     = 0;
     bool jumping            = false;

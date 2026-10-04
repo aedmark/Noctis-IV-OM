@@ -11,6 +11,7 @@
 #include "display.h"
 #include "gallery_viewer.h"
 #include "upscale.h"
+#include "flight_log.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
 #include "indexed_framebuffer.h"
@@ -615,6 +616,7 @@ void save_display_settings_current() {
 
 void freeze() {
     save_display_settings_current();
+    noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
     const auto result = noctis::save_native_save(native_situation_file, capture_native_state());
     if (result.status != noctis::NativeSaveStatus::ok) {
         noctis::log_event("error", "native_save", result.message);
@@ -2153,6 +2155,10 @@ void dev_commands() {
                     if (assigned.status == noctis::GoesDataStatus::ok) {
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
+                        noctis::active_flight_log().record_label_assigned(
+                            star_id, name, false,
+                            static_cast<std::int16_t>((star_label[22] - '0') * 10 + star_label[23] - '0'));
+                        noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
                     } else if (assigned.status == noctis::GoesDataStatus::rejected) {
                         status("EXTANT", 50);
                         ap_target_previd = 12345;
@@ -2207,6 +2213,9 @@ void dev_commands() {
                     if (assigned.status == noctis::GoesDataStatus::ok) {
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
+                        noctis::active_flight_log().record_label_assigned(
+                            planet_id, name, true, static_cast<std::int16_t>(ip_targetted + 1));
+                        noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
                     } else if (assigned.status == noctis::GoesDataStatus::rejected) {
                         status("EXTANT", 50);
                         prev_planet_id   = 12345;
@@ -2404,6 +2413,8 @@ bool unfreeze() {
         sm_consolidated = 0;
     }
 
+    noctis::active_flight_log().load_from_file(noctis::runtime_paths().data_dir / "flight_log.json");
+
     noctis::NativeSaveState native_state;
     bool is_legacy_migration = false;
     const auto native_result = noctis::load_native_save(native_situation_file, native_state);
@@ -2466,6 +2477,15 @@ bool unfreeze() {
     npcs   = -12345;
     _delay = 0;
     prepare_nearstar();
+
+    if (noctis::active_flight_log().entries().empty()) {
+        std::string init_sname(reinterpret_cast<const char *>(star_label), 20);
+        while (!init_sname.empty() && init_sname.back() == ' ') init_sname.pop_back();
+        noctis::active_flight_log().record_system_arrival(
+            nearstar_x, nearstar_y, nearstar_z, nearstar_identity,
+            init_sname, nearstar_class, 0.0);
+        noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
+    }
 
     if (lithium_collector) {
         while (elapsed >= 30 && charge < 120) {
@@ -5555,6 +5575,14 @@ ext_1: //
                 stspeed               = 0;
                 g_active_travel_speed = 0.0f;
                 g_active_travel_phase = noctis::TravelPhase::arrived;
+
+                std::string sname(reinterpret_cast<const char *>(star_label), 20);
+                while (!sname.empty() && sname.back() == ' ') sname.pop_back();
+                const double jump_dist_ly = ap_target_initial_d * 5E-5;
+                noctis::active_flight_log().record_system_arrival(
+                    ap_target_x, ap_target_y, ap_target_z, ap_target_id,
+                    sname, ap_target_class, jump_dist_ly);
+                noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
             } else {
                 status(noctis::travel_phase_status(travel.phase), 0);
                 pwr -= travel.power_cost;
@@ -5643,6 +5671,17 @@ resynctoplanet:
                 ip_reached            = 1;
                 g_active_travel_speed = 0.0f;
                 g_active_travel_phase = noctis::TravelPhase::arrived;
+
+                std::string pname(reinterpret_cast<const char *>(planet_label), 20);
+                while (!pname.empty() && pname.back() == ' ') pname.pop_back();
+                std::string sname(reinterpret_cast<const char *>(star_label), 20);
+                while (!sname.empty() && sname.back() == ' ') sname.pop_back();
+                const std::int8_t ptype = (ip_targetted >= 0 && ip_targetted < nearstar_nob)
+                                              ? nearstar_p_type[ip_targetted] : 0;
+                noctis::active_flight_log().record_orbit_arrival(
+                    nearstar_x, nearstar_y, nearstar_z, sname,
+                    ip_targetted, pname, ptype);
+                noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");
             } else {
                 double move_ratio =
                     (guidance.current_coefficient > 0.0) ? (travel.distance / guidance.current_coefficient) : 0.0;

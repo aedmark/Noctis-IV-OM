@@ -15,7 +15,7 @@ int main() {
     using namespace noctis;
     bool ok = true;
 
-    ok &= require(goes_command_registry().size() == 17, "registry size changed");
+    ok &= require(goes_command_registry().size() == 19, "registry size changed");
     const auto *target = find_goes_command("ST");
     ok &= require(target != nullptr && target->command == GoesCommand::set_target
                       && target->disposition == GoesCommandDisposition::required_native,
@@ -23,6 +23,18 @@ int main() {
     const auto *inbox = find_goes_command("INBOX");
     ok &= require(inbox != nullptr && inbox->disposition == GoesCommandDisposition::obsolete_legacy_tool,
                   "legacy exchange disposition mismatch");
+    const auto *log_cmd = find_goes_command("LOG");
+    ok &= require(log_cmd != nullptr && log_cmd->command == GoesCommand::flight_log,
+                  "LOG command dispatch mismatch");
+    const auto *journal_cmd = find_goes_command("JOURNAL");
+    ok &= require(journal_cmd != nullptr && journal_cmd->command == GoesCommand::flight_log,
+                  "JOURNAL alias mismatch");
+    const auto *name_cmd = find_goes_command("NAME");
+    ok &= require(name_cmd != nullptr && name_cmd->command == GoesCommand::name_object,
+                  "NAME command dispatch mismatch");
+    const auto *label_cmd = find_goes_command("LABEL");
+    ok &= require(label_cmd != nullptr && label_cmd->command == GoesCommand::name_object,
+                  "LABEL alias mismatch");
 
     const auto par = parse_goes_command(" par new felysia:50000 _");
     ok &= require(par.status == GoesParseStatus::ok && par.command == GoesCommand::parameters

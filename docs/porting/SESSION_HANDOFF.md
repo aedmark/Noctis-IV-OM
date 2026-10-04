@@ -6,8 +6,8 @@ Replace this document at the end of every session; Git holds older versions.
 
 - Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M11 (In-Engine Media Export & Exploration Ergonomics) completed.
-- Status: Release 1.9.1 ("The Gamepad Flight & Media Export Update") published.
+- Branch: `master`; Milestone M12 (Celestial Cartography & Waypoint Navigation) in progress.
+- Status: Release 1.9.1 published; beginning Milestone M12.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -139,17 +139,41 @@ Replace this document at the end of every session; Git holds older versions.
 - **Bug Fixes:**
   - Isolated arrow keys from `WASD` character movement during planetary landing zone coordinate selection (`active_screen == 2`), preventing coordinate adjustments from moving the character or triggering the observation deck elevator.
   - Re-mapped gamepad <kbd>B</kbd> button to context-sensitive cancel / right-click deselect instead of raw <kbd>Escape</kbd>, preventing accidental immediate exits to desktop.
-- **Release 1.9.1 (Feature Release — The Gamepad Flight & Media Export Update):**
-  - Packaged Linux (`.tar.gz`), Windows (`.zip`), and Web (`.zip`) releases with SHA-256 checksums in `public-builds/1.9.1/`.
-  - Full automated test suite passing at 100% (47/47 tests).
+- **M12-W01 (In-Engine Captain's Flight Log):**
+  - Implemented automated flight log engine (`src/flight_log.h`, `src/flight_log.cpp`):
+    - Real-time logging of interstellar jump arrivals with calculated light-year jump distances (`SystemArrival`).
+    - Local orbital insertion logging with body ID and type (`OrbitArrival`).
+    - Surface landing touchdown logging with exact planetary latitude/longitude coordinates (`SurfaceLanding`).
+    - Object discovery/naming logging with custom labels and body identifiers (`LabelAssigned`).
+    - Deterministic JSON loading/saving (`flight_log.json`) and Markdown export (`flight_log.md`).
+  - Integrated flight log into engine lifecycle (`src/noctis.cpp`, `src/noctis-1.cpp`):
+    - `restore_situation()` initializes log and logs starting system.
+    - Remote jump arrival (`stspeed == 1`) logs interstellar transitions.
+    - Local travel arrival (`ip_reaching`) logs orbit insertions.
+    - Surface landing (`planetary_main`) logs touchdown events with planetary coordinates.
+    - Cockpit console labeling (cases 1 and 2) logs star and planet designations.
+  - Implemented GOESnet commands (`src/goesnet_commands.cpp`, `src/goesnet_protocol.cpp`):
+    - `LOG` / `JOURNAL`: 21-column pager showing flight statistics (total jumps, landings, light-years traveled, objects named) and chronological event ledger (`LOG <N>` for page jumps).
+    - `LOG EXPORT`: exports formatted flight journal to `flight_log.md` and JSON data to `flight_log.json` in user runtime directory.
+    - `NAME <LABEL>` / `NAME STAR:<LABEL>` / `NAME P<N>:<LABEL>`: assigns names to unnamed stars and planetary bodies directly from GOESnet terminal, atomically appending to `STARMAP.BIN` via `append_starmap_label()`.
+  - Added unit test suite `tests/flight_log_test.cpp` and expanded `tests/goesnet_commands_test.cpp`.
+  - Verified 100% test pass rate across all 48 automated test suites.
 
 ## Test suite and package status
 
-- **Clang Release:** 47/47 passed.
+- **Clang Release:** 48/48 passed.
+- **GCC Debug:** 48/48 passed.
+- **Clang Sanitized (ASan/UBSan):** Passed with zero errors or memory leaks.
 - **Web Release:** Built cleanly (`nivlr.html`, `nivlr.wasm`, `nivlr.data`).
 - **Live Server:** Python 3 daemon serving `build/web-release` at `http://localhost:8090/nivlr.html`.
 
 ## Next steps
 
-1. Milestone M12 planning:
-   - Identify next targets for galaxy exploration fidelity, stellar physics, or community features.
+1. Milestone M12 (Celestial Cartography & Waypoint Navigation):
+   - M12-W02: Starmap bookmarks & waypoint navigation (save and manage labeled star/planet bookmarks with quick-target recall in the navigation computer and starmap, persisted in `bookmarks.ini`).
+   - M12-W03: Surface & orbital navigation HUD (unobtrusive toggleable exploration compass, planetary lat/long coordinates, elevation/altitude above terrain, and local sun bearing).
+2. Future Milestones:
+   - M13: Atmospheric Scattering & Horizon Visual Fidelity
+   - M14: Moviemaker Modernization & Direct Video Export
+   - M15: Ambient Music & Generative Soundscapes
+   - M16: Asynchronous Community GOESnet Catalog Exchange

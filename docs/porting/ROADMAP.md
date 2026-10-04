@@ -24,6 +24,11 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M9 | Modern Presentation & Display Enhancements | DONE |
 | M10 | Deterministic Upscaling & Fidelity Increase | DONE |
 | M11 | In-Engine Media Export & Exploration Ergonomics | DONE |
+| M12 | Celestial Cartography & Waypoint Navigation | IN PROGRESS |
+| M13 | Atmospheric Scattering & Horizon Visual Fidelity | PLANNED |
+| M14 | Moviemaker Modernization & Direct Video Export | PLANNED |
+| M15 | Ambient Music & Generative Soundscapes | PLANNED |
+| M16 | Asynchronous Community GOESnet Catalog Exchange | PLANNED |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -267,6 +272,88 @@ containers, not substitutes for that ledger.
 - Web players can download captured screenshots and panoramas directly to their computer with a single in-engine keypress or button in the F4 Image Archive without opening developer tools.
 - Desktop players can open the gallery folder or export captures directly from within the game.
 - All existing 47 automated test suites continue passing with 100% determinism.
+
+## M12 — Celestial Cartography & Waypoint Navigation
+
+**Goal:** Provide comprehensive navigational and logbook tools for deep exploration, including an automated captain's flight journal, custom star and planet bookmarks with quick-nav targeting, and a toggleable surface exploration HUD with compass heading and coordinates.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M12-W01 | In-engine captain's flight log | DONE | Automated flight log recording visited systems with light-year jump distances, orbital arrivals, surface landings with lat/long coordinates, and star/planet naming events; GOESnet `LOG`/`JOURNAL` 21-column pager, `LOG EXPORT` (Markdown `flight_log.md` and JSON `flight_log.json`), and `NAME`/`LABEL` GOESnet commands writing to `STARMAP.BIN`; verified in `tests/flight_log_test.cpp`, `tests/goesnet_commands_test.cpp`, and 48/48 passing test suites across all compilers and sanitizers |
+| M12-W02 | Starmap bookmarks & waypoint navigation | PLANNED | Save and manage labeled star/planet bookmarks with quick-target recall in the navigation computer and starmap, persisted in `bookmarks.ini` |
+| M12-W03 | Surface & orbital navigation HUD | PLANNED | Unobtrusive toggleable exploration compass, planetary lat/long coordinates, elevation/altitude above terrain, and local sun bearing when exploring surfaces or in orbit |
+
+**Exit criteria**
+
+- Visited systems and planetfalls are automatically journaled in an in-engine log with browsable UI and export capability.
+- Players can bookmark stars and planets, assign custom notes/labels, and quickly lock guidance to bookmarked coordinates.
+- Surface explorers can toggle a compass and coordinate display to orient themselves and locate previous landing sites or points of interest.
+- All test suites pass with 100% determinism.
+
+## M13 — Atmospheric Scattering & Horizon Visual Fidelity
+
+**Goal:** Elevate planetary and stellar visual fidelity with expanded horizon terrain draw distance, dynamic twilight atmospheric scattering gradients, and refined stellar coronal flares.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M13-W01 | Extended surface terrain draw distance & adaptive horizon LOD | PLANNED | Configurable terrain rendering radius scaling up to 2x/4x baseline on modern hardware while retaining authentic procedural terrain heights and fixtures |
+| M13-W02 | Twilight atmospheric scattering glow | PLANNED | Multi-stop sky scattering gradients during dawn and dusk on worlds with atmospheres, calculated from solar zenith angle and planetary air density |
+| M13-W03 | Spectral color fidelity & dynamic coronal flares | PLANNED | Enhanced stellar coronal flares and accurate spectral radiation colors for exotic stellar types (Wolf-Rayet, pulsars, white dwarfs, blue hypergiants) |
+
+**Exit criteria**
+
+- Extended horizon draw distance can be toggled without frame drops or visual artifacts.
+- Sunrise and sunset on atmospheric worlds exhibit natural twilight sky glow transitions.
+- All test suites pass with 100% determinism.
+
+## M14 — Moviemaker Modernization & Direct Video Export
+
+**Goal:** Streamline media capture with direct video encoding and in-cockpit replay.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M14-W01 | In-browser WebM video recording | PLANNED | Direct canvas capture and video download via browser `MediaRecorder` API without requiring external frame stitching |
+| M14-W02 | Desktop automated MP4/WebM video export | PLANNED | In-engine export command invoking system or bundled ffmpeg to encode recorded Moviemaker decks directly to video files in user Downloads |
+| M14-W03 | In-cockpit Moviemaker deck preview | PLANNED | Play back recorded Moviemaker decks directly on cockpit bulkhead screens or observation deck projector |
+
+**Exit criteria**
+
+- Web players can record and export playable WebM videos directly from the browser.
+- Desktop players can generate encoded video files with one click or command.
+- Recorded decks can be previewed inside the ship.
+- All test suites pass with 100% determinism.
+
+## M15 — Ambient Music & Generative Soundscapes
+
+**Goal:** Integrate atmospheric exploration music tracks and procedural generative ambient layers beneath physical acoustics.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M15-W01 | Authentic ambient exploration music integration | PLANNED | Optional playback of Alessandro Ghignola's atmospheric music tracks during spaceflight and surface exploration |
+| M15-W02 | Procedural generative ambient drone synthesizer | PLANNED | Multi-oscillator generative harmonic drone synthesizer responding to stellar class, planetary temperature, and environment |
+| M15-W03 | Music volume controls & playlist preferences overlay | PLANNED | Dedicated Music channel slider in F2 Audio menu with track skipping and generative/recorded mode selection |
+
+**Exit criteria**
+
+- Music tracks and generative drones play smoothly through miniaudio without blocking the main loop or clipping.
+- Music volume is fully controllable and persistent in `config.ini`.
+- All test suites pass with 100% determinism.
+
+## M16 — Asynchronous Community GOESnet Catalog Exchange
+
+**Goal:** Connect explorers across platforms with optional cloud/community star catalog synchronization.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M16-W01 | Community catalog sync protocol | PLANNED | Lightweight REST/WebSocket protocol for exchanging star names, planetary annotations, and exploration logs |
+| M16-W02 | Web and desktop community catalog client | PLANNED | In-engine sync toggle and background updater fetching recent community discoveries |
+| M16-W03 | Conflict resolution & offline-first queue | PLANNED | Non-destructive merging of local and remote discoveries with offline queueing |
+
+**Exit criteria**
+
+- Players can optionally synchronize catalog entries with a community server.
+- Local catalogs are never corrupted or overwritten destructively.
+- All test suites pass with 100% determinism.
 
 ## Work item template
 

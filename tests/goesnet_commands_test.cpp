@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     for (const char *name : {"00000004.BMP", "00000009.BMP"}) {
         std::vector<char> bmp(1078 + 320 * 200, 0);
         bmp[0] = 'B'; bmp[1] = 'M'; bmp[10] = 0x36; bmp[11] = 0x04; bmp[14] = 40;
-        bmp[18] = 0x40; bmp[19] = 0x01; bmp[22] = 200; bmp[26] = 1; bmp[28] = 8;
+        bmp[18] = 0x40; bmp[19] = 0x01; bmp[22] = static_cast<char>(200); bmp[26] = 1; bmp[28] = 8;
         std::ofstream(gallery / name, std::ios::binary).write(bmp.data(), static_cast<std::streamsize>(bmp.size()));
     }
     answer = execute_goes_command("GALLERY_", context);
@@ -166,7 +166,58 @@ int main(int argc, char **argv) {
     ok &= require(answer.status == GoesResultStatus::unsupported && contains(answer, "UNKNOWN MODULE"),
                   "unknown command mismatch");
 
+    // Flight log commands
+    answer = execute_goes_command("LOG_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "CAPTAIN'S FLIGHT LOG"),
+                  "LOG summary mismatch");
+    answer = execute_goes_command("JOURNAL_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "CAPTAIN'S FLIGHT LOG"),
+                  "JOURNAL alias mismatch");
+    answer = execute_goes_command("LOG EXPORT_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::export_created
+                      && contains(answer, "FLIGHT LOG EXPORTED"),
+                  "LOG EXPORT mismatch");
+    const auto export_dir = std::filesystem::path(argv[1]).parent_path();
+    ok &= require(std::filesystem::exists(export_dir / "flight_log.md"), "flight_log.md was exported");
+    ok &= require(std::filesystem::exists(export_dir / "flight_log.json"), "flight_log.json was exported");
+
+    // Naming commands on a disposable starmap copy
+    const auto starmap_copy = guide_copy.parent_path() / "disposable-starmap.bin";
+    std::filesystem::copy_file(argv[1], starmap_copy, std::filesystem::copy_options::overwrite_existing);
+    auto mutable_context = context;
+    mutable_context.starmap_path = starmap_copy;
+    mutable_context.local_star_x = 100000;
+    mutable_context.local_star_x = 318928;
+    mutable_context.local_star_y = 100216574;
+    mutable_context.local_star_z = -33444;
+
+    // Name unnamed star
+    answer = execute_goes_command("NAME CELESTIA_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::catalog_changed
+                      && contains(answer, "OBJECT LABELED") && contains(answer, "CELESTIA"),
+                  "NAME star failed");
+    // Duplicate star name attempt rejected
+    answer = execute_goes_command("NAME CELESTIA2_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::rejected && contains(answer, "STAR ALREADY LABELED"),
+                  "duplicate star label was not rejected");
+    // Name planet body on system with bodies (318928, 100216574, -33444)
+    answer = execute_goes_command("NAME P1:AERIA_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::catalog_changed
+                      && contains(answer, "BODY #1:") && contains(answer, "AERIA"),
+                  "NAME planet body failed");
+    // Duplicate body name attempt with LABEL alias rejected
+    answer = execute_goes_command("LABEL P1:AERIA2_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::rejected && contains(answer, "BODY ALREADY LABELED"),
+                  "duplicate body label via LABEL alias was not rejected");
+    // Renaming an extant object rejected
+    answer = execute_goes_command("NAME FELYSIA:RENAMED_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::rejected && contains(answer, "OBJECT IS LABELED"),
+                  "renaming extant object was not rejected");
+
     std::error_code ignored;
+    std::filesystem::remove(starmap_copy, ignored);
+    std::filesystem::remove(export_dir / "flight_log.md", ignored);
+    std::filesystem::remove(export_dir / "flight_log.json", ignored);
     std::filesystem::remove(guide_copy, ignored);
     std::filesystem::remove(argv[4], ignored);
     std::filesystem::remove(corrupt_path, ignored);

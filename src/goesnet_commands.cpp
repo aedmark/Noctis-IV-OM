@@ -1,5 +1,6 @@
 #include "goesnet_commands.h"
 
+#include "flight_log.h"
 #include "galaxy_sector.h"
 #include "gallery.h"
 #include "goesnet_data.h"
@@ -19,6 +20,12 @@
 namespace noctis {
 namespace {
 constexpr std::string_view divider = "&&&&&&&&&&&&&&&&&&&&&";
+
+std::string_view trim_spaces(std::string_view s) {
+    while (!s.empty() && (s.front() == ' ' || s.front() == '\t')) s.remove_prefix(1);
+    while (!s.empty() && (s.back() == ' ' || s.back() == '\t')) s.remove_suffix(1);
+    return s;
+}
 
 GoesResult result(GoesResultStatus status, std::vector<std::string> rows,
                   GoesResultAction action = GoesResultAction::none) {
@@ -162,12 +169,21 @@ GoesResult parse_failure(const GoesRequest &request) {
 
 GoesResult help(std::string_view topic) {
     if (!topic.empty()) {
+        if (topic == "LOG" || topic == "JOURNAL") {
+            return result(GoesResultStatus::ok, {"LOG / JOURNAL", std::string(divider),
+                "VIEW FLIGHT JOURNAL", "AND EXPLORATION LOG", "LOG EXPORT: SAVE MD"});
+        }
+        if (topic == "NAME" || topic == "LABEL") {
+            return result(GoesResultStatus::ok, {"NAME / LABEL", std::string(divider),
+                "NAME UNNAMED OBJECT", "NAME <NAME> FOR STAR", "P<N>:<NAME> FOR BODY"});
+        }
         const auto *entry = find_goes_command(topic);
         if (!entry) return result(GoesResultStatus::not_found, {"UNKNOWN HELP TOPIC"});
         return result(GoesResultStatus::ok, {std::string(entry->name), "SEE COMMAND REFERENCE"});
     }
     return result(GoesResultStatus::ok, {" GOES COMMAND HELP ", std::string(divider),
-        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW", std::string(divider),
+        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW",
+        "LOG NAME", std::string(divider),
         "USE HELP COMMAND"});
 }
 
@@ -234,6 +250,24 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.command == GoesCommand::help) return help(request.argument);
     if (request.command == GoesCommand::gallery) return gallery_listing(context.gallery_path);
     if (request.command == GoesCommand::view_image) return view_image(context.gallery_path, request.argument);
+    if (request.command == GoesCommand::flight_log) {
+        if (request.argument.empty()) {
+            return result(GoesResultStatus::ok, active_flight_log().format_goes_summary());
+        }
+        if (request.argument == "EXPORT") {
+            const auto dir = context.starmap_path.parent_path();
+            const bool ok_md = active_flight_log().export_markdown(dir / "flight_log.md");
+            const bool ok_json = active_flight_log().export_json(dir / "flight_log.json");
+            if (!ok_md || !ok_json) {
+                return result(GoesResultStatus::write_failed, {"EXPORT FAILED", "CHECK DISK ACCESS"});
+            }
+            return result(GoesResultStatus::ok,
+                          {" FLIGHT LOG EXPORTED ", std::string(divider),
+                           "SAVED TO FLIGHT_LOG", "MD AND JSON FILES."},
+                          GoesResultAction::export_created);
+        }
+        return result(GoesResultStatus::usage_error, {"INVALID LOG ARGUMENT", "USE LOG OR LOG EXPORT"});
+    }
     if (request.command == GoesCommand::clean || request.command == GoesCommand::inbox || request.command == GoesCommand::outbox)
         return result(GoesResultStatus::unsupported, {"LEGACY TOOL RETIRED", "NATIVE DATA NEEDS NO", "DOS MAINTENANCE"});
 
@@ -419,6 +453,87 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
         rows.push_back("STARS LISTING END.");
         return result(GoesResultStatus::ok, std::move(rows));
     }
+
+    if (request.command == GoesCommand::name_object) {
+        std::string target_key;
+        std::string new_name;
+        const auto colon = request.argument.find(':');
+        if (colon != std::string::npos) {
+            target_key = std::string(trim_spaces(std::string_view(request.argument).substr(0, colon)));
+            new_name = std::string(trim_spaces(std::string_view(request.argument).substr(colon + 1)));
+        } else {
+            target_key = "STAR";
+            new_name = std::string(trim_spaces(request.argument));
+        }
+
+        if (new_name.empty() || new_name.size() > 20) {
+            return result(GoesResultStatus::usage_error, {"NAME REQUIRED", "1-20 CHARACTERS"});
+        }
+
+        const double star_id = context.local_star_x / 100000.0 * context.local_star_y / 100000.0 * context.local_star_z / 100000.0;
+
+        if (target_key == "STAR" || target_key == "HERE" || target_key == "LOCAL" || target_key == "CURRENT") {
+            const auto existing = find_starmap_name_by_id(map, star_id);
+            if (existing) {
+                return result(GoesResultStatus::rejected, {"STAR ALREADY LABELED", *existing});
+            }
+            const auto properties = derive_star_properties(context.local_star_x, context.local_star_y, context.local_star_z);
+            const std::int16_t star_class = properties.star_class;
+            std::int32_t offset = -1;
+            const auto mutation = append_starmap_label(context.starmap_path, star_id, new_name,
+                                                       GoesObjectKind::star, star_class, offset);
+            if (mutation.status != GoesDataStatus::ok) return data_failure(mutation);
+            active_flight_log().record_label_assigned(star_id, new_name, false, star_class);
+            active_flight_log().save_to_file(context.starmap_path.parent_path() / "flight_log.json");
+            return result(GoesResultStatus::ok,
+                          {"OBJECT LABELED", std::string(divider), "NAME ASSIGNED:", new_name, "RECORD SAVED TO MAP."},
+                          GoesResultAction::catalog_changed);
+        }
+
+        bool is_planet = false;
+        std::size_t planet_num = 0;
+        if (target_key.rfind("PLANET", 0) == 0) {
+            std::string_view rest = trim_spaces(std::string_view(target_key).substr(6));
+            if (parse_positive(rest, planet_num)) is_planet = true;
+        } else if (target_key.size() > 1 && target_key.front() == 'P') {
+            std::string_view rest = trim_spaces(std::string_view(target_key).substr(1));
+            if (parse_positive(rest, planet_num)) is_planet = true;
+        } else if (parse_positive(target_key, planet_num)) {
+            is_planet = true;
+        }
+
+        if (is_planet) {
+            const auto properties = derive_star_properties(context.local_star_x, context.local_star_y, context.local_star_z);
+            const auto system = derive_planet_system(context.local_star_x, context.local_star_y, context.local_star_z,
+                                                     properties.star_class, properties.radius);
+            if (planet_num < 1 || planet_num > static_cast<std::size_t>(system.body_count)) {
+                return result(GoesResultStatus::usage_error,
+                              {"INVALID BODY NUMBER", "SYSTEM HAS " + std::to_string(system.body_count) + " BODIES"});
+            }
+            const double planet_id = star_id + planet_num;
+            const auto existing = find_starmap_name_by_id(map, planet_id);
+            if (existing) {
+                return result(GoesResultStatus::rejected, {"BODY ALREADY LABELED", *existing});
+            }
+            std::int32_t offset = -1;
+            const auto mutation = append_starmap_label(context.starmap_path, planet_id, new_name,
+                                                       GoesObjectKind::planet, static_cast<std::int16_t>(planet_num), offset);
+            if (mutation.status != GoesDataStatus::ok) return data_failure(mutation);
+            active_flight_log().record_label_assigned(planet_id, new_name, true, static_cast<std::int16_t>(planet_num));
+            active_flight_log().save_to_file(context.starmap_path.parent_path() / "flight_log.json");
+            return result(GoesResultStatus::ok,
+                          {"OBJECT LABELED", std::string(divider),
+                           "BODY #" + std::to_string(planet_num) + ":", new_name, "RECORD SAVED TO MAP."},
+                          GoesResultAction::catalog_changed);
+        }
+
+        const auto matches = find_starmap_objects(map, target_key);
+        if (!matches.empty()) {
+            return result(GoesResultStatus::rejected, {"OBJECT IS LABELED", "RENAME NOT PERMITTED"});
+        }
+        return result(GoesResultStatus::usage_error, {"UNKNOWN TARGET OBJECT", "USE STAR OR P<N>"});
+    }
+
     return result(GoesResultStatus::unsupported, {"COMMAND NOT IMPLEMENTED"});
 }
 

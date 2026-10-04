@@ -245,6 +245,15 @@ std::vector<std::size_t> find_starmap_objects(const StarmapData &data, std::stri
     return matches;
 }
 
+std::optional<std::string> find_starmap_name_by_id(const StarmapData &data, double id) {
+    for (const auto &record : data.records) {
+        if (!record.removed && std::abs(record.id - id) <= goes_id_tolerance) {
+            return record.name;
+        }
+    }
+    return std::nullopt;
+}
+
 std::vector<std::size_t> guide_records_for(const GuideData &data, double subject_id) {
     std::vector<std::size_t> matches;
     for (std::size_t index = 0; index < data.records.size(); ++index) {

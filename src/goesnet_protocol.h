@@ -31,6 +31,8 @@ enum class GoesCommand : std::uint8_t {
     outbox,
     gallery,
     view_image,
+    flight_log,
+    name_object,
     unknown,
 };
 

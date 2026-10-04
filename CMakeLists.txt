@@ -75,6 +75,7 @@ set(SOURCE_FILES
     src/goesnet_commands.cpp
     src/gallery.cpp
     src/gallery_viewer.cpp
+    src/flight_log.cpp
     src/noctis.cpp
     src/noctis-1.cpp
     src/noctis-0.cpp
@@ -314,9 +315,15 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_BINARY_DIR}/goesnet-starmap-test.bin
         ${CMAKE_CURRENT_BINARY_DIR}/goesnet-guide-test.bin)
 
+    add_executable(flight_log_tests tests/flight_log_test.cpp src/flight_log.cpp)
+    target_include_directories(flight_log_tests PRIVATE src)
+    target_compile_features(flight_log_tests PRIVATE cxx_std_20)
+    set_target_properties(flight_log_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME flight_log COMMAND flight_log_tests)
+
     add_executable(goesnet_command_tests tests/goesnet_commands_test.cpp
         src/goesnet_commands.cpp src/goesnet_protocol.cpp src/goesnet_data.cpp
-        src/gallery.cpp src/atomic_file.cpp
+        src/flight_log.cpp src/gallery.cpp src/atomic_file.cpp
         src/galaxy_sector.cpp src/star_properties.cpp src/system_properties.cpp
         src/legacy_numeric.cpp src/brtl.cpp)
     nivlr_require_strict_fp(goesnet_command_tests)
