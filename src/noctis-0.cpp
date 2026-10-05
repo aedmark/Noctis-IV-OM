@@ -5827,7 +5827,8 @@ void draw_plus_overlay(bool surface) {
                                                           noctis::get_subpixel_fidelity(),
                                                           true,
                                                           static_cast<int>(noctis::get_internal_resolution_mode()),
-                                                          static_cast<int>(noctis::get_draw_distance_mode()));
+                                                          static_cast<int>(noctis::get_draw_distance_mode()),
+                                                          static_cast<int>(noctis::get_texture_filter_mode()));
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);

@@ -38,18 +38,21 @@ int main() {
                       && menu[2] == "LENS FLARES ALWAYS OFF (F)"
                       && menu[3] == "SEAMLESS BORDER (B)",
                   "F2 menu state text changed");
-    const auto adv_menu_1x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 0, 0);
-    ok &= require(adv_menu_1x.size() == 10 && adv_menu_1x[5] == "INTERNAL RES: 320X200 1X (R)"
-                      && adv_menu_1x[6] == "DRAW DISTANCE: STANDARD 64Q (D)",
-                  "F2 advanced menu 1x resolution and standard draw distance line");
-    const auto adv_menu_2x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 1, 1);
-    ok &= require(adv_menu_2x.size() == 10 && adv_menu_2x[5] == "INTERNAL RES: 640X400 2X (R)"
-                      && adv_menu_2x[6] == "DRAW DISTANCE: EXTENDED 96Q (D)",
-                  "F2 advanced menu 2x resolution and extended draw distance line");
-    const auto adv_menu_4x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 2, 2);
-    ok &= require(adv_menu_4x.size() == 10 && adv_menu_4x[5] == "INTERNAL RES: 1280X800 4X (R)"
-                      && adv_menu_4x[6] == "DRAW DISTANCE: FAR 128Q (D)",
-                  "F2 advanced menu 4x resolution and far draw distance line");
+    const auto adv_menu_1x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 0, 0, 0);
+    ok &= require(adv_menu_1x.size() == 11 && adv_menu_1x[5] == "INTERNAL RES: 320X200 1X (R)"
+                      && adv_menu_1x[6] == "DRAW DISTANCE: STANDARD 64Q (D)"
+                      && adv_menu_1x[7] == "TEXTURE FILTER: NEAREST (X)",
+                  "F2 advanced menu 1x resolution, standard draw distance, and nearest filter line");
+    const auto adv_menu_2x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 1, 1, 1);
+    ok &= require(adv_menu_2x.size() == 11 && adv_menu_2x[5] == "INTERNAL RES: 640X400 2X (R)"
+                      && adv_menu_2x[6] == "DRAW DISTANCE: EXTENDED 96Q (D)"
+                      && adv_menu_2x[7] == "TEXTURE FILTER: BILINEAR (X)",
+                  "F2 advanced menu 2x resolution, extended draw distance, and bilinear filter line");
+    const auto adv_menu_4x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 2, 2, 2);
+    ok &= require(adv_menu_4x.size() == 11 && adv_menu_4x[5] == "INTERNAL RES: 1280X800 4X (R)"
+                      && adv_menu_4x[6] == "DRAW DISTANCE: FAR 128Q (D)"
+                      && adv_menu_4x[7] == "TEXTURE FILTER: DETAILED (X)",
+                  "F2 advanced menu 4x resolution, far draw distance, and detailed filter line");
     const auto movie = noctis::plus_movie_menu_lines(7, 3, false, true, false, false, 0.0);
     const auto recording = noctis::plus_movie_menu_lines(7, 3, true, false, true, false, 12.5);
     ok &= require(movie.size() == 5 && movie[1].find("007 EXISTS") != std::string::npos

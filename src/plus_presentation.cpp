@@ -336,7 +336,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        bool subpixel_fidelity,
                                                        bool show_advanced_fx,
                                                        int internal_res_mode,
-                                                       int draw_distance_mode) {
+                                                       int draw_distance_mode,
+                                                       int texture_filter_mode) {
     std::vector<std::string> lines = {
         "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
         draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
@@ -357,6 +358,10 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                : (draw_distance_mode == 2) ? "FAR 128Q (D)"
                                                            : "STANDARD 64Q (D)";
         lines.emplace_back(std::string("DRAW DISTANCE: ") + dist_label);
+        const char *filter_label = (texture_filter_mode == 1) ? "BILINEAR (X)"
+                                 : (texture_filter_mode == 2) ? "DETAILED (X)"
+                                                              : "NEAREST (X)";
+        lines.emplace_back(std::string("TEXTURE FILTER: ") + filter_label);
         lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
         lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
         lines.emplace_back("TAB / A: AUDIO SETTINGS");

@@ -789,6 +789,7 @@ DisplaySettings capture_display_settings() {
     s.subpixel_fidelity = get_subpixel_fidelity();
     s.internal_resolution = get_internal_resolution_mode();
     s.draw_distance = get_draw_distance_mode();
+    s.texture_filter = get_texture_filter_mode();
     s.fullscreen = is_fullscreen();
     s.timewarp_multiplier = get_timewarp_multiplier();
     s.draw_hud = g_draw_hud;
@@ -804,6 +805,7 @@ void apply_display_settings(const DisplaySettings &settings) {
     set_subpixel_fidelity(settings.subpixel_fidelity);
     set_internal_resolution_mode(settings.internal_resolution);
     set_draw_distance_mode(settings.draw_distance);
+    set_texture_filter_mode(settings.texture_filter);
     set_fullscreen(settings.fullscreen);
     set_timewarp_multiplier(settings.timewarp_multiplier);
     g_draw_hud = settings.draw_hud;
@@ -847,6 +849,11 @@ bool save_display_settings(const std::filesystem::path &config_dir) {
     if (settings.draw_distance == DrawDistanceMode::extended) dist_str = "extended";
     else if (settings.draw_distance == DrawDistanceMode::far) dist_str = "far";
     out << "draw_distance = " << dist_str << "\n";
+
+    const char *filter_str = "nearest";
+    if (settings.texture_filter == TextureFilterMode::bilinear) filter_str = "bilinear";
+    else if (settings.texture_filter == TextureFilterMode::detailed) filter_str = "detailed";
+    out << "texture_filter = " << filter_str << "\n";
 
     out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
 
@@ -911,6 +918,10 @@ bool load_display_settings(const std::filesystem::path &config_dir) {
             if (val == "standard" || val == "64" || val == "64q" || val == "1x" || val == "0") settings.draw_distance = DrawDistanceMode::standard;
             else if (val == "extended" || val == "96" || val == "96q" || val == "1.5x" || val == "1") settings.draw_distance = DrawDistanceMode::extended;
             else if (val == "far" || val == "128" || val == "128q" || val == "2x" || val == "2") settings.draw_distance = DrawDistanceMode::far;
+        } else if (key == "texture_filter" || key == "texture_filtering" || key == "filter") {
+            if (val == "nearest" || val == "point" || val == "off" || val == "0") settings.texture_filter = TextureFilterMode::nearest;
+            else if (val == "bilinear" || val == "linear" || val == "smooth" || val == "1") settings.texture_filter = TextureFilterMode::bilinear;
+            else if (val == "detailed" || val == "detail" || val == "grain" || val == "2") settings.texture_filter = TextureFilterMode::detailed;
         } else if (key == "fullscreen") {
             settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "timewarp_multiplier") {

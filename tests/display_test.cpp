@@ -142,6 +142,7 @@ int main() {
         noctis::set_setting_lens_flare_mode(-1);
         noctis::set_setting_seamless_border(1);
         noctis::set_draw_distance_mode(noctis::DrawDistanceMode::far);
+        noctis::set_texture_filter_mode(noctis::TextureFilterMode::detailed);
 
         const bool saved = noctis::save_display_settings(test_dir);
         ok &= require(saved, "save_display_settings should succeed");
@@ -158,6 +159,7 @@ int main() {
         noctis::set_setting_lens_flare_mode(1);
         noctis::set_setting_seamless_border(0);
         noctis::set_draw_distance_mode(noctis::DrawDistanceMode::standard);
+        noctis::set_texture_filter_mode(noctis::TextureFilterMode::nearest);
 
         // Load settings back
         const bool loaded = noctis::load_display_settings(test_dir);
@@ -183,6 +185,8 @@ int main() {
                       "seamless_border restored to 1");
         ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::far,
                       "draw_distance restored to far");
+        ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::detailed,
+                      "texture_filter restored to detailed");
 
         // 13. Missing file handling
         const auto non_existent = test_dir / "does_not_exist";
@@ -200,6 +204,7 @@ int main() {
                 << "upscale_mode = smooth\n"
                 << "internal_resolution = 4x\n"
                 << "draw_distance = extended\n"
+                << "texture_filter = bilinear\n"
                 << "timewarp_multiplier = 99999\n" // Clamped to 5000
                 << "lens_flare_mode = -99\n";      // Clamped to -1
         }
@@ -209,6 +214,7 @@ int main() {
         ok &= require(noctis::get_upscale_mode() == noctis::UpscaleMode::smooth_bilinear, "upscale_mode parsed smooth");
         ok &= require(noctis::get_internal_resolution_mode() == noctis::InternalResolutionMode::res_4x, "internal_resolution parsed 4x");
         ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::extended, "draw_distance parsed extended");
+        ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::bilinear, "texture_filter parsed bilinear");
         ok &= require(noctis::get_timewarp_multiplier() == 5000, "timewarp_multiplier clamped to 5000");
         ok &= require(noctis::get_setting_lens_flare_mode() == -1, "lens_flare_mode clamped to -1");
 
@@ -298,6 +304,39 @@ int main() {
             // Clean up: restore to standard
             noctis::set_draw_distance_mode(noctis::DrawDistanceMode::standard);
             ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::standard, "restored to standard");
+        }
+
+        // 17. Texture filter cycling, names, getter/setter, and ini persistence
+        {
+            auto mode = noctis::TextureFilterMode::nearest;
+            mode = noctis::cycle_texture_filter_mode(mode);
+            ok &= require(mode == noctis::TextureFilterMode::bilinear, "nearest cycles to bilinear");
+            mode = noctis::cycle_texture_filter_mode(mode);
+            ok &= require(mode == noctis::TextureFilterMode::detailed, "bilinear cycles to detailed");
+            mode = noctis::cycle_texture_filter_mode(mode);
+            ok &= require(mode == noctis::TextureFilterMode::nearest, "detailed cycles to nearest");
+
+            ok &= require(std::string(noctis::texture_filter_mode_name(noctis::TextureFilterMode::nearest)) ==
+                              "TEXTURE FILTER: NEAREST", "nearest name format");
+            ok &= require(std::string(noctis::texture_filter_mode_name(noctis::TextureFilterMode::bilinear)) ==
+                              "TEXTURE FILTER: BILINEAR", "bilinear name format");
+            ok &= require(std::string(noctis::texture_filter_mode_name(noctis::TextureFilterMode::detailed)) ==
+                              "TEXTURE FILTER: DETAILED", "detailed name format");
+
+            noctis::set_texture_filter_mode(noctis::TextureFilterMode::detailed);
+            ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::detailed, "set detailed");
+
+            // Save and verify round-trip
+            noctis::save_display_settings(test_dir);
+            noctis::set_texture_filter_mode(noctis::TextureFilterMode::nearest);
+            ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::nearest, "reset to nearest");
+
+            noctis::load_display_settings(test_dir);
+            ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::detailed, "loaded detailed from ini");
+
+            // Clean up: restore to nearest
+            noctis::set_texture_filter_mode(noctis::TextureFilterMode::nearest);
+            ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::nearest, "restored to nearest");
         }
 
         std::filesystem::remove_all(test_dir, ec);

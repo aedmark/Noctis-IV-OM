@@ -2937,6 +2937,7 @@ int main(int argc, char **argv) {
     std::optional<bool> portable_mode_override;
     std::optional<noctis::InternalResolutionMode> resolution_override;
     std::optional<noctis::DrawDistanceMode> draw_distance_override;
+    std::optional<noctis::TextureFilterMode> texture_filter_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -2988,6 +2989,18 @@ int main(int argc, char **argv) {
                 draw_distance_override = noctis::DrawDistanceMode::far;
             } else {
                 noctis::log_event("error", "arguments", "Invalid draw distance: " + std::string(dist_arg) + " (expected standard, extended, or far)");
+                return 2;
+            }
+        } else if ((std::string_view(argv[arg]) == "--texture-filter" || std::string_view(argv[arg]) == "--filter") && arg + 1 < argc) {
+            std::string_view filter_arg = argv[++arg];
+            if (filter_arg == "nearest" || filter_arg == "point" || filter_arg == "off" || filter_arg == "0") {
+                texture_filter_override = noctis::TextureFilterMode::nearest;
+            } else if (filter_arg == "bilinear" || filter_arg == "linear" || filter_arg == "smooth" || filter_arg == "1") {
+                texture_filter_override = noctis::TextureFilterMode::bilinear;
+            } else if (filter_arg == "detailed" || filter_arg == "detail" || filter_arg == "grain" || filter_arg == "2") {
+                texture_filter_override = noctis::TextureFilterMode::detailed;
+            } else {
+                noctis::log_event("error", "arguments", "Invalid texture filter: " + std::string(filter_arg) + " (expected nearest, bilinear, or detailed)");
                 return 2;
             }
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
@@ -3043,7 +3056,8 @@ int main(int argc, char **argv) {
                 "[--export-starmap [PATH]] [--import-starmap PATH] [--validate-starmap PATH] "
                 "[--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] "
                 "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>] "
-                "[--draw-distance <standard|extended|far>]");
+                "[--draw-distance <standard|extended|far>] "
+                "[--texture-filter <nearest|bilinear|detailed>]");
             return 2;
         }
     }
@@ -3160,6 +3174,9 @@ int main(int argc, char **argv) {
     }
     if (draw_distance_override) {
         noctis::set_draw_distance_mode(*draw_distance_override);
+    }
+    if (texture_filter_override) {
+        noctis::set_texture_filter_mode(*texture_filter_override);
     }
     sync_internal_resolution_engine(noctis::get_internal_resolution_mode());
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
@@ -6698,6 +6715,10 @@ resynctoplanet:
                     const auto new_mode = noctis::cycle_draw_distance_mode();
                     status(noctis::draw_distance_mode_name(new_mode), 100);
                     save_display_settings_current();
+                } else if (mc == 'x' || mc == 'X') {
+                    const auto new_mode = noctis::cycle_texture_filter_mode();
+                    status(noctis::texture_filter_mode_name(new_mode), 100);
+                    save_display_settings_current();
                 }
             } else if (graphics_menu_status == 2) {
                 if (mc == 9) {
@@ -7042,6 +7063,12 @@ resynctoplanet:
                     if (mc == 'd' || mc == 'D') {
                         const auto new_mode = noctis::cycle_draw_distance_mode();
                         status(noctis::draw_distance_mode_name(new_mode), 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'x' || mc == 'X') {
+                        const auto new_mode = noctis::cycle_texture_filter_mode();
+                        status(noctis::texture_filter_mode_name(new_mode), 100);
                         save_display_settings_current();
                         goto endmain;
                     }

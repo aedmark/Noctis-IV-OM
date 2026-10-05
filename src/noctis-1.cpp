@@ -5963,6 +5963,12 @@ nosecondarysun:
                         save_surface_display_settings();
                         continue;
                     }
+                    if (w == 'x' || w == 'X') {
+                        const auto new_mode = noctis::cycle_texture_filter_mode();
+                        status(noctis::texture_filter_mode_name(new_mode), 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
                 } else if (graphics_menu_status == 2) {
                     if (w == 9) {
                         graphics_menu_status = 3;

@@ -118,6 +118,47 @@ DrawDistanceMode cycle_draw_distance_mode();
 const char *draw_distance_mode_name(DrawDistanceMode mode);
 int draw_distance_max_depth(DrawDistanceMode mode);
 
+// Surface texture filtering and micro-detail modes (Milestone 13 - Phase 3)
+enum class TextureFilterMode : std::uint8_t {
+    nearest,  // 0: Authentic DOS nearest-neighbor point sampling
+    bilinear, // 1: Sub-texel bilinear filtering
+    detailed  // 2: Bilinear filtering + procedural micro-surface grain
+};
+
+inline TextureFilterMode g_texture_filter_mode = TextureFilterMode::nearest;
+
+inline TextureFilterMode get_texture_filter_mode() {
+    return g_texture_filter_mode;
+}
+
+inline void set_texture_filter_mode(TextureFilterMode mode) {
+    g_texture_filter_mode = mode;
+}
+
+inline TextureFilterMode cycle_texture_filter_mode(TextureFilterMode current) {
+    switch (current) {
+        case TextureFilterMode::nearest:  return TextureFilterMode::bilinear;
+        case TextureFilterMode::bilinear: return TextureFilterMode::detailed;
+        case TextureFilterMode::detailed: return TextureFilterMode::nearest;
+    }
+    return TextureFilterMode::nearest;
+}
+
+inline TextureFilterMode cycle_texture_filter_mode() {
+    auto next = cycle_texture_filter_mode(g_texture_filter_mode);
+    set_texture_filter_mode(next);
+    return next;
+}
+
+inline const char *texture_filter_mode_name(TextureFilterMode mode) {
+    switch (mode) {
+        case TextureFilterMode::nearest:  return "TEXTURE FILTER: NEAREST";
+        case TextureFilterMode::bilinear: return "TEXTURE FILTER: BILINEAR";
+        case TextureFilterMode::detailed: return "TEXTURE FILTER: DETAILED";
+    }
+    return "TEXTURE FILTER: NEAREST";
+}
+
 // Display Settings Structure & Persistence (Milestone 10)
 struct DisplaySettings {
     AspectRatioMode aspect_ratio = AspectRatioMode::crt_4_3;
@@ -126,6 +167,7 @@ struct DisplaySettings {
     bool subpixel_fidelity = false;
     InternalResolutionMode internal_resolution = InternalResolutionMode::res_1x;
     DrawDistanceMode draw_distance = DrawDistanceMode::standard;
+    TextureFilterMode texture_filter = TextureFilterMode::nearest;
     bool fullscreen = false;
     int timewarp_multiplier = 100;
     std::int8_t draw_hud = 1;

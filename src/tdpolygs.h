@@ -47,6 +47,7 @@
 #include <type_traits>
 
 #include "noctis-d.h"
+#include "display.h"
 
 static int32_t projected_i32(double value) {
     value = std::round(value);
@@ -718,6 +719,60 @@ int8_t halfscan_needed = 0; // flag: traccia due linee per volta.
 
 uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
+static inline uint32_t detail_hash(uint32_t x, uint32_t y) {
+    uint32_t h = (x * 0x7feb352du) ^ (y * 0x846ca68bu);
+    h = (h ^ (h >> 15u)) * 0x45d9f3bu;
+    h ^= (h >> 16u);
+    return h;
+}
+
+static inline uint8_t sample_polygon_texel(uint16_t tax, uint16_t tdx,
+                                           noctis::TextureFilterMode mode,
+                                           int32_t micro_weight) {
+    if (mode == noctis::TextureFilterMode::nearest) {
+        uint16_t tbx = (tdx & 0xFF00u) | ((tax >> 8u) & 0xFFu);
+        return txtr[texture_offset(static_cast<uint16_t>(tbx - 4u))];
+    }
+
+    uint8_t u0 = static_cast<uint8_t>(tax >> 8u);
+    uint8_t v0 = static_cast<uint8_t>(tdx >> 8u);
+    uint8_t u1 = u0 + 1u;
+    uint8_t v1 = v0 + 1u;
+
+    uint16_t idx00 = (static_cast<uint16_t>(v0) << 8u) | u0;
+    uint16_t idx10 = (static_cast<uint16_t>(v0) << 8u) | u1;
+    uint16_t idx01 = (static_cast<uint16_t>(v1) << 8u) | u0;
+    uint16_t idx11 = (static_cast<uint16_t>(v1) << 8u) | u1;
+
+    uint32_t s00 = txtr[texture_offset(static_cast<uint16_t>(idx00 - 4u))];
+    uint32_t s10 = txtr[texture_offset(static_cast<uint16_t>(idx10 - 4u))];
+    uint32_t s01 = txtr[texture_offset(static_cast<uint16_t>(idx01 - 4u))];
+    uint32_t s11 = txtr[texture_offset(static_cast<uint16_t>(idx11 - 4u))];
+
+    uint32_t fu = tax & 0xFFu;
+    uint32_t fv = tdx & 0xFFu;
+
+    uint32_t top = s00 * (256u - fu) + s10 * fu;
+    uint32_t bot = s01 * (256u - fu) + s11 * fu;
+    uint32_t filtered = (top * (256u - fv) + bot * fv + 32768u) >> 16u;
+
+    if (micro_weight > 0) {
+        uint32_t h1 = detail_hash(tax >> 6u, tdx >> 6u);
+        int32_t g1 = static_cast<int32_t>(h1 & 0x03u) - 1; // -1, 0, 1, 2
+        uint32_t h2 = detail_hash(tax >> 4u, tdx >> 4u);
+        int32_t g2 = (h2 & 0x01u) ? 1 : 0;
+        int32_t raw_grain = (g1 * 2 + g2) >> 1;
+        int32_t micro = (raw_grain * micro_weight + 128) >> 8;
+        int32_t res = static_cast<int32_t>(filtered) + micro;
+        if (res < 0) res = 0;
+        if (res > 31 && filtered <= 31) res = 31;
+        else if (res > 255) res = 255;
+        return static_cast<uint8_t>(res);
+    }
+
+    return static_cast<uint8_t>(filtered);
+}
+
 void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     float ultima_x[2 * VERTEXES_PER_POLYGON];
     float ultima_y[2 * VERTEXES_PER_POLYGON];
@@ -741,6 +796,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz, z2;
     float midx, midy, midz;
     float trxf[4], tryf[4], trzf[4];
+    const auto texture_filter_mode = noctis::get_texture_filter_mode();
+    int32_t micro_weight = 0;
 
     // Polymap is made to draw quads.
     // If drawing a triangle, the last vertex must be duplicated.
@@ -1189,6 +1246,18 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakesi = wrapped_delta(v, tempv) >> 4u;
         tbp    = wrapped_delta(u, tempu) >> 4u;
 
+        if (texture_filter_mode == noctis::TextureFilterMode::detailed) {
+            int32_t step_mag = std::max(std::abs(static_cast<int16_t>(tbp)),
+                                        std::abs(static_cast<int16_t>(fakesi)));
+            if (step_mag < 128) {
+                micro_weight = 256;
+            } else if (step_mag < 256) {
+                micro_weight = 256 - (step_mag - 128) * 2;
+            } else {
+                micro_weight = 0;
+            }
+        }
+
         tch = _flares;
         if (tch & 1u) {
             goto transp;
@@ -1203,16 +1272,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         }
 
     internal:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi++;
-        tbl = tah;
-        tch = tinta;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))]; // NOTE; Fudge factor to account for
-                                           // loss of offset on txtr.
+        tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1222,15 +1283,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto common;
 
     transp:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi++;
-        tbl = tah;
-        tch = adapted[fakedi + 3];
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = adapted[fakedi + 3] + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1240,66 +1294,32 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto common;
 
     bright: // NOTE: This is for the text rendering.
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tch = adapted[fakedi + 4];
-        tbh = tdh;
+        tch = (adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         fakedi++;
-        tbl = tah;
-        tch &= 0x3Fu;
         tax += tbp;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        /* NOTE: This frequently runs over the intended end of the txtr (40k),
-         * but we have allocated additional space to bring it up to 65k and
-         * prevent it from running over. It happens in the original source too.
-         */
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
         tdx += fakesi;
-        if (tch <= 0x3E)
-            goto antibloom;
-        tch = 0x3E;
-
-    antibloom:
-        adapted[fakedi + 3] &= 0xC0u;
-        adapted[fakedi + 3] |= tch;
+        if (tch > 0x3E)
+            tch = 0x3E;
+        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
         tcl--;
         if (tcl != 0)
             goto bright;
         goto common;
 
     merger:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tch = adapted[fakedi + 4];
-        tbh = tdh;
+        tch = (((adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >> 1u);
         fakedi++;
-        tbl = tah;
-        tch &= 0x3Fu;
         tax += tbp;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
-        tch += tinta;
         tdx += fakesi;
-        tch >>= 1u;
-        adapted[fakedi + 3] &= 0xC0u;
-        adapted[fakedi + 3] |= tch;
+        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
         tcl--;
         if (tcl != 0)
             goto merger;
         goto common;
 
     bumper:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi++;
-        tbl = tah;
-        tch = tinta;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tempfakedi          = fakedi;
@@ -1311,10 +1331,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tch--;
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto bmpm320;
-        tch = tempch;
-        tch -= tinta;
-        tch += escrescenze;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = tempch - tinta + escrescenze + sample_polygon_texel(tax - tbp, tdx - fakesi, texture_filter_mode, micro_weight);
         adapted[fakedi + (adapted_width * 2) + 3] = tch;
         fakedi                                    = tempfakedi;
         tdx += fakesi;
@@ -1369,6 +1386,18 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakesi = wrapped_delta(v, tempv) >> 4u;
         tbp    = wrapped_delta(u, tempu) >> 4u;
 
+        if (texture_filter_mode == noctis::TextureFilterMode::detailed) {
+            int32_t step_mag = std::max(std::abs(static_cast<int16_t>(tbp)),
+                                        std::abs(static_cast<int16_t>(fakesi)));
+            if (step_mag < 128) {
+                micro_weight = 256;
+            } else if (step_mag < 256) {
+                micro_weight = 256 - (step_mag - 128) * 2;
+            } else {
+                micro_weight = 0;
+            }
+        }
+
         tcl >>= 1u;
         tch = _flares;
         if (tch & 1u) {
@@ -1384,16 +1413,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         }
 
     c_internal:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi += 2;
-        tbl = tah;
-        tch = tinta;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))]; // NOTE; Fudge factor to account for
-                                           // loss of offset on txtr.
+        tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
@@ -1404,15 +1425,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto c_common;
 
     c_transp:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi += 2;
-        tbl = tah;
-        tch = adapted[fakedi + 3];
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = adapted[fakedi + 3] + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
@@ -1423,66 +1437,34 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto c_common;
 
     c_bright:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tch = adapted[fakedi + 4];
-        tbh = tdh;
+        tch = (adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         fakedi += 2;
-        tbl = tah;
-        tch &= 0x3Fu;
         tax += tbp;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
         tdx += fakesi;
-        if (tch <= 0x3E)
-            goto c_antibloom;
-        tch = 0x3E;
-
-    c_antibloom:
-        adapted[fakedi + 2] &= 0xC0u;
-        tch |= adapted[fakedi + 2];
-        adapted[fakedi + 2] = tch;
-        adapted[fakedi + 3] = tch;
+        if (tch > 0x3E)
+            tch = 0x3E;
+        adapted[fakedi + 2] = (adapted[fakedi + 2] & 0xC0u) | tch;
+        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
         tcl--;
         if (tcl != 0)
             goto c_bright;
         goto c_common;
 
     c_merger:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tch = adapted[fakedi + 4];
-        tbh = tdh;
+        tch = (((adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >> 1u);
         fakedi += 2;
-        tbl = tah;
-        tch &= 0x3Fu;
         tax += tbp;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
-        tch += tinta;
         tdx += fakesi;
-        tch >>= 1u;
-        adapted[fakedi + 2] &= 0xC0u;
-        tch |= adapted[fakedi + 2];
-        adapted[fakedi + 2] = tch;
-        adapted[fakedi + 3] = tch;
+        adapted[fakedi + 2] = (adapted[fakedi + 2] & 0xC0u) | tch;
+        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
         tcl--;
         if (tcl != 0)
             goto c_merger;
         goto c_common;
 
     c_bumper:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
-
-        tbh = tdh;
         fakedi += 2;
-        tbl = tah;
-        tch = tinta;
-        tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
@@ -1495,10 +1477,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tch--;
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto c_bmpm320;
-        tch = tempch;
-        tch -= tinta;
-        tch += escrescenze;
-        tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
+        tch = tempch - tinta + escrescenze + sample_polygon_texel(tax - tbp, tdx - fakesi, texture_filter_mode, micro_weight);
         adapted[fakedi + (adapted_width * 2) + 2] = tch;
         adapted[fakedi + (adapted_width * 2) + 3] = tch;
         fakedi                    = tempfakedi;
