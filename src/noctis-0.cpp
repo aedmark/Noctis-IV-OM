@@ -57,6 +57,9 @@
 #include "audio.h"
 #include "controls_config.h"
 #include "gamepad.h"
+#include "navigation_hud.h"
+
+extern float hpoint(int32_t px, int32_t pz);
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -5746,25 +5749,81 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
              triads.sinister, triads.medius, triads.dexter);
 
     if (compass_on) {
-        strcat((char *) outhudbuffer, " & SQC ");
-        strcat((char *) outhudbuffer, alphavalue(landing_pt_lon));
-        strcat((char *) outhudbuffer, ".");
-        strcat((char *) outhudbuffer, alphavalue(landing_pt_lat));
-        strcat((char *) outhudbuffer, ":");
-        strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_x)) >> 14u) - 100));
-        strcat((char *) outhudbuffer, ".");
-        strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_z)) >> 14u) - 100));
-        area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
-        area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
-        ccom = 360 - user_beta;
-
-        if (ccom > 359) {
-            ccom -= 360;
+        auto visor_mode = noctis::get_visor_hud_mode();
+        if (environment_fixture_mode || content_fixture_mode || orbit_surface_fixture_mode) {
+            visor_mode = noctis::VisorHudMode::standard;
         }
+        if (visor_mode == noctis::VisorHudMode::minimal) {
+            // Minimal HUD: time only
+        } else if (visor_mode == noctis::VisorHudMode::standard) {
+            strcat((char *) outhudbuffer, " & SQC ");
+            strcat((char *) outhudbuffer, alphavalue(landing_pt_lon));
+            strcat((char *) outhudbuffer, ".");
+            strcat((char *) outhudbuffer, alphavalue(landing_pt_lat));
+            strcat((char *) outhudbuffer, ":");
+            strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_x)) >> 14u) - 100));
+            strcat((char *) outhudbuffer, ".");
+            strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_z)) >> 14u) - 100));
+            area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
+            area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+            ccom = 360 - user_beta;
 
-        cpos = (int16_t) (ccom / 9);
-        crem = (int16_t) (ccom * 0.44444);
-        wrouthud(200 - (crem % 4), 2, 28, (char *) (compass + cpos));
+            if (ccom > 359) {
+                ccom -= 360;
+            }
+
+            cpos = (int16_t) (ccom / 9);
+            crem = (int16_t) (ccom * 0.44444);
+            wrouthud(200 - (crem % 4), 2, 28, (char *) (compass + cpos));
+        } else {
+            // Explorer's Visor HUD:
+            // 1. Cardinal heading and degrees on top HUD
+            const auto hdg = noctis::compute_heading(user_beta);
+            char hdg_buf[32];
+            std::snprintf(hdg_buf, sizeof(hdg_buf), " & %03.0f* %.*s",
+                          hdg.degrees, static_cast<int>(hdg.cardinal.size()), hdg.cardinal.data());
+            strcat((char *) outhudbuffer, hdg_buf);
+
+            area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
+            area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+
+            ccom = static_cast<float>(hdg.degrees);
+            cpos = (int16_t) (ccom / 9);
+            crem = (int16_t) (ccom * 0.44444);
+
+            static const char *explorer_compass =
+                "N...NE...E...SE...S...SW...W...NW...N...NE...E...SE...S...SW...W...NW...";
+            wrouthud(200 - (crem % 4), 2, 28, (char *) (explorer_compass + cpos));
+
+            // 2. Line 2 (y=10): Coordinates, Elevation, and Lander Return Beacon
+            if (landed) {
+                const double capsule_x = (atl_x << 14) + atl_x2;
+                const double capsule_z = (atl_z << 14) + atl_z2;
+                const double ground_y = hpoint(pos_x, pos_z);
+                const auto coords = noctis::compute_surface_coordinates(
+                    landing_pt_lon, landing_pt_lat, pos_x, pos_y, pos_z, ground_y, capsule_x, capsule_z);
+                const auto beacon = noctis::compute_lander_beacon(
+                    pos_x, pos_z, user_beta, capsule_x, capsule_z);
+
+                char nav_buf[81];
+                if (beacon.is_docked) {
+                    std::snprintf(nav_buf, sizeof(nav_buf),
+                                  "LAT %+05.1f* LON %05.1f* ELEV %+04.0fM LDR: DOCKED",
+                                  coords.latitude_deg, coords.longitude_deg, coords.elevation_msl_m);
+                } else if (beacon.distance_m < 1000.0) {
+                    std::snprintf(nav_buf, sizeof(nav_buf),
+                                  "LAT %+05.1f* LON %05.1f* ELEV %+04.0fM LDR: %3.0fM %.*s",
+                                  coords.latitude_deg, coords.longitude_deg, coords.elevation_msl_m,
+                                  beacon.distance_m, static_cast<int>(beacon.direction_arrow.size()), beacon.direction_arrow.data());
+                } else {
+                    std::snprintf(nav_buf, sizeof(nav_buf),
+                                  "LAT %+05.1f* LON %05.1f* ELEV %+04.0fM LDR: %3.1fKM %.*s",
+                                  coords.latitude_deg, coords.longitude_deg, coords.elevation_msl_m,
+                                  beacon.distance_m * 0.001, static_cast<int>(beacon.direction_arrow.size()), beacon.direction_arrow.data());
+                }
+                wrouthud(2, 10, 0, nav_buf);
+            }
+        }
     } else {
         if (!ontheroof) {
             strcat((char *) outhudbuffer, " & ");

@@ -1,5 +1,6 @@
 #include "goesnet_commands.h"
 
+#include "bookmarks.h"
 #include "flight_log.h"
 #include "galaxy_sector.h"
 #include "gallery.h"
@@ -191,13 +192,17 @@ GoesResult help(std::string_view topic) {
             return result(GoesResultStatus::ok, {"NAME / LABEL", std::string(divider),
                 "NAME UNNAMED OBJECT", "NAME <NAME> FOR STAR", "P<N>:<NAME> FOR BODY"});
         }
+        if (topic == "BM" || topic == "BOOKMARK" || topic == "BOOKMARKS" || topic == "WAYPOINT" || topic == "WAYPOINTS") {
+            return result(GoesResultStatus::ok, {"BM / BOOKMARKS", std::string(divider),
+                "BM: LIST BOOKMARKS", "BM ADD [NOTE]: MARK", "BM GOTO <ID>: TARGET", "BM DEL <ID>: REMOVE"});
+        }
         const auto *entry = find_goes_command(topic);
         if (!entry) return result(GoesResultStatus::not_found, {"UNKNOWN HELP TOPIC"});
         return result(GoesResultStatus::ok, {std::string(entry->name), "SEE COMMAND REFERENCE"});
     }
     return result(GoesResultStatus::ok, {" GOES COMMAND HELP ", std::string(divider),
         "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW",
-        "LOG NAME", std::string(divider),
+        "LOG NAME BM", std::string(divider),
         "USE HELP COMMAND"});
 }
 
@@ -255,6 +260,212 @@ GoesResult view_image(const std::filesystem::path &directory, std::string_view k
     answer.image_id = entry.id;
     return answer;
 }
+
+GoesResult handle_bookmarks_command(std::string_view argument, const GoesCommandContext &context) {
+    if (!context.bookmarks_path.empty()) {
+        active_bookmarks().load_from_file(context.bookmarks_path);
+    }
+
+    std::string arg = std::string(trim_spaces(argument));
+
+    // BM / BM LIST / BM <page>
+    if (arg.empty() || arg == "LIST" || (arg.size() <= 4 && std::all_of(arg.begin(), arg.end(), [](unsigned char c) { return std::isdigit(c); }))) {
+        std::size_t page = 1;
+        if (!arg.empty() && arg != "LIST") {
+            try {
+                page = static_cast<std::size_t>(std::stoul(arg));
+            } catch (...) {
+                page = 1;
+            }
+        }
+        return result(GoesResultStatus::ok,
+                      active_bookmarks().format_goes_list(page, context.observer_x, context.observer_y, context.observer_z));
+    }
+
+    // BM ADD / BM ADD <note>
+    if (arg == "ADD" || arg.rfind("ADD ", 0) == 0) {
+        std::string note;
+        if (arg.size() > 4) {
+            note = std::string(trim_spaces(std::string_view(arg).substr(4)));
+        }
+
+        Bookmark bm;
+        bm.timestamp = "FLIGHT EPOC";
+        bm.star_id = context.current_star_id;
+        bm.star_name = context.current_star_name.empty() ? "(STAR)" : context.current_star_name;
+        bm.star_class = context.current_star_class;
+        bm.star_x = context.local_star_x;
+        bm.star_y = context.local_star_y;
+        bm.star_z = context.local_star_z;
+
+        if (context.is_on_surface) {
+            bm.is_surface = true;
+            bm.surface_lat = context.surface_lat;
+            bm.surface_lon = context.surface_lon;
+            bm.planet_index = context.current_planet_index;
+            bm.planet_name = context.current_planet_name;
+        } else if (context.current_planet_index >= 0) {
+            bm.is_surface = false;
+            bm.planet_index = context.current_planet_index;
+            bm.planet_name = context.current_planet_name;
+        } else {
+            bm.is_surface = false;
+            bm.planet_index = -1;
+        }
+
+        if (!note.empty()) {
+            bm.label = std::move(note);
+        } else {
+            bm.label = bm.planet_index >= 0 && !bm.planet_name.empty()
+                           ? bm.planet_name
+                           : bm.star_name;
+        }
+
+        const auto added = active_bookmarks().add(std::move(bm));
+        if (!context.bookmarks_path.empty()) {
+            active_bookmarks().save_to_file(context.bookmarks_path);
+        }
+
+        std::string loc_desc;
+        if (added.is_surface) {
+            loc_desc = "SURFACE OF " + (added.planet_name.empty() ? "BODY" : added.planet_name);
+        } else if (added.planet_index >= 0) {
+            loc_desc = "ORBIT: " + (added.planet_name.empty() ? ("BODY #" + std::to_string(added.planet_index + 1)) : added.planet_name);
+        } else {
+            loc_desc = "STAR " + added.star_name;
+        }
+
+        std::vector<std::string> rows = {
+            " BOOKMARK RECORDED  ",
+            std::string(divider),
+            "WAYPOINT #" + std::to_string(added.id),
+            "LABEL: " + added.label,
+            std::move(loc_desc),
+            "SAVED TO BOOKMARKS.",
+        };
+        return result(GoesResultStatus::ok, std::move(rows));
+    }
+
+    // BM GOTO <id> / BM GO <id>
+    if (arg.rfind("GOTO ", 0) == 0 || arg.rfind("GO ", 0) == 0) {
+        const auto space_pos = arg.find(' ');
+        const auto id_str = trim_spaces(std::string_view(arg).substr(space_pos + 1));
+        std::size_t id = 0;
+        try {
+            std::string clean_id(id_str);
+            if (!clean_id.empty() && clean_id.front() == '#') clean_id.erase(0, 1);
+            id = static_cast<std::size_t>(std::stoul(clean_id));
+        } catch (...) {
+            return result(GoesResultStatus::usage_error, {"INVALID WAYPOINT ID", "USE BM GOTO <NUM>"});
+        }
+
+        const auto bm = active_bookmarks().get(id);
+        if (!bm) {
+            return result(GoesResultStatus::not_found, {"WAYPOINT NOT FOUND", "USE BM TO LIST"});
+        }
+
+        active_bookmarks().set_active_waypoint_id(id);
+        if (!context.bookmarks_path.empty()) {
+            active_bookmarks().save_to_file(context.bookmarks_path);
+        }
+
+        const bool is_same_system =
+            std::abs(bm->star_x - context.local_star_x) < 0.5 &&
+            std::abs(bm->star_y - context.local_star_y) < 0.5 &&
+            std::abs(bm->star_z - context.local_star_z) < 0.5;
+
+        if (is_same_system && bm->planet_index >= 0) {
+            GoesResult res;
+            res.status = GoesResultStatus::ok;
+            res.action = GoesResultAction::set_local_target;
+            res.target = {bm->star_x, bm->star_y, bm->star_z, bm->planet_index};
+            std::string target_name = bm->planet_name.empty()
+                                          ? ("BODY #" + std::to_string(bm->planet_index + 1))
+                                          : bm->planet_name;
+            res.cells = format_goes_rows({
+                " WAYPOINT LOCK ON   ",
+                divider,
+                "LOCAL TARGET:",
+                target_name,
+                "AUTOPILOT ENGAGED",
+            });
+            return res;
+        }
+
+        const double dx = bm->star_x - context.observer_x;
+        const double dy = bm->star_y - context.observer_y;
+        const double dz = bm->star_z - context.observer_z;
+        const double dist_ly = std::sqrt(dx * dx + dy * dy + dz * dz) * 5E-5;
+        char dist_line[24];
+        std::snprintf(dist_line, sizeof(dist_line), "DIST: %.1f LY", dist_ly);
+
+        GoesResult res;
+        res.status = GoesResultStatus::ok;
+        res.action = GoesResultAction::set_remote_target;
+        res.target = {bm->star_x, bm->star_y, bm->star_z, bm->planet_index};
+        std::string target_name = bm->star_name.empty() ? "(STAR)" : bm->star_name;
+        res.cells = format_goes_rows({
+            " WAYPOINT LOCK ON   ",
+            divider,
+            "REMOTE TARGET:",
+            target_name,
+            dist_line,
+            "AUTOPILOT ENGAGED",
+        });
+        return res;
+    }
+
+    // BM DEL <id> / BM DELETE <id> / BM REMOVE <id>
+    if (arg.rfind("DEL ", 0) == 0 || arg.rfind("DELETE ", 0) == 0 || arg.rfind("REMOVE ", 0) == 0) {
+        const auto space_pos = arg.find(' ');
+        const auto id_str = trim_spaces(std::string_view(arg).substr(space_pos + 1));
+        std::size_t id = 0;
+        try {
+            std::string clean_id(id_str);
+            if (!clean_id.empty() && clean_id.front() == '#') clean_id.erase(0, 1);
+            id = static_cast<std::size_t>(std::stoul(clean_id));
+        } catch (...) {
+            return result(GoesResultStatus::usage_error, {"INVALID WAYPOINT ID", "USE BM DEL <NUM>"});
+        }
+
+        const bool ok = active_bookmarks().remove(id);
+        if (!ok) {
+            return result(GoesResultStatus::not_found, {"WAYPOINT NOT FOUND", "USE BM TO LIST"});
+        }
+        if (!context.bookmarks_path.empty()) {
+            active_bookmarks().save_to_file(context.bookmarks_path);
+        }
+
+        return result(GoesResultStatus::ok, {
+            " BOOKMARK DELETED   ",
+            std::string(divider),
+            "WAYPOINT #" + std::to_string(id),
+            "REMOVED FROM FILE.",
+        });
+    }
+
+    // BM CLEAR
+    if (arg == "CLEAR") {
+        active_bookmarks().clear();
+        if (!context.bookmarks_path.empty()) {
+            active_bookmarks().save_to_file(context.bookmarks_path);
+        }
+        return result(GoesResultStatus::ok, {
+            " BOOKMARKS CLEARED  ",
+            std::string(divider),
+            "ALL WAYPOINTS",
+            "REMOVED FROM FILE.",
+        });
+    }
+
+    return result(GoesResultStatus::usage_error, {
+        "INVALID BM ARGUMENT",
+        std::string(divider),
+        "USE BM, BM ADD,",
+        "BM GOTO <ID>,",
+        "OR BM DEL <ID>",
+    });
+}
 } // namespace
 
 GoesResult execute_goes_command(std::string_view console_line, const GoesCommandContext &context) {
@@ -281,6 +492,9 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
                           GoesResultAction::export_created);
         }
         return result(GoesResultStatus::usage_error, {"INVALID LOG ARGUMENT", "USE LOG OR LOG EXPORT"});
+    }
+    if (request.command == GoesCommand::bookmarks) {
+        return handle_bookmarks_command(request.argument, context);
     }
     if (request.command == GoesCommand::clean || request.command == GoesCommand::inbox || request.command == GoesCommand::outbox)
         return result(GoesResultStatus::unsupported, {"LEGACY TOOL RETIRED", "NATIVE DATA NEEDS NO", "DOS MAINTENANCE"});

@@ -6,7 +6,7 @@
 namespace noctis {
 namespace {
 
-constexpr std::array<GoesCommandDescriptor, 20> registry{{
+constexpr std::array<GoesCommandDescriptor, 21> registry{{
     {GoesCommand::clear, "CLR", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
     {GoesCommand::help, "HELP", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::parameters, "PAR", GoesArgumentShape::object_with_optional_range, GoesCommandDisposition::required_native, false},
@@ -26,6 +26,7 @@ constexpr std::array<GoesCommandDescriptor, 20> registry{{
     {GoesCommand::view_image, "VIEW", GoesArgumentShape::optional_image, GoesCommandDisposition::required_native, false},
     {GoesCommand::flight_log, "LOG", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::name_object, "NAME", GoesArgumentShape::object_and_note, GoesCommandDisposition::required_native, true},
+    {GoesCommand::bookmarks, "BM", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::unknown, "", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
 }};
 
@@ -66,6 +67,7 @@ const std::vector<GoesCommandDescriptor> &goes_command_registry() {
 const GoesCommandDescriptor *find_goes_command(std::string_view name) {
     if (name == "JOURNAL") name = "LOG";
     if (name == "LABEL") name = "NAME";
+    if (name == "BOOKMARK" || name == "BOOKMARKS" || name == "WAYPOINT" || name == "WAYPOINTS") name = "BM";
     const auto found = std::find_if(registry.begin(), registry.end() - 1,
                                     [name](const auto &entry) { return entry.name == name; });
     return found == registry.end() - 1 ? nullptr : &*found;

@@ -13,6 +13,8 @@
 #include "controls_config.h"
 #include "gamepad.h"
 #include "flight_log.h"
+#include "bookmarks.h"
+#include "navigation_hud.h"
 #include "plus_presentation.h"
 #include "runtime_paths.h"
 #include "simulation_clock.h"
@@ -6062,6 +6064,46 @@ nosecondarysun:
                         noctis::play_cockpit_button();
                         continue;
                     }
+                    continue;
+                }
+
+                if (!graphics_menu_status && !movie_recorder.menu_open() && (w == 'v' || w == 'V')) {
+                    const auto new_mode = noctis::cycle_visor_hud_mode(noctis::get_visor_hud_mode());
+                    noctis::set_visor_hud_mode(new_mode);
+                    status(noctis::visor_hud_mode_name(new_mode), 100);
+                    noctis::play_visor_servo();
+                    continue;
+                }
+
+                if (!graphics_menu_status && !movie_recorder.menu_open() && (w == 'j' || w == 'J')) {
+                    std::string sname(reinterpret_cast<const char *>(star_label), 20);
+                    while (!sname.empty() && sname.back() == ' ') sname.pop_back();
+                    std::string pname(reinterpret_cast<const char *>(planet_label), 20);
+                    while (!pname.empty() && pname.back() == ' ') pname.pop_back();
+                    const double lat_deg = (landing_pt_lat - 60) * 1.5;
+                    const double lon_deg = static_cast<double>(landing_pt_lon);
+
+                    noctis::Bookmark bm;
+                    bm.is_surface = true;
+                    bm.surface_lat = lat_deg;
+                    bm.surface_lon = lon_deg;
+                    bm.star_id = nearstar_identity;
+                    bm.star_name = sname.empty() ? "(STAR)" : sname;
+                    bm.star_class = nearstar_class;
+                    bm.star_x = nearstar_x;
+                    bm.star_y = nearstar_y;
+                    bm.star_z = nearstar_z;
+                    bm.planet_index = ip_targetted;
+                    bm.planet_name = pname;
+                    bm.label = pname.empty() ? sname : pname;
+                    bm.timestamp = "SURFACE EPOC";
+
+                    const auto added = noctis::active_bookmarks().add(std::move(bm));
+                    noctis::active_bookmarks().save_to_file(noctis::runtime_paths().config_dir / "bookmarks.ini");
+                    char msg[32];
+                    std::snprintf(msg, sizeof(msg), "WAYPOINT #%zu SAVED", added.id);
+                    status(msg, 100);
+                    noctis::play_cockpit_button();
                     continue;
                 }
 

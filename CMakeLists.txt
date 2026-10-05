@@ -76,6 +76,8 @@ set(SOURCE_FILES
     src/gallery.cpp
     src/gallery_viewer.cpp
     src/flight_log.cpp
+    src/bookmarks.cpp
+    src/navigation_hud.cpp
     src/noctis.cpp
     src/noctis-1.cpp
     src/noctis-0.cpp
@@ -321,9 +323,21 @@ if(BUILD_TESTING)
     set_target_properties(flight_log_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
     add_test(NAME flight_log COMMAND flight_log_tests)
 
+    add_executable(bookmarks_tests tests/bookmarks_test.cpp src/bookmarks.cpp)
+    target_include_directories(bookmarks_tests PRIVATE src)
+    target_compile_features(bookmarks_tests PRIVATE cxx_std_20)
+    set_target_properties(bookmarks_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME bookmarks COMMAND bookmarks_tests)
+
+    add_executable(navigation_hud_tests tests/navigation_hud_test.cpp src/navigation_hud.cpp)
+    target_include_directories(navigation_hud_tests PRIVATE src)
+    target_compile_features(navigation_hud_tests PRIVATE cxx_std_20)
+    set_target_properties(navigation_hud_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME navigation_hud COMMAND navigation_hud_tests)
+
     add_executable(goesnet_command_tests tests/goesnet_commands_test.cpp
         src/goesnet_commands.cpp src/goesnet_protocol.cpp src/goesnet_data.cpp
-        src/flight_log.cpp src/gallery.cpp src/atomic_file.cpp
+        src/flight_log.cpp src/bookmarks.cpp src/gallery.cpp src/atomic_file.cpp
         src/galaxy_sector.cpp src/star_properties.cpp src/system_properties.cpp
         src/legacy_numeric.cpp src/brtl.cpp)
     nivlr_require_strict_fp(goesnet_command_tests)
@@ -571,8 +585,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32)
     set(CPACK_PACKAGE_NAME "Noctis-IV-OM")
     set(CPACK_PACKAGE_VENDOR "Noctis IV OM contributors")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-        "Noctis IV OM 1.9.1 Release")
-    set(CPACK_PACKAGE_VERSION "1.9.1")
+        "Noctis IV OM 2.0.0 Release")
+    set(CPACK_PACKAGE_VERSION "2.0.0")
     set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}")
     set(CPACK_PACKAGE_CHECKSUM "SHA256")
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)

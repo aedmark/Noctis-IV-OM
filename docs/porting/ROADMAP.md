@@ -24,7 +24,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M9 | Modern Presentation & Display Enhancements | DONE |
 | M10 | Deterministic Upscaling & Fidelity Increase | DONE |
 | M11 | In-Engine Media Export & Exploration Ergonomics | DONE |
-| M12 | Celestial Cartography & Waypoint Navigation | IN PROGRESS |
+| M12 | Celestial Cartography & Waypoint Navigation | DONE |
 | M13 | Atmospheric Scattering & Horizon Visual Fidelity | PLANNED |
 | M14 | Moviemaker Modernization & Direct Video Export | PLANNED |
 | M15 | Ambient Music & Generative Soundscapes | PLANNED |
@@ -279,9 +279,9 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M12-W01 | In-engine captain's flight log | DONE | Automated flight log recording visited systems with light-year jump distances, orbital arrivals, surface landings with lat/long coordinates, and star/planet naming events; GOESnet `LOG`/`JOURNAL` 21-column pager, `LOG EXPORT` (Markdown `flight_log.md` and JSON `flight_log.json`), and `NAME`/`LABEL` GOESnet commands writing to `STARMAP.BIN`; verified in `tests/flight_log_test.cpp`, `tests/goesnet_commands_test.cpp`, and 48/48 passing test suites across all compilers and sanitizers |
-| M12-W02 | Starmap bookmarks & waypoint navigation | PLANNED | Save and manage labeled star/planet bookmarks with quick-target recall in the navigation computer and starmap, persisted in `bookmarks.ini` |
-| M12-W03 | Surface & orbital navigation HUD | PLANNED | Unobtrusive toggleable exploration compass, planetary lat/long coordinates, elevation/altitude above terrain, and local sun bearing when exploring surfaces or in orbit |
+| M12-W01 | In-engine captain's flight log | DONE | Automated flight log recording visited systems with light-year jump distances, orbital arrivals, surface landings with lat/long coordinates, and star/planet naming events; GOESnet `LOG`/`JOURNAL` 21-column pager, `LOG EXPORT` (Markdown `flight_log.md` and JSON `flight_log.json`), and `NAME`/`LABEL` GOESnet commands writing to `STARMAP.BIN`; verified in `tests/flight_log_test.cpp`, `tests/goesnet_commands_test.cpp`, and passing test suites |
+| M12-W02 | Starmap bookmarks & waypoint navigation | DONE | Save and manage labeled star/planet bookmarks with quick-target recall in the navigation computer and starmap; GOESnet `BM`/`BOOKMARK`/`WAYPOINT` pager, `BM ADD`/`GOTO`/`DEL`/`CLEAR`, cockpit `J` quick-jump, surface `J` instant GPS waypoint drop, persisted in `bookmarks.ini`; verified in `tests/bookmarks_test.cpp` and `tests/goesnet_commands_test.cpp` |
+| M12-W03 | Surface & orbital navigation HUD | DONE | The Explorer's Visor HUD featuring 360° cardinal compass tape, digital heading, planetary lat/lon coordinates, elevation MSL in meters, and real-time Lander Return Beacon bearing arrow and range; surface `V` mode toggle with suit servo audio feedback; verified in `tests/navigation_hud_test.cpp` and 50/50 passing test suites across all compilers and sanitizers |
 
 **Exit criteria**
 

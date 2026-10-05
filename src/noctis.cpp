@@ -12,6 +12,8 @@
 #include "gallery_viewer.h"
 #include "upscale.h"
 #include "flight_log.h"
+#include "bookmarks.h"
+#include "navigation_hud.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
 #include "indexed_framebuffer.h"
@@ -646,6 +648,11 @@ void update_planet_label();
 // Native GOESnet dispatch. No process, shell, or interchange file is involved.
 void run_goesnet_module() {
     const auto &paths = noctis::runtime_paths();
+    std::string sname(reinterpret_cast<const char *>(star_label), 20);
+    while (!sname.empty() && sname.back() == ' ') sname.pop_back();
+    std::string pname(reinterpret_cast<const char *>(planet_label), 20);
+    while (!pname.empty() && pname.back() == ' ') pname.pop_back();
+
     const noctis::GoesCommandContext context{starmap_file,
                                              paths.data_dir / "GUIDE.BIN",
                                              paths.data_dir / "guide-export.txt",
@@ -655,7 +662,16 @@ void run_goesnet_module() {
                                              nearstar_x,
                                              nearstar_y,
                                              nearstar_z,
-                                             paths.gallery_dir};
+                                             paths.gallery_dir,
+                                             paths.config_dir / "bookmarks.ini",
+                                             nearstar_identity,
+                                             std::move(sname),
+                                             nearstar_class,
+                                             ip_targetted,
+                                             std::move(pname),
+                                             false,
+                                             0.0,
+                                             0.0};
     auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
     goes_output_cells = std::move(answer.cells);
     noctis::play_goesnet_chime(answer.status == noctis::GoesResultStatus::ok);
@@ -6969,6 +6985,17 @@ resynctoplanet:
                     char msg[32];
                     std::snprintf(msg, sizeof(msg), "SPEED %dx", m);
                     status(msg, 50);
+                    goto endmain;
+                }
+
+                if ((mc == 'j' || mc == 'J') && !(labstar || labplanet) && !graphics_menu_status &&
+                    !ip_targetting && !manual_target) {
+                    active_screen = 0;
+                    std::strncpy(goesnet_command, "BM_", sizeof(goesnet_command) - 1);
+                    goesnet_command[sizeof(goesnet_command) - 1] = 0;
+                    gnc_pos = 2;
+                    run_goesnet_module();
+                    status("WAYPOINT JOURNAL", 50);
                     goto endmain;
                 }
 

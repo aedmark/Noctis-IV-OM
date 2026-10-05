@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 1.9.1</a>
+        <a class="nav-cta" href="index.html#download">Get 2.0.0</a>
       </nav>
     </div>
   </header>
@@ -168,6 +168,15 @@
     <p>Pilots can now fly the Stardrifter and walk celestial surfaces with modern gamepads using analog dual sticks. Throttle up and down with analog triggers (<kbd>RT</kbd>/<kbd>LT</kbd>), roll your craft or engage vertical jetpack thrusters with bumpers (<kbd>LB</kbd>/<kbd>RB</kbd>), and enjoy physical dual-motor haptic rumble for engine burns, cold-gas RCS maneuvers, atmospheric entry buffeting, and touchdown impacts. The <kbd>B</kbd> button is mapped to context-sensitive cancellation and deselecting, preventing accidental game exits.</p>
     <p>A new interactive Controls Options overlay (<kbd>F2</kbd> then <kbd>Tab</kbd> or <kbd>C</kbd>) provides live gamepad detection, rumble toggles (<kbd>R</kbd>), sensitivity adjustments, deadzone calibration, and keybinding displays. Mouse pitch inversion is now configurable with standard push-forward = look-up default, toggleable via <kbd>I</kbd> or the menu and saved in <code>controls.ini</code>.</p>
     <p>Finally, the <kbd>F4</kbd> Image Archive Viewer now features direct in-engine media export: press <kbd>D</kbd> or click the Export button to download snapshots or panoramas directly to your Downloads folder on web or export them to disk on desktop.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 2.0.0: The Celestial Cartography &amp; Explorer's Update — Automated Flight Log, Bookmarks &amp; Waypoint Navigation, and The Explorer's Visor HUD</h2>
+    <p>Version 2.0.0 marks a monumental milestone for Noctis IV OM: the general availability of comprehensive celestial cartography, deep navigation tools, and surface orientation guidance.</p>
+    <p>Explorers now possess an automated in-engine <strong>Captain's Flight Log</strong>. As you journey through the galaxy, interstellar warp transitions, orbital insertions, planetary landings with latitude/longitude coordinates, and celestial naming discoveries are recorded automatically in an authentic 21-column GOESnet ledger (<kbd>LOG</kbd> / <kbd>JOURNAL</kbd>). Use <kbd>LOG EXPORT</kbd> to generate polished Markdown flight summaries (<code>flight_log.md</code>) and JSON data archives (<code>flight_log.json</code>) directly in your runtime directory.</p>
+    <p>Naming stars, planets, and moons via GOESnet (<kbd>NAME</kbd> / <kbd>LABEL</kbd>) is now seamlessly persistent across launches, writing directly to <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code>. Starmap catalog caching and HUD telemetry sync ensure that whenever you name a celestial body, its new designation appears immediately on cockpit readouts and across all GOESnet navigation searches.</p>
+    <p>With the new <strong>Starmap Bookmarks &amp; Waypoint Navigation</strong> system (<kbd>BM</kbd> / <kbd>BOOKMARK</kbd> / <kbd>WAYPOINT</kbd>), you can save personal waypoints across the stars. Manage bookmarks with <kbd>BM LIST</kbd>, record new landmarks with <kbd>BM ADD [label]</kbd>, lock guidance coordinates with <kbd>BM GOTO &lt;id&gt;</kbd>, and organize with <kbd>BM DEL</kbd> and <kbd>BM CLEAR</kbd>. Press <kbd>J</kbd> in the cockpit to instantly jump to the GOESnet bookmarks screen, or press <kbd>J</kbd> while walking on a planetary surface to drop an instant GPS surface waypoint at your exact latitude and longitude. All waypoints persist in <code>bookmarks.ini</code>.</p>
+    <p>Finally, planetary surface exploration is elevated by <strong>The Explorer's Visor HUD</strong>. Press <kbd>V</kbd> to cycle between Standard, Explorer Telemetry, and Minimal visor modes with authentic suit servo audio feedback. Explorer Telemetry projects an unobtrusive 360&deg; scrolling cardinal compass tape, digital degree heading, planetary coordinates (<code>LAT</code> / <code>LON</code>), and elevation in meters (<code>ELEV</code>). Crucially, the <strong>Lander Return Beacon</strong> (<code>LDR</code>) provides real-time distance and an 8-way directional arrow pointing directly back to your landed exploration capsule, ensuring you can traverse planetary expanses with complete confidence.</p>
   </section>
 </article>
 </body>

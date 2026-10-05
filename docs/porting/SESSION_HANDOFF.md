@@ -6,8 +6,8 @@ Replace this document at the end of every session; Git holds older versions.
 
 - Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M12 (Celestial Cartography & Waypoint Navigation) in progress.
-- Status: Release 1.9.1 published; beginning Milestone M12.
+- Branch: `master`; Milestone M12 (Celestial Cartography & Waypoint Navigation) complete.
+- Status: Release 2.0.0 (The Celestial Cartography & Explorer's Update) packaged, tagged, and published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -157,23 +157,46 @@ Replace this document at the end of every session; Git holds older versions.
     - `LOG EXPORT`: exports formatted flight journal to `flight_log.md` and JSON data to `flight_log.json` in user runtime directory.
     - `NAME <LABEL>` / `NAME STAR:<LABEL>` / `NAME P<N>:<LABEL>`: assigns names to unnamed stars and planetary bodies directly from GOESnet terminal, atomically appending to `STARMAP.BIN` via `append_starmap_label()`.
   - Added unit test suite `tests/flight_log_test.cpp` and expanded `tests/goesnet_commands_test.cpp`.
-  - Verified 100% test pass rate across all 48 automated test suites.
+- **M12-W02 (Starmap Bookmarks & Waypoint Navigation System):**
+  - Created `src/bookmarks.h` and `src/bookmarks.cpp`:
+    - Full CRUD bookmark management (`add`, `get`, `remove`, `clear`, `find_by_star_id`).
+    - INI serialization (`bookmarks.ini`) preserving star IDs, celestial coordinates, planetary indices, surface coordinates, and timestamps across sessions.
+    - GOESnet pager formatter `format_goes_list` enforcing strict 21-column width limits, multi-page navigation (`BM 2`), active target marker `*`, and distance in light years or local body proximity.
+  - Registered `GoesCommand::bookmarks` (`BM`, `BOOKMARK`, `WAYPOINT`) in `src/goesnet_protocol.cpp` and implemented `handle_bookmarks_command` in `src/goesnet_commands.cpp`:
+    - Supports `BM LIST`, `BM ADD [label]`, `BM GOTO <id>`, `BM DEL <id>`, and `BM CLEAR`.
+    - `BM GOTO` triggers remote jump lock (`set_remote_target`) or local body targeting (`set_local_target`).
+  - Added cockpit shortcut: press <kbd>J</kbd> in cockpit to jump directly to Bulkhead Screen 1 (GOESnet) with `BM_` queued.
+  - Added surface shortcut: press <kbd>J</kbd> while walking on a planetary surface to drop an instant GPS surface waypoint at current latitude/longitude.
+  - Added unit test suite `tests/bookmarks_test.cpp`.
+- **M12-W03 (Surface & Orbital Navigation HUD — The Explorer's Visor):**
+  - Created `src/navigation_hud.h` and `src/navigation_hud.cpp`:
+    - Dynamic 360° cardinal compass tape computation (`compute_heading`) with 8 cardinal headings (N, NE, E, SE, S, SW, W, NW) and digital heading degrees.
+    - Planetary coordinates telemetry computation (`compute_surface_coordinates`) formatting latitude, longitude, altitude AGL, and elevation MSL in meters.
+    - Lander Return Beacon guidance computation (`compute_lander_beacon`): calculates distance in meters/km and 8-way relative directional arrow (`[^]`, `[^>]`, `[>]`, `[v>]`, `[v]`, `[<v]`, `[<]`, `[<^]`) pointing back to the landed capsule or `DOCKED`.
+  - Integrated into surface rendering in `src/noctis-0.cpp`:
+    - Added Visor HUD modes: `standard`, `explorer_telemetry`, and `minimal`.
+    - Protected headless regression test fixtures (`environment_fixture_mode`, etc.) so deterministic pixel hashing is preserved.
+  - Added surface hotkey: press <kbd>V</kbd> to cycle Visor HUD modes with authentic suit servo audio feedback.
+  - Added unit test suite `tests/navigation_hud_test.cpp`.
+- **Release 2.0.0 (The Celestial Cartography & Explorer's Update):**
+  - Packaged Linux, Windows, and Web release archives in `public-builds/2.0.0/` with SHA-256 checksums.
+  - Tagged `v2.0.0` and pushed to remote master.
 
 ## Test suite and package status
 
-- **Clang Release:** 48/48 passed.
-- **GCC Debug:** 48/48 passed.
-- **Clang Sanitized (ASan/UBSan):** Passed with zero errors or memory leaks.
+- **Clang Release:** 50/50 passed.
+- **GCC Debug:** 50/50 passed.
+- **Clang Sanitized (ASan/UBSan):** 50/50 passed with zero errors or memory leaks.
+- **MinGW Windows Release:** 50/50 passed; clean `nivlr.exe`.
 - **Web Release:** Built cleanly (`nivlr.html`, `nivlr.wasm`, `nivlr.data`).
 - **Live Server:** Python 3 daemon serving `build/web-release` at `http://localhost:8090/nivlr.html`.
 
 ## Next steps
 
-1. Milestone M12 (Celestial Cartography & Waypoint Navigation):
-   - M12-W02: Starmap bookmarks & waypoint navigation (save and manage labeled star/planet bookmarks with quick-target recall in the navigation computer and starmap, persisted in `bookmarks.ini`).
-   - M12-W03: Surface & orbital navigation HUD (unobtrusive toggleable exploration compass, planetary lat/long coordinates, elevation/altitude above terrain, and local sun bearing).
-2. Future Milestones:
-   - M13: Atmospheric Scattering & Horizon Visual Fidelity
-   - M14: Moviemaker Modernization & Direct Video Export
-   - M15: Ambient Music & Generative Soundscapes
-   - M16: Asynchronous Community GOESnet Catalog Exchange
+1. Milestone M13 (Atmospheric Scattering & Horizon Visual Fidelity):
+   - M13-W01: Extended surface terrain draw distance & adaptive horizon LOD (configurable terrain rendering radius scaling up to 2x/4x baseline).
+   - M13-W02: Twilight atmospheric scattering glow (multi-stop sky scattering gradients during dawn and dusk on worlds with atmospheres).
+   - M13-W03: Stellar coronal flare & limb darkening refinement (physically informed limb darkening and procedural coronal prominence flares).
+2. Milestone M14: Moviemaker Modernization & Direct Video Export
+3. Milestone M15: Ambient Music & Generative Soundscapes
+4. Milestone M16: Asynchronous Community GOESnet Catalog Exchange

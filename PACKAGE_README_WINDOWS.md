@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 1.9.1 Release
+# Noctis IV OM — Windows 2.0.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 1.9.1 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.0 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -73,6 +73,8 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 - **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
 - **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
+- **Waypoint Bookmarks & Starmap:** Press `J` in cockpit to jump directly to GOESnet bookmarks (`BM`). Press `J` while exploring a planetary surface to drop an instant GPS surface waypoint.
+- **Explorer's Visor HUD:** Press `V` on planetary surfaces to cycle Visor telemetry (Standard, Explorer Telemetry with 360° cardinal compass tape, digital heading, planetary coordinates/elevation, and Lander Return Beacon range/direction, or Minimal).
 - **Controls & Gamepad Menu:** Press `F2` then `Tab` or `C` to open Controls Options. View gamepad connection status, toggle mouse pitch inversion (`I`), toggle haptic rumble (`R`), or adjust sensitivity and deadzones. Settings persist in `controls.ini`.
 - **Gamepad Flight & Traversal:** Dual-stick analog movement and camera look with deadzone filtering. Left/Right triggers (`LT`/`RT`) accelerate/decelerate; bumpers (`LB`/`RB`) roll ship or boost jetpack; `B` button safely cancels/deselects without quitting. Dual-motor rumble for thrusters, atmospheric buffeting, and landing.
 - **Image Archive Export:** Press `F4` to open the Image Archive Viewer, then press `D` to export the current snapshot or panorama directly to your Downloads folder.
@@ -83,11 +85,11 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 1.9.1 Feature Release (The Gamepad Flight & Media Export Update),
-introducing native gamepad/joystick analog flight and surface locomotion with haptic
-dual-motor rumble, configurable controls with mouse pitch inversion and sensitivity
-options, in-engine screenshot and panorama export (<kbd>D</kbd> in F4 viewer), and
-exploration navigation fixes. The Microsoft
+This is the 2.0.0 Major Release (The Celestial Cartography & Explorer's Update),
+introducing automated exploration journal logging (`LOG`) with Markdown/JSON export,
+seamless celestial naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`,
+starmap personal bookmark and waypoint navigation (`BM`), and the surface Explorer's
+Visor with real-time compass telemetry, coordinates, and Lander Return Beacon guidance. The Microsoft
 C/C++ runtime is statically linked into the executable, so the ZIP does not require a separate
 Visual C++ Redistributable installation. Please keep the JSON Lines output from
 `--diagnostics` with any startup report. Read `KNOWN_ISSUES.md` for

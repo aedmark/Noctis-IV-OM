@@ -228,10 +228,66 @@ int main(int argc, char **argv) {
     ok &= require(answer.status == GoesResultStatus::rejected && contains(answer, "OBJECT IS LABELED"),
                   "renaming extant object was not rejected");
 
+    // Bookmarks and Waypoint navigation (BM)
+    auto bm_context = mutable_context;
+    bm_context.bookmarks_path = export_dir / "bookmarks_test.ini";
+    bm_context.current_star_id = 9999.0;
+    bm_context.current_star_name = "OUTPOST STAR";
+    bm_context.current_star_class = 2;
+    bm_context.local_star_x = 100000.0;
+    bm_context.local_star_y = 200000.0;
+    bm_context.local_star_z = 300000.0;
+
+    // 1. BM with empty list
+    answer = execute_goes_command("BM_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "WAYPOINT BOOKMARKS"),
+                  "BM empty list failed");
+
+    // 2. BM ADD with label
+    answer = execute_goes_command("BM ADD BASE ALPHA_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BOOKMARK RECORDED")
+                      && contains(answer, "BASE ALPHA"),
+                  "BM ADD failed");
+
+    // 3. BM listing shows added bookmark
+    answer = execute_goes_command("BM_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BASE ALPHA"),
+                  "BM listing did not show bookmark");
+
+    // 4. BM GOTO targets the waypoint
+    auto distant_context = bm_context;
+    distant_context.observer_x = 900000.0;
+    distant_context.observer_y = 900000.0;
+    distant_context.observer_z = 900000.0;
+    answer = execute_goes_command("BM GOTO 1_", distant_context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::set_remote_target
+                      && answer.target.has_value() && contains(answer, "WAYPOINT LOCK ON"),
+                  "BM GOTO failed");
+
+    // 5. BOOKMARK and WAYPOINT aliases
+    answer = execute_goes_command("BOOKMARK_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BOOKMARKS"),
+                  "BOOKMARK alias failed");
+    answer = execute_goes_command("WAYPOINT_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BOOKMARKS"),
+                  "WAYPOINT alias failed");
+
+    // 6. BM DEL removes bookmark
+    answer = execute_goes_command("BM DEL 1_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BOOKMARK DELETED"),
+                  "BM DEL failed");
+
+    // 7. BM CLEAR
+    execute_goes_command("BM ADD TEST BM_", bm_context);
+    answer = execute_goes_command("BM CLEAR_", bm_context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "BOOKMARKS CLEARED"),
+                  "BM CLEAR failed");
+
     std::error_code ignored;
     std::filesystem::remove(starmap_copy, ignored);
     std::filesystem::remove(export_dir / "flight_log.md", ignored);
     std::filesystem::remove(export_dir / "flight_log.json", ignored);
+    std::filesystem::remove(export_dir / "bookmarks_test.ini", ignored);
     std::filesystem::remove(guide_copy, ignored);
     std::filesystem::remove(argv[4], ignored);
     std::filesystem::remove(corrupt_path, ignored);

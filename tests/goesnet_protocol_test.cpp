@@ -15,7 +15,7 @@ int main() {
     using namespace noctis;
     bool ok = true;
 
-    ok &= require(goes_command_registry().size() == 19, "registry size changed");
+    ok &= require(goes_command_registry().size() == 20, "registry size changed");
     const auto *target = find_goes_command("ST");
     ok &= require(target != nullptr && target->command == GoesCommand::set_target
                       && target->disposition == GoesCommandDisposition::required_native,
@@ -35,6 +35,12 @@ int main() {
     const auto *label_cmd = find_goes_command("LABEL");
     ok &= require(label_cmd != nullptr && label_cmd->command == GoesCommand::name_object,
                   "LABEL alias mismatch");
+    const auto *bm_cmd = find_goes_command("BM");
+    ok &= require(bm_cmd != nullptr && bm_cmd->command == GoesCommand::bookmarks,
+                  "BM command dispatch mismatch");
+    const auto *bookmark_cmd = find_goes_command("BOOKMARK");
+    ok &= require(bookmark_cmd != nullptr && bookmark_cmd->command == GoesCommand::bookmarks,
+                  "BOOKMARK alias mismatch");
 
     const auto par = parse_goes_command(" par new felysia:50000 _");
     ok &= require(par.status == GoesParseStatus::ok && par.command == GoesCommand::parameters

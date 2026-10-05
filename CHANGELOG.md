@@ -5,6 +5,27 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 2.0.0 (2026-10-04) — The Celestial Cartography & Explorer's Update
+
+### Features
+* **Exploration Logbook & Celestial Naming Persistence (M12-W01):**
+  * Automated journal logging of discoveries, star system arrivals, planetary landings, and custom celestial names.
+  * Dual-format log export to Markdown (`flight_log.md`) and JSON (`flight_log.json`) via GOESnet `LOG` / `LOG EXPORT` commands.
+  * Seamless persistence of custom star, planet, and moon names saved across sessions in `STARMAP.BIN` and `GUIDE.BIN`.
+  * Starmap sync and catalog lookup fixes ensuring user-assigned names are immediately reflected on cockpit HUD telemetry and searchable across GOESnet navigation commands.
+* **Starmap Bookmarks & Waypoint Navigation System (M12-W02):**
+  * Full personal bookmark and waypoint management integrated directly into GOESnet (`BM`, `BOOKMARK`, `WAYPOINT`).
+  * Supports `BM LIST`, `BM ADD [label]`, `BM GOTO <id>`, `BM DEL <id>`, and `BM CLEAR`.
+  * Auto-calculated distance in light years or local body proximity, active target indicator `*`, and 21-column pager formatting conforming to retro terminal standards.
+  * Quick cockpit shortcut: press <kbd>J</kbd> in the cockpit to jump directly to Bulkhead Screen 1 (GOESnet) with `BM_` ready.
+  * Surface shortcut: press <kbd>J</kbd> while walking on a planetary surface to immediately record a GPS surface waypoint bookmark at your exact latitude/longitude.
+  * Persistent storage in `bookmarks.ini` saved under the user configuration directory.
+* **Surface & Orbital Navigation HUD — The Explorer's Visor (M12-W03):**
+  * Dynamic 360° cardinal compass tape rendered on planetary surface visors with true 8-point headings (N, NE, E, SE, S, SW, W, NW) and digital heading degrees.
+  * Planetary coordinates telemetry displaying latitude and longitude in degrees (`LAT %+05.1f° LON %05.1f°`) and elevation in meters above terrain/sea level (`ELEV %+04.0fM`).
+  * Lander Return Beacon (`LDR`): displays real-time range to your landed exploration capsule in meters or kilometers alongside an 8-way directional arrow (`[^]`, `[^>]`, `[>]`, `[v>]`, `[v]`, `[<v]`, `[<]`, `[<^]`) or `DOCKED` status, ensuring you never lose your ship on vast planetary expanses.
+  * Visor telemetry mode toggle: press <kbd>V</kbd> to cycle between Standard, Explorer Telemetry, and Minimal Visor modes with authentic suit servo audio feedback.
+
 ## 1.9.1 (2026-10-04) — The Gamepad Flight & Media Export Update
 
 ### Features
