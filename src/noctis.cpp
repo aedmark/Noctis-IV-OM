@@ -5828,6 +5828,18 @@ ext_1: //
                 g_active_travel_speed = 0.0f;
                 g_active_travel_phase = noctis::TravelPhase::arrived;
 
+                const double star_ang = static_cast<double>(deg * navigation_beta);
+                dzat_x                = ap_target_x - ras * std::sin(star_ang);
+                dzat_y                = ap_target_y;
+                dzat_z                = ap_target_z + ras * std::cos(star_ang);
+                user_alfa             = 0;
+                user_beta             = 0;
+
+                if (nsnp && ap_targetted != -1) {
+                    prepare_nearstar();
+                    nsnp = 0;
+                }
+
                 std::string sname(reinterpret_cast<const char *>(star_label), 20);
                 while (!sname.empty() && sname.back() == ' ') sname.pop_back();
                 const double jump_dist_ly = ap_target_initial_d * 5E-5;

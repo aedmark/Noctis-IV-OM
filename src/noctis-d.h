@@ -42,7 +42,7 @@
 //           screen update buffer.
 #define oc_bytes 40000 //   objectschart    map objects on the surface;
 //           atmospheric overlay.
-#define sc_bytes (1280 * 800 + 1024) //   adapted         the hidden video page�
+#define sc_bytes (1280 * 800 + 65536) //   adapted         the hidden video page�
 //          2 bytes (support for polymap)
 //           would give 64002. But I extended
 //          it to 64Kb + 4 bytes to avoid it

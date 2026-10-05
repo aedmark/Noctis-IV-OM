@@ -166,7 +166,16 @@ void psmooth_grays(uint8_t *target) {
 }
 
 void psmooth_grays_ex(uint8_t *target) {
-    uint32_t count = (QUADWORDS << 2u) - ((adapted_width) << 2u);
+    if (!target) return;
+    uint32_t available = 0;
+    if (target >= adapted && target < adapted + (adapted_width * adapted_height)) {
+        available = static_cast<uint32_t>((adapted + adapted_width * adapted_height) - target);
+    } else {
+        available = (QUADWORDS << 2u);
+    }
+    const uint32_t margin = static_cast<uint32_t>(adapted_width * 3 + 4);
+    if (available <= margin) return;
+    uint32_t count = available - margin;
     uint32_t index = 0;
     for (uint32_t i = 0; i < count; i++, index++) {
         uint8_t smoothed;

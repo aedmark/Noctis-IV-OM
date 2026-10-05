@@ -59,6 +59,36 @@ int main() {
     ok &= phases[static_cast<std::size_t>(noctis::TravelPhase::driving)];
     ok &= phases[static_cast<std::size_t>(noctis::TravelPhase::parking)];
 
+    // Verify star parking alignment geometry matches cockpit forward orientation
+    {
+        constexpr double deg_rad = M_PI / 180.0;
+        const double ras = noctis::remote_arrival_radius(false, true, star_radius);
+        for (int heading_deg : {0, 45, 90, 180, 270, 315}) {
+            const double star_ang = static_cast<double>(heading_deg) * deg_rad;
+            const noctis::TravelPosition parked{
+                balastrackonastreya.x - ras * std::sin(star_ang),
+                balastrackonastreya.y,
+                balastrackonastreya.z + ras * std::cos(star_ang)
+            };
+            const double dist = noctis::travel_distance(parked, balastrackonastreya);
+            ok &= std::abs(dist - ras) < 1e-6;
+
+            // Target vector relative to ship
+            const double dx = balastrackonastreya.x - parked.x;
+            const double dy = balastrackonastreya.y - parked.y;
+            const double dz = balastrackonastreya.z - parked.z;
+
+            // Cockpit forward heading vector: (sin(beta), 0, -cos(beta))
+            const double fwd_x = std::sin(star_ang);
+            const double fwd_y = 0.0;
+            const double fwd_z = -std::cos(star_ang);
+
+            // Normalized dot product must be +1.0 (dead center in windshield)
+            const double dot = (dx * fwd_x + dy * fwd_y + dz * fwd_z) / dist;
+            ok &= std::abs(dot - 1.0) < 1e-6;
+        }
+    }
+
     const auto system =
         derive_planet_system(balastrackonastreya.x, balastrackonastreya.y, balastrackonastreya.z, 0, star_radius);
     constexpr std::int16_t felysia_index = 3;
