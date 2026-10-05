@@ -203,11 +203,22 @@ void FlightLog::record_label_assigned(double id, std::string_view name, bool is_
         entry.star_name = std::string(name);
     }
 
-    // Retroactively update earlier entries that had (UNNAMED)
+    if (has_last_star_) {
+        entry.star_x = last_star_x_;
+        entry.star_y = last_star_y_;
+        entry.star_z = last_star_z_;
+    }
+
+    // Retroactively update earlier entries that had (UNNAMED) or UNKNOWN STAR
     for (auto &e : entries_) {
-        if (!is_planet && (e.star_name.empty() || e.star_name == "(UNNAMED)")
+        if (!is_planet && (e.star_name.empty() || e.star_name == "(UNNAMED)" || e.star_name.find("UNKNOWN STAR") != std::string::npos)
             && std::abs(e.star_id - id) < 0.0001) {
             e.star_name = std::string(name);
+            if (entry.star_x == 0.0 && entry.star_y == 0.0 && entry.star_z == 0.0) {
+                entry.star_x = e.star_x;
+                entry.star_y = e.star_y;
+                entry.star_z = e.star_z;
+            }
         } else if (is_planet && e.planet_index == ordinal - 1
                    && (e.planet_name.empty() || e.planet_name.find("Planet #") != std::string::npos)) {
             e.planet_name = std::string(name);

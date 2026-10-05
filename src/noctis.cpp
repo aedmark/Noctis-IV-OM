@@ -638,6 +638,11 @@ void open_cockpit_gallery(std::string_view key) {
     }
 }
 
+extern double ap_target_previd;
+extern double prev_planet_id;
+void update_star_label();
+void update_planet_label();
+
 // Native GOESnet dispatch. No process, shell, or interchange file is involved.
 void run_goesnet_module() {
     const auto &paths = noctis::runtime_paths();
@@ -682,6 +687,19 @@ void run_goesnet_module() {
             ip_reached    = 0;
             ip_reaching   = 1;
         }
+    } else if (answer.action == noctis::GoesResultAction::catalog_changed) {
+        ap_target_previd = 12345;
+        prev_planet_id   = 12345;
+        if (ap_targetted == 0 && (nearstar_x != 0.0 || nearstar_y != 1E8)) {
+            ap_target_x   = nearstar_x;
+            ap_target_y   = nearstar_y;
+            ap_target_z   = nearstar_z;
+            ap_targetted  = 1;
+            extract_ap_target_infos();
+        }
+        update_star_label();
+        update_planet_label();
+        nearstar_labeled++;
     }
 
     force_update = 1;
@@ -2155,6 +2173,7 @@ void dev_commands() {
                     if (assigned.status == noctis::GoesDataStatus::ok) {
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
+                        ap_target_previd = 12345;
                         noctis::active_flight_log().record_label_assigned(
                             star_id, name, false,
                             static_cast<std::int16_t>((star_label[22] - '0') * 10 + star_label[23] - '0'));
@@ -2213,6 +2232,7 @@ void dev_commands() {
                     if (assigned.status == noctis::GoesDataStatus::ok) {
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
+                        prev_planet_id = 12345;
                         noctis::active_flight_log().record_label_assigned(
                             planet_id, name, true, static_cast<std::int16_t>(ip_targetted + 1));
                         noctis::active_flight_log().save_to_file(noctis::runtime_paths().data_dir / "flight_log.json");

@@ -242,6 +242,15 @@ std::vector<std::size_t> find_starmap_objects(const StarmapData &data, std::stri
         return data.records[index].name == key;
     });
     if (exact != matches.end()) return {*exact};
+    if (!matches.empty()) return matches;
+
+    // Fallback: search for key anywhere within object name (e.g. "STAR EDMARK" matched by "EDMARK")
+    for (std::size_t index = 0; index < data.records.size(); ++index) {
+        const auto &record = data.records[index];
+        if (!record.removed && record.name.find(key) != std::string::npos) {
+            matches.push_back(index);
+        }
+    }
     return matches;
 }
 

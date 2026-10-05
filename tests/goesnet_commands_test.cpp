@@ -205,6 +205,20 @@ int main(int argc, char **argv) {
     ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::catalog_changed
                       && contains(answer, "BODY #1:") && contains(answer, "AERIA"),
                   "NAME planet body failed");
+    // Name planet body with space-separated syntax
+    answer = execute_goes_command("NAME P2 BOREAS_", mutable_context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::catalog_changed
+                      && contains(answer, "BODY #2:") && contains(answer, "BOREAS"),
+                  "NAME planet body with space separator failed");
+    // Navigate back to newly named star from another location
+    auto remote_observer = mutable_context;
+    remote_observer.observer_x = 318928 + 500000;
+    remote_observer.observer_y = 100216574 - 200000;
+    remote_observer.observer_z = -33444 + 800000;
+    answer = execute_goes_command("ST CELESTIA_", remote_observer);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::set_remote_target
+                      && answer.target.has_value() && contains(answer, "STARTING VIMANA DRIVE"),
+                  "ST to newly named star failed");
     // Duplicate body name attempt with LABEL alias rejected
     answer = execute_goes_command("LABEL P1:AERIA2_", mutable_context);
     ok &= require(answer.status == GoesResultStatus::rejected && contains(answer, "BODY ALREADY LABELED"),

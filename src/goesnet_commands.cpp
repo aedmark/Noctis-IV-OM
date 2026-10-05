@@ -85,6 +85,20 @@ ObjectArgument parse_object(std::string_view argument, bool range_suffix) {
 }
 
 std::optional<GalaxyStar> resolve_star(double id, double x, double y, double z, int range) {
+    // 1. Fast lookup from flight log entries: visited or labeled stars have exact coordinates recorded
+    for (const auto &entry : active_flight_log().entries()) {
+        if (std::abs(entry.star_id - id) < goes_id_tolerance && (entry.star_x != 0.0 || entry.star_y != 0.0 || entry.star_z != 0.0)) {
+            const auto star = galaxy_star_at(
+                static_cast<std::int32_t>(entry.star_x / 100000.0) * 100000,
+                static_cast<std::int32_t>(entry.star_y / 100000.0) * 100000,
+                static_cast<std::int32_t>(entry.star_z / 100000.0) * 100000, 0);
+            if (star) {
+                const double candidate = static_cast<double>(star->x) / 100000.0 * star->y / 100000.0 * star->z / 100000.0;
+                if (std::abs(candidate - id) < goes_id_tolerance) return star;
+            }
+        }
+    }
+
     const auto start = [range](double coordinate) {
         return static_cast<std::int32_t>((coordinate - range * 50000.0) / 100000.0) * 100000;
     };
@@ -457,13 +471,41 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.command == GoesCommand::name_object) {
         std::string target_key;
         std::string new_name;
-        const auto colon = request.argument.find(':');
-        if (colon != std::string::npos) {
-            target_key = std::string(trim_spaces(std::string_view(request.argument).substr(0, colon)));
-            new_name = std::string(trim_spaces(std::string_view(request.argument).substr(colon + 1)));
+        std::string_view arg = trim_spaces(request.argument);
+        const auto colon = arg.find(':');
+        if (colon != std::string_view::npos) {
+            target_key = std::string(trim_spaces(arg.substr(0, colon)));
+            new_name = std::string(trim_spaces(arg.substr(colon + 1)));
         } else {
-            target_key = "STAR";
-            new_name = std::string(trim_spaces(request.argument));
+            if (arg.rfind("STAR ", 0) == 0) {
+                target_key = "STAR";
+                new_name = std::string(trim_spaces(arg.substr(5)));
+            } else if (arg.rfind("HERE ", 0) == 0) {
+                target_key = "STAR";
+                new_name = std::string(trim_spaces(arg.substr(5)));
+            } else if (arg.rfind("LOCAL ", 0) == 0) {
+                target_key = "STAR";
+                new_name = std::string(trim_spaces(arg.substr(6)));
+            } else if (arg.rfind("CURRENT ", 0) == 0) {
+                target_key = "STAR";
+                new_name = std::string(trim_spaces(arg.substr(8)));
+            } else if (arg.size() > 2 && (arg[0] == 'P' || arg[0] == 'p') && std::isdigit(static_cast<unsigned char>(arg[1])) && arg.find(' ') != std::string_view::npos) {
+                const auto space = arg.find(' ');
+                target_key = std::string(arg.substr(0, space));
+                new_name = std::string(trim_spaces(arg.substr(space + 1)));
+            } else if (arg.rfind("PLANET ", 0) == 0) {
+                std::string_view rest = trim_spaces(arg.substr(7));
+                const auto space = rest.find(' ');
+                if (space != std::string_view::npos) {
+                    target_key = "P" + std::string(trim_spaces(rest.substr(0, space)));
+                    new_name = std::string(trim_spaces(rest.substr(space + 1)));
+                } else {
+                    target_key = "P" + std::string(rest);
+                }
+            } else {
+                target_key = "STAR";
+                new_name = std::string(arg);
+            }
         }
 
         if (new_name.empty() || new_name.size() > 20) {

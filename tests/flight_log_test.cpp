@@ -64,14 +64,21 @@ int main() {
     ok &= require(log.entries().size() == 5, "label assigned event recorded");
     // Verify retroactive update of earlier arrival
     ok &= require(log.entries()[3].star_name == "AURORA", "retroactive star name updated");
+    ok &= require(log.entries().back().star_x == 500000.0, "star coordinates captured in label event");
+
+    // 5b. Jump with UNKNOWN STAR / CLASS label followed by naming
+    log.record_system_arrival(600000.0, 700000.0, 800000.0, 99.0, "UNKNOWN STAR / CLASS", 4, 30.0, "Epoc 6014");
+    ok &= require(log.entries().back().star_name == "UNKNOWN STAR / CLASS", "unknown star label preserved");
+    log.record_label_assigned(99.0, "SOLIS", false, 4, "Epoc 6014");
+    ok &= require(log.entries()[5].star_name == "SOLIS", "retroactive update from UNKNOWN STAR / CLASS succeeded");
 
     // 6. Statistics
     const auto stats = log.compute_stats();
-    ok &= require(stats.total_jumps == 2, "jump count is 2");
-    ok &= require(std::abs(stats.total_distance_ly - 162.5) < 0.001, "total distance is 162.5");
-    ok &= require(stats.unique_systems_visited == 2, "unique systems visited is 2");
+    ok &= require(stats.total_jumps == 3, "jump count is 3");
+    ok &= require(std::abs(stats.total_distance_ly - 192.5) < 0.001, "total distance is 192.5");
+    ok &= require(stats.unique_systems_visited == 3, "unique systems visited is 3");
     ok &= require(stats.total_landings == 1, "total landings is 1");
-    ok &= require(stats.total_labeled == 1, "total labeled is 1");
+    ok &= require(stats.total_labeled == 2, "total labeled is 2");
 
     // 7. GOESnet screen row formatting
     const auto goes_rows = log.format_goes_summary();
