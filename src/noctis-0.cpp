@@ -635,7 +635,7 @@ int16_t albedo    = 0;   // Albedo average of the landing surface. [0,62]
 
 uint8_t sky_brightness = 32; // Sky luminosity. [0,48]
 
-uint16_t m200[200]; // Numbers from 0 to 199, multipled by 200 (Lookup table)
+uint16_t m200[256]; // Numbers from 0 to 255, multiplied by 200 (Lookup table)
 
 float rwp     = 15; // Required wind power (in knots).
 float iwp     = 0;  // Ideal wind power (from 0 to 1).
@@ -2291,19 +2291,19 @@ void sky(uint16_t limits) {
                 inv_rz = uno / rz;
                 rx     = (int32_t) round(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz);
 
-                index = rx + VIEW_X_CENTER;
-                if (index <= 10 || index >= adapted_width - 10) {
+                int32_t center_x = rx + VIEW_X_CENTER;
+                if (center_x <= 10 * internal_res_scale || center_x >= adapted_width - 10 * internal_res_scale) {
                     continue;
                 }
 
-                ry = (int32_t) round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2;
+                ry = (int32_t) round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2 * internal_res_scale;
 
-                uint32_t nety = ry + VIEW_Y_CENTER;
-                if (nety <= 10 || nety >= adapted_height - 10) {
+                int32_t center_y = ry + VIEW_Y_CENTER;
+                if (center_y <= 10 * internal_res_scale || center_y >= adapted_height - 10 * internal_res_scale) {
                     continue;
                 }
 
-                index += (uint32_t) (adapted_width * nety);
+                index = static_cast<uint32_t>(center_y * adapted_width + center_x);
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
@@ -2316,14 +2316,54 @@ void sky(uint16_t limits) {
                 int32_t tempshift = temp >> (13u + field_amplificator);
                 int8_t mask       = 63 - tempshift;
                 if (mask >= 0) {
-                    int8_t color = adapted[index];
-                    adapted[index] &= 0xC0u;
-                    color &= 0x3Fu;
-                    mask += color;
-                    if (mask > 63) {
-                        mask = 63;
+                    if (internal_res_scale == 1) {
+                        int8_t color = adapted[index];
+                        adapted[index] &= 0xC0u;
+                        color &= 0x3Fu;
+                        mask += color;
+                        if (mask > 63) {
+                            mask = 63;
+                        }
+                        adapted[index] |= mask;
+                    } else if (internal_res_scale == 2) {
+                        for (int dy = 0; dy < 2; ++dy) {
+                            uint32_t row = (center_y + dy) * adapted_width;
+                            for (int dx = 0; dx < 2; ++dx) {
+                                uint32_t p = row + (center_x + dx);
+                                int8_t color = adapted[p];
+                                adapted[p] &= 0xC0u;
+                                int8_t m = std::min(63, (color & 0x3F) + mask);
+                                adapted[p] |= m;
+                            }
+                        }
+                    } else {
+                        // 4x mode: 2x2 core + soft anti-aliased cross
+                        for (int dy = 0; dy < 2; ++dy) {
+                            uint32_t row = (center_y + dy) * adapted_width;
+                            for (int dx = 0; dx < 2; ++dx) {
+                                uint32_t p = row + (center_x + dx);
+                                int8_t color = adapted[p];
+                                adapted[p] &= 0xC0u;
+                                int8_t m = std::min(63, (color & 0x3F) + mask);
+                                adapted[p] |= m;
+                            }
+                        }
+                        const int8_t edge_mask = mask >> 1u;
+                        if (edge_mask > 2) {
+                            const int offsets[4][2] = {{-1, 0}, {2, 0}, {0, -1}, {0, 2}};
+                            for (const auto &off : offsets) {
+                                int px = center_x + off[0];
+                                int py = center_y + off[1];
+                                if (px >= 0 && px < adapted_width && py >= 0 && py < adapted_height) {
+                                    uint32_t p = py * adapted_width + px;
+                                    int8_t color = adapted[p];
+                                    adapted[p] &= 0xC0u;
+                                    int8_t m = std::min(63, (color & 0x3F) + edge_mask);
+                                    adapted[p] |= m;
+                                }
+                            }
+                        }
                     }
-                    adapted[index] |= mask;
                 }
 
                 if (ap_targetting == 1) {
@@ -2412,81 +2452,52 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
     // 320 = Screen width, 100 = Max x/y pixels of the map,
     // 1.32 = Maximum magnification factor with points of 4 pixels.
 
-    if (rx < -((adapted_width / 2) + (100 * max_mag_factor)) || rx > ((adapted_width / 2) + (100 * max_mag_factor))) {
-        return; // 292 = (320 / 2) + (100 * 1.32)
+    const int32_t scale = internal_res_scale;
+    if (rx < -((adapted_width / 2) + (100 * max_mag_factor * scale)) || rx > ((adapted_width / 2) + (100 * max_mag_factor * scale))) {
+        return; // (adapted_width / 2) + (100 * 1.32 * scale)
     }
 
-    if (ry < -((adapted_height / 2) + (100 * max_mag_factor)) || ry > ((adapted_height / 2) + (100 * max_mag_factor))) {
-        return; // 232 = (200 / 2) + (100 * 1.32)
+    if (ry < -((adapted_height / 2) + (100 * max_mag_factor * scale)) || ry > ((adapted_height / 2) + (100 * max_mag_factor * scale))) {
+        return; // (adapted_height / 2) + (100 * 1.32 * scale)
     }
 
-    center_x = (int16_t) (rx + x_centro_f);
-    center_y = (int16_t) (ry + y_centro_f);
+    center_x = (int32_t) (rx + x_centro_f);
+    center_y = (int32_t) (ry + y_centro_f);
 
     uint8_t color = 0;
     uint16_t curr = start;
+    const int32_t stamp_w = gman * scale;
+    const int32_t stamp_h = gman * scale;
     for (uint16_t i = (total_map_bytes / 2), j = 0; i > 0; i--, j += 2) {
         if (offsetsmap[j] != 100) {
             int16_t offset = (int8_t) offsetsmap[j];
             temp           = offset;
-            temp           = (int16_t) round(((int16_t) temp) * mag_factor);
-            uint32_t pos   = temp + center_y;
+            temp           = (int32_t) round(((int32_t) temp) * mag_factor * scale);
+            int32_t y_pos  = temp + center_y;
 
-            if (pos > 6 && pos < (adapted_height - 9)) {
+            if (y_pos > 6 * scale && y_pos < (adapted_height - 9 * scale)) {
                 offset = (int8_t) offsetsmap[j + 1];
-                pos    = adapted_width * pos;
                 temp   = offset;
-                temp   = (int16_t) round(((int16_t) temp) * mag_factor);
-                offset = temp + center_x;
+                temp   = (int32_t) round(((int32_t) temp) * mag_factor * scale);
+                int32_t x_pos = temp + center_x;
 
-                if (offset > 6 && offset < (adapted_width - 9)) {
-                    pos += offset;
+                if (x_pos > 6 * scale && x_pos < (adapted_width - 9 * scale)) {
                     color = tapestry[curr];
                     if (color < globe_saturation) {
                         color = globe_saturation;
                     }
 
                     color |= colormask;
-                    if (gman == 1) {
-                        target[pos] = color;
-                    } else if (gman == 2) {
-                        target[pos]     = color;
-                        target[pos + 1] = color;
-
-                        target[pos + adapted_width]     = color;
-                        target[pos + adapted_width + 1] = color;
-                    } else if (gman == 3) {
-                        target[pos]     = color;
-                        target[pos + 1] = color;
-                        target[pos + 2] = color;
-
-                        target[pos + adapted_width]     = color;
-                        target[pos + adapted_width + 1] = color;
-                        target[pos + adapted_width + 2] = color;
-
-                        target[pos + adapted_width * 2]     = color;
-                        target[pos + adapted_width * 2 + 1] = color;
-                        target[pos + adapted_width * 2 + 2] = color;
-                    } else if (gman == 4) {
-                        target[pos]     = color;
-                        target[pos + 1] = color;
-                        target[pos + 2] = color;
-                        target[pos + 3] = color;
-
-                        target[pos + adapted_width]     = color;
-                        target[pos + adapted_width + 1] = color;
-                        target[pos + adapted_width + 2] = color;
-                        target[pos + adapted_width + 3] = color;
-
-                        target[pos + adapted_width * 2]     = color;
-                        target[pos + adapted_width * 2 + 1] = color;
-                        target[pos + adapted_width * 2 + 2] = color;
-                        target[pos + adapted_width * 2 + 3] = color;
-
-                        target[pos + adapted_width * 3]     = color;
-                        target[pos + adapted_width * 3 + 1] = color;
-                        target[pos + adapted_width * 3 + 2] = color;
-                        target[pos + adapted_width * 3 + 3] = color;
+                    for (int32_t sdy = 0; sdy < stamp_h; ++sdy) {
+                        int32_t py = y_pos + sdy;
+                        if (py < 0 || py >= adapted_height) continue;
+                        uint32_t row = static_cast<uint32_t>(py * adapted_width);
+                        for (int32_t sdx = 0; sdx < stamp_w; ++sdx) {
+                            int32_t px = x_pos + sdx;
+                            if (px >= 0 && px < adapted_width) {
+                                target[row + px] = color;
+                            }
+                        }
                     }
                 }
             }
@@ -2501,14 +2512,14 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
         return;
     }
 
-    temp = mag_factor * 7.25;
+    temp = (int16_t) round(mag_factor * 7.25 * scale);
 
     if (!temp) {
         return;
     }
 
-    rx = mag_factor * 110;
-    ry = (1.2 * deg) / mag_factor;
+    rx = mag_factor * 110 * scale;
+    ry = (1.2 * deg) / (mag_factor * scale);
     rz = 0.5 * ry;
     z2 = 0.833 * rx;
 
@@ -2582,18 +2593,22 @@ void glowing_globe(int16_t start, uint8_t *target, const uint8_t *offsetsmap, ui
                 int32_t y_pos  = temp + center_y;
                 if (y_pos > 10 * internal_res_scale && y_pos < adapted_height - 10 * internal_res_scale) { // Y bounds.
                     offset = (int8_t) offsetsmap[j + 1];
-                    uint32_t pos   = adapted_width * y_pos;
                     temp   = offset;
                     temp   = (int32_t) round(((int32_t) temp) * mag_factor * internal_res_scale);
                     int32_t x_offset = temp + center_x;
                     // X bounds.
                     if (x_offset > 6 * internal_res_scale && x_offset < adapted_width - 10 * internal_res_scale) {
-                        pos += x_offset;
-                        if (pos < static_cast<uint32_t>(adapted_width * adapted_height)) {
-                            if (curr < terminator_arc) {
-                                target[pos] = colorMask;
-                            } else {
-                                target[pos] = color;
+                        uint8_t c = (curr < terminator_arc) ? colorMask : color;
+                        const int32_t stamp_sz = internal_res_scale;
+                        for (int32_t sdy = 0; sdy < stamp_sz; ++sdy) {
+                            int32_t py = y_pos + sdy;
+                            if (py < 0 || py >= adapted_height) continue;
+                            uint32_t row = static_cast<uint32_t>(py * adapted_width);
+                            for (int32_t sdx = 0; sdx < stamp_sz; ++sdx) {
+                                int32_t px = x_offset + sdx;
+                                if (px >= 0 && px < adapted_width) {
+                                    target[row + px] = c;
+                                }
                             }
                         }
                     }
@@ -3008,6 +3023,21 @@ void single_pixel_at_ptr(uint32_t offset, uint8_t pixel_color) {
     }
 }
 
+void splat_pixel_at_xy(int32_t x, int32_t y, uint8_t pixel_color) {
+    const int32_t scale = internal_res_scale;
+    for (int32_t dy = 0; dy < scale; ++dy) {
+        int32_t py = y + dy;
+        if (py < 0 || py >= adapted_height) continue;
+        uint32_t row = static_cast<uint32_t>(py * adapted_width);
+        for (int32_t dx = 0; dx < scale; ++dx) {
+            int32_t px = x + dx;
+            if (px >= 0 && px < adapted_width) {
+                single_pixel_at_ptr(row + static_cast<uint32_t>(px), pixel_color);
+            }
+        }
+    }
+}
+
 int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, uint8_t unconditioned_color) {
     double xx, yy, zz, z2, rz;
     int32_t pixel_color;
@@ -3044,6 +3074,56 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
         pyy += VIEW_Y_CENTER;
 
         if (pxx > 10 && pyy > 10 && pxx < (adapted_width - 10) && pyy < (adapted_height - 10)) {
+            if (internal_res_scale > 1) {
+                const int32_t scale = internal_res_scale;
+                const int32_t cx = static_cast<int32_t>(std::round(pxx));
+                const int32_t cy = static_cast<int32_t>(std::round(pyy));
+                if (pixel_spreads) {
+                    edge_color_1 = pixel_color >> 1u;
+                    edge_color_2 = pixel_color >> 2u;
+                    edge_color_3 = pixel_color >> 3u;
+                    edge_color_4 = pixel_color >> 4u;
+
+                    if (edge_color_1 > 7) {
+                        splat_pixel_at_xy(cx, cy - scale, edge_color_1);
+                        splat_pixel_at_xy(cx, cy + scale, edge_color_1);
+                        splat_pixel_at_xy(cx - scale, cy, edge_color_1);
+                        splat_pixel_at_xy(cx + scale, cy, edge_color_1);
+                    }
+
+                    if (edge_color_2 > 7) {
+                        splat_pixel_at_xy(cx - scale, cy - scale, edge_color_2);
+                        splat_pixel_at_xy(cx + scale, cy - scale, edge_color_2);
+                        splat_pixel_at_xy(cx - scale, cy + scale, edge_color_2);
+                        splat_pixel_at_xy(cx + scale, cy + scale, edge_color_2);
+                    }
+
+                    if (edge_color_3 > 7) {
+                        splat_pixel_at_xy(cx, cy - scale * 2, edge_color_3);
+                        splat_pixel_at_xy(cx, cy + scale * 2, edge_color_3);
+                        splat_pixel_at_xy(cx - scale * 2, cy, edge_color_3);
+                        splat_pixel_at_xy(cx + scale * 2, cy, edge_color_3);
+                    }
+
+                    if (edge_color_4 > 7) {
+                        splat_pixel_at_xy(cx - scale, cy - scale * 2, edge_color_4);
+                        splat_pixel_at_xy(cx + scale, cy - scale * 2, edge_color_4);
+                        splat_pixel_at_xy(cx - scale, cy + scale * 2, edge_color_4);
+                        splat_pixel_at_xy(cx + scale, cy + scale * 2, edge_color_4);
+                        splat_pixel_at_xy(cx - scale * 2, cy - scale, edge_color_4);
+                        splat_pixel_at_xy(cx - scale * 2, cy + scale, edge_color_4);
+                        splat_pixel_at_xy(cx + scale * 2, cy - scale, edge_color_4);
+                        splat_pixel_at_xy(cx + scale * 2, cy + scale, edge_color_4);
+                    }
+
+                    if (pixel_color > 7) {
+                        splat_pixel_at_xy(cx, cy, pixel_color);
+                    }
+                } else if (pixel_color) {
+                    splat_pixel_at_xy(cx, cy, pixel_color);
+                }
+                return (1);
+            }
             if (noctis::get_subpixel_fidelity()) {
                 if (pixel_spreads) {
                     vptr = (uint32_t) (adapted_width * (int32_t) std::round(pyy) + (int32_t) std::round(pxx));
@@ -5746,7 +5826,8 @@ void draw_plus_overlay(bool surface) {
                                                           noctis::is_crt_shader_enabled(),
                                                           noctis::get_subpixel_fidelity(),
                                                           true,
-                                                          static_cast<int>(noctis::get_internal_resolution_mode()));
+                                                          static_cast<int>(noctis::get_internal_resolution_mode()),
+                                                          static_cast<int>(noctis::get_draw_distance_mode()));
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);

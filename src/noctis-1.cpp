@@ -1158,6 +1158,8 @@ void fragment(int32_t x, int32_t z) {
     uint8_t rch1, rch2, rch3, rch4;
     uint16_t *ani_sqc_temp;
     texture_address_bias = 0;
+    const int32_t max_depth = noctis::draw_distance_max_depth(noctis::get_draw_distance_mode());
+    const int32_t diagonal_limit = static_cast<int32_t>(max_depth * 1.4142f + 0.5f);
 
     if (x == ipfx && z == ipfz) {
         // si assicura di tracciare una sola volta
@@ -1192,7 +1194,7 @@ void fragment(int32_t x, int32_t z) {
             cl = -cl;
         }
 
-        if (c1 + cl > 90) {
+        if (c1 + cl > diagonal_limit) {
             return;
         }
     }
@@ -1209,13 +1211,7 @@ void fragment(int32_t x, int32_t z) {
     float hpdep   = sqrt(dx * dx + dz * dz);
     int32_t depth = (int32_t) (hpdep) >> 14;
 
-    // limita la visibilit? in diagonale, pi? che altro per fare
-    // uno sfondo su pianta rotonda, invece che quadrata, perch? cos?
-    // si ottiene una sorta di curvatura dell'orizzonte, ormai alla
-    // Terra piatta non ci crede pi? nessuno...
-    // Poi: in Noctis IV ho deciso di tracciare in massima precisione,
-    // quindi la limitazione deve essere presente, altrimenti ? lento.
-    if (depth > 64) {
+    if (depth > max_depth) {
         return;
     }
 
@@ -1261,16 +1257,12 @@ void fragment(int32_t x, int32_t z) {
         c1 = 8 + fast_random(7);
     }
 
-    // Slight atmospheric effect on the dials at a great distance
-    // the "fog" effect isz increased due to the reduction of
-    // visibility diagonally (from 80 quadrants to 64) according
-    // with the decision to trace with maximum precision, and went
-    // from depth / 3 to depth / 2 (with a shift, by the way)
+    // Atmospheric fog calibrated to active draw distance
     if (c1 < 00) {
         c1 = 00;
     }
 
-    c1 += depth >> 1;
+    c1 += (depth * 32) / max_depth;
 
     if (c1 > 32) {
         c1 = 32;
@@ -5962,6 +5954,12 @@ nosecondarysun:
                     if (w == 'r' || w == 'R') {
                         const auto new_mode = noctis::cycle_internal_resolution_mode();
                         status(noctis::internal_resolution_mode_name(new_mode), 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 'd' || w == 'D') {
+                        const auto new_mode = noctis::cycle_draw_distance_mode();
+                        status(noctis::draw_distance_mode_name(new_mode), 100);
                         save_surface_display_settings();
                         continue;
                     }

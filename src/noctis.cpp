@@ -2936,6 +2936,7 @@ int main(int argc, char **argv) {
     std::optional<std::filesystem::path> migration_source;
     std::optional<bool> portable_mode_override;
     std::optional<noctis::InternalResolutionMode> resolution_override;
+    std::optional<noctis::DrawDistanceMode> draw_distance_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -2975,6 +2976,18 @@ int main(int argc, char **argv) {
                 resolution_override = noctis::InternalResolutionMode::res_4x;
             } else {
                 noctis::log_event("error", "arguments", "Invalid resolution: " + std::string(res_arg) + " (expected 1x, 2x, or 4x)");
+                return 2;
+            }
+        } else if ((std::string_view(argv[arg]) == "--draw-distance" || std::string_view(argv[arg]) == "--distance") && arg + 1 < argc) {
+            std::string_view dist_arg = argv[++arg];
+            if (dist_arg == "standard" || dist_arg == "64" || dist_arg == "64q" || dist_arg == "1x") {
+                draw_distance_override = noctis::DrawDistanceMode::standard;
+            } else if (dist_arg == "extended" || dist_arg == "96" || dist_arg == "96q" || dist_arg == "1.5x") {
+                draw_distance_override = noctis::DrawDistanceMode::extended;
+            } else if (dist_arg == "far" || dist_arg == "128" || dist_arg == "128q" || dist_arg == "2x") {
+                draw_distance_override = noctis::DrawDistanceMode::far;
+            } else {
+                noctis::log_event("error", "arguments", "Invalid draw distance: " + std::string(dist_arg) + " (expected standard, extended, or far)");
                 return 2;
             }
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
@@ -3029,7 +3042,8 @@ int main(int argc, char **argv) {
                 "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data|--reset-data] "
                 "[--export-starmap [PATH]] [--import-starmap PATH] [--validate-starmap PATH] "
                 "[--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] "
-                "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>]");
+                "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>] "
+                "[--draw-distance <standard|extended|far>]");
             return 2;
         }
     }
@@ -3144,6 +3158,9 @@ int main(int argc, char **argv) {
     if (resolution_override) {
         noctis::set_internal_resolution_mode(*resolution_override);
     }
+    if (draw_distance_override) {
+        noctis::set_draw_distance_mode(*draw_distance_override);
+    }
     sync_internal_resolution_engine(noctis::get_internal_resolution_mode());
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
     noctis::load_controls_settings(noctis::runtime_paths().config_dir);
@@ -3222,7 +3239,7 @@ int main(int argc, char **argv) {
         noctis::set_overlay_input_handler(noctis::gallery_viewer_input);
     }
 
-    for (ir = 0; ir < 200; ir++) {
+    for (ir = 0; ir < 256; ir++) {
         m200[ir] = ir * 200;
     }
 
@@ -6677,6 +6694,10 @@ resynctoplanet:
                     const auto new_mode = noctis::cycle_internal_resolution_mode();
                     status(noctis::internal_resolution_mode_name(new_mode), 100);
                     save_display_settings_current();
+                } else if (mc == 'd' || mc == 'D') {
+                    const auto new_mode = noctis::cycle_draw_distance_mode();
+                    status(noctis::draw_distance_mode_name(new_mode), 100);
+                    save_display_settings_current();
                 }
             } else if (graphics_menu_status == 2) {
                 if (mc == 9) {
@@ -7015,6 +7036,12 @@ resynctoplanet:
                     if (mc == 'r' || mc == 'R') {
                         const auto new_mode = noctis::cycle_internal_resolution_mode();
                         status(noctis::internal_resolution_mode_name(new_mode), 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'd' || mc == 'D') {
+                        const auto new_mode = noctis::cycle_draw_distance_mode();
+                        status(noctis::draw_distance_mode_name(new_mode), 100);
                         save_display_settings_current();
                         goto endmain;
                     }

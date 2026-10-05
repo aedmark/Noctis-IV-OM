@@ -141,6 +141,7 @@ int main() {
         noctis::set_setting_draw_hud(0);
         noctis::set_setting_lens_flare_mode(-1);
         noctis::set_setting_seamless_border(1);
+        noctis::set_draw_distance_mode(noctis::DrawDistanceMode::far);
 
         const bool saved = noctis::save_display_settings(test_dir);
         ok &= require(saved, "save_display_settings should succeed");
@@ -156,6 +157,7 @@ int main() {
         noctis::set_setting_draw_hud(1);
         noctis::set_setting_lens_flare_mode(1);
         noctis::set_setting_seamless_border(0);
+        noctis::set_draw_distance_mode(noctis::DrawDistanceMode::standard);
 
         // Load settings back
         const bool loaded = noctis::load_display_settings(test_dir);
@@ -179,6 +181,8 @@ int main() {
                       "lens_flare_mode restored to -1");
         ok &= require(noctis::get_setting_seamless_border() == 1,
                       "seamless_border restored to 1");
+        ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::far,
+                      "draw_distance restored to far");
 
         // 13. Missing file handling
         const auto non_existent = test_dir / "does_not_exist";
@@ -195,6 +199,7 @@ int main() {
                 << "aspect_ratio = 4:3\n"
                 << "upscale_mode = smooth\n"
                 << "internal_resolution = 4x\n"
+                << "draw_distance = extended\n"
                 << "timewarp_multiplier = 99999\n" // Clamped to 5000
                 << "lens_flare_mode = -99\n";      // Clamped to -1
         }
@@ -203,6 +208,7 @@ int main() {
         ok &= require(noctis::get_aspect_ratio_mode() == noctis::AspectRatioMode::crt_4_3, "aspect_ratio parsed 4:3");
         ok &= require(noctis::get_upscale_mode() == noctis::UpscaleMode::smooth_bilinear, "upscale_mode parsed smooth");
         ok &= require(noctis::get_internal_resolution_mode() == noctis::InternalResolutionMode::res_4x, "internal_resolution parsed 4x");
+        ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::extended, "draw_distance parsed extended");
         ok &= require(noctis::get_timewarp_multiplier() == 5000, "timewarp_multiplier clamped to 5000");
         ok &= require(noctis::get_setting_lens_flare_mode() == -1, "lens_flare_mode clamped to -1");
 
@@ -255,6 +261,43 @@ int main() {
             ok &= require(internal_res_scale == 1, "internal_res_scale restored to 1");
             ok &= require(adapted_width == 320, "adapted_width restored to 320");
             ok &= require(adapted_height == 200, "adapted_height restored to 200");
+        }
+
+        // 16. Draw distance cycling, max depth, names, and ini persistence
+        {
+            auto dist = noctis::DrawDistanceMode::standard;
+            dist = noctis::cycle_draw_distance_mode(dist);
+            ok &= require(dist == noctis::DrawDistanceMode::extended, "standard cycles to extended");
+            dist = noctis::cycle_draw_distance_mode(dist);
+            ok &= require(dist == noctis::DrawDistanceMode::far, "extended cycles to far");
+            dist = noctis::cycle_draw_distance_mode(dist);
+            ok &= require(dist == noctis::DrawDistanceMode::standard, "far cycles to standard");
+
+            ok &= require(noctis::draw_distance_max_depth(noctis::DrawDistanceMode::standard) == 64, "standard max depth is 64");
+            ok &= require(noctis::draw_distance_max_depth(noctis::DrawDistanceMode::extended) == 96, "extended max depth is 96");
+            ok &= require(noctis::draw_distance_max_depth(noctis::DrawDistanceMode::far) == 128, "far max depth is 128");
+
+            ok &= require(std::string(noctis::draw_distance_mode_name(noctis::DrawDistanceMode::standard)) ==
+                              "DRAW DISTANCE: STANDARD (64Q)", "standard name format");
+            ok &= require(std::string(noctis::draw_distance_mode_name(noctis::DrawDistanceMode::extended)) ==
+                              "DRAW DISTANCE: EXTENDED (96Q)", "extended name format");
+            ok &= require(std::string(noctis::draw_distance_mode_name(noctis::DrawDistanceMode::far)) ==
+                              "DRAW DISTANCE: FAR (128Q)", "far name format");
+
+            noctis::set_draw_distance_mode(noctis::DrawDistanceMode::extended);
+            ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::extended, "set extended");
+
+            // Save and verify round-trip
+            noctis::save_display_settings(test_dir);
+            noctis::set_draw_distance_mode(noctis::DrawDistanceMode::standard);
+            ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::standard, "reset to standard");
+
+            noctis::load_display_settings(test_dir);
+            ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::extended, "loaded extended from ini");
+
+            // Clean up: restore to standard
+            noctis::set_draw_distance_mode(noctis::DrawDistanceMode::standard);
+            ok &= require(noctis::get_draw_distance_mode() == noctis::DrawDistanceMode::standard, "restored to standard");
         }
 
         std::filesystem::remove_all(test_dir, ec);

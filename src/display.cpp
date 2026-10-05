@@ -24,6 +24,7 @@ namespace {
 AspectRatioMode g_current_aspect_mode = AspectRatioMode::crt_4_3;
 InternalResolutionMode g_internal_resolution_mode = InternalResolutionMode::res_1x;
 InternalResolutionChangeCallback g_res_change_callback = nullptr;
+DrawDistanceMode g_draw_distance_mode = DrawDistanceMode::standard;
 bool g_fullscreen_configured = false;
 std::int8_t g_draw_hud = 1;
 std::int8_t g_lens_flare_mode = 0;
@@ -188,6 +189,47 @@ void set_internal_resolution_mode(InternalResolutionMode mode) {
     if (g_res_change_callback) {
         g_res_change_callback(mode);
     }
+}
+
+DrawDistanceMode cycle_draw_distance_mode(DrawDistanceMode current) {
+    switch (current) {
+        case DrawDistanceMode::standard: return DrawDistanceMode::extended;
+        case DrawDistanceMode::extended: return DrawDistanceMode::far;
+        case DrawDistanceMode::far:      return DrawDistanceMode::standard;
+    }
+    return DrawDistanceMode::standard;
+}
+
+DrawDistanceMode cycle_draw_distance_mode() {
+    auto next = cycle_draw_distance_mode(g_draw_distance_mode);
+    set_draw_distance_mode(next);
+    return next;
+}
+
+const char *draw_distance_mode_name(DrawDistanceMode mode) {
+    switch (mode) {
+        case DrawDistanceMode::standard: return "DRAW DISTANCE: STANDARD (64Q)";
+        case DrawDistanceMode::extended: return "DRAW DISTANCE: EXTENDED (96Q)";
+        case DrawDistanceMode::far:      return "DRAW DISTANCE: FAR (128Q)";
+    }
+    return "DRAW DISTANCE: STANDARD (64Q)";
+}
+
+int draw_distance_max_depth(DrawDistanceMode mode) {
+    switch (mode) {
+        case DrawDistanceMode::standard: return 64;
+        case DrawDistanceMode::extended: return 96;
+        case DrawDistanceMode::far:      return 128;
+    }
+    return 64;
+}
+
+DrawDistanceMode get_draw_distance_mode() {
+    return g_draw_distance_mode;
+}
+
+void set_draw_distance_mode(DrawDistanceMode mode) {
+    g_draw_distance_mode = mode;
 }
 
 void render_high_dpi_hud(const char *status_text, int delay, int render_width, int render_height,
@@ -746,6 +788,7 @@ DisplaySettings capture_display_settings() {
     s.crt_shader = is_crt_shader_enabled();
     s.subpixel_fidelity = get_subpixel_fidelity();
     s.internal_resolution = get_internal_resolution_mode();
+    s.draw_distance = get_draw_distance_mode();
     s.fullscreen = is_fullscreen();
     s.timewarp_multiplier = get_timewarp_multiplier();
     s.draw_hud = g_draw_hud;
@@ -760,6 +803,7 @@ void apply_display_settings(const DisplaySettings &settings) {
     set_crt_shader_enabled(settings.crt_shader);
     set_subpixel_fidelity(settings.subpixel_fidelity);
     set_internal_resolution_mode(settings.internal_resolution);
+    set_draw_distance_mode(settings.draw_distance);
     set_fullscreen(settings.fullscreen);
     set_timewarp_multiplier(settings.timewarp_multiplier);
     g_draw_hud = settings.draw_hud;
@@ -798,6 +842,11 @@ bool save_display_settings(const std::filesystem::path &config_dir) {
     if (settings.internal_resolution == InternalResolutionMode::res_2x) res_str = "2x";
     else if (settings.internal_resolution == InternalResolutionMode::res_4x) res_str = "4x";
     out << "internal_resolution = " << res_str << "\n";
+
+    const char *dist_str = "standard";
+    if (settings.draw_distance == DrawDistanceMode::extended) dist_str = "extended";
+    else if (settings.draw_distance == DrawDistanceMode::far) dist_str = "far";
+    out << "draw_distance = " << dist_str << "\n";
 
     out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
 
@@ -858,6 +907,10 @@ bool load_display_settings(const std::filesystem::path &config_dir) {
             if (val == "1x" || val == "1" || val == "320x200") settings.internal_resolution = InternalResolutionMode::res_1x;
             else if (val == "2x" || val == "2" || val == "640x400") settings.internal_resolution = InternalResolutionMode::res_2x;
             else if (val == "4x" || val == "4" || val == "1280x800") settings.internal_resolution = InternalResolutionMode::res_4x;
+        } else if (key == "draw_distance" || key == "distance" || key == "draw_dist") {
+            if (val == "standard" || val == "64" || val == "64q" || val == "1x" || val == "0") settings.draw_distance = DrawDistanceMode::standard;
+            else if (val == "extended" || val == "96" || val == "96q" || val == "1.5x" || val == "1") settings.draw_distance = DrawDistanceMode::extended;
+            else if (val == "far" || val == "128" || val == "128q" || val == "2x" || val == "2") settings.draw_distance = DrawDistanceMode::far;
         } else if (key == "fullscreen") {
             settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "timewarp_multiplier") {

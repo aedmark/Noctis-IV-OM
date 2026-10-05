@@ -238,7 +238,7 @@ extern uint32_t fixture_ruin_draws;
 extern uint32_t fixture_capsule_draws;
 extern int16_t albedo;
 extern uint8_t sky_brightness;
-extern uint16_t m200[200];
+extern uint16_t m200[256];
 extern float rwp;
 extern float iwp;
 extern float wp;

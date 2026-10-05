@@ -104,6 +104,20 @@ int internal_resolution_scale(InternalResolutionMode mode);
 using InternalResolutionChangeCallback = void (*)(InternalResolutionMode mode);
 void set_internal_resolution_change_callback(InternalResolutionChangeCallback cb);
 
+// Terrain draw distance modes (Milestone 13 - Phase 2)
+enum class DrawDistanceMode : std::uint8_t {
+    standard, // 64 quadrants (1.0x Authentic DOS)
+    extended, // 96 quadrants (1.5x Extended horizon)
+    far       // 128 quadrants (2.0x Distant horizon, full active heightfield)
+};
+
+DrawDistanceMode get_draw_distance_mode();
+void set_draw_distance_mode(DrawDistanceMode mode);
+DrawDistanceMode cycle_draw_distance_mode(DrawDistanceMode current);
+DrawDistanceMode cycle_draw_distance_mode();
+const char *draw_distance_mode_name(DrawDistanceMode mode);
+int draw_distance_max_depth(DrawDistanceMode mode);
+
 // Display Settings Structure & Persistence (Milestone 10)
 struct DisplaySettings {
     AspectRatioMode aspect_ratio = AspectRatioMode::crt_4_3;
@@ -111,6 +125,7 @@ struct DisplaySettings {
     bool crt_shader = false;
     bool subpixel_fidelity = false;
     InternalResolutionMode internal_resolution = InternalResolutionMode::res_1x;
+    DrawDistanceMode draw_distance = DrawDistanceMode::standard;
     bool fullscreen = false;
     int timewarp_multiplier = 100;
     std::int8_t draw_hud = 1;

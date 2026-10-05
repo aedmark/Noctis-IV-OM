@@ -28,12 +28,14 @@ std::uint16_t visible_surface_objects(std::uint16_t count, std::int32_t depth) {
 void apply_suit_torch(std::uint8_t *framebuffer, std::int32_t width, std::int32_t height, bool torch_active) {
     if (!torch_active || !framebuffer || width <= 0 || height <= 0) return;
 
+    const float scale_x = static_cast<float>(width) / 320.0f;
+    const float scale_y = static_cast<float>(height) / 200.0f;
     const int cx = width / 2;
-    const int cy = height / 2 + 8;
-    constexpr float rx = 85.0f;
-    constexpr float ry = 65.0f;
-    constexpr float inv_rx2 = 1.0f / (rx * rx);
-    constexpr float inv_ry2 = 1.0f / (ry * ry);
+    const int cy = height / 2 + static_cast<int>(std::round(8.0f * scale_y));
+    const float rx = 85.0f * scale_x;
+    const float ry = 65.0f * scale_y;
+    const float inv_rx2 = 1.0f / (rx * rx);
+    const float inv_ry2 = 1.0f / (ry * ry);
 
     const int min_y = std::max(0, cy - static_cast<int>(ry));
     const int max_y = std::min(height - 1, cy + static_cast<int>(ry));
@@ -79,17 +81,21 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
                            std::int32_t width, std::int32_t height) {
     if (!rgba || !adapted || width <= 0 || height <= 0) return;
 
+    const float scale_x = static_cast<float>(width) / 320.0f;
+    const float scale_y = static_cast<float>(height) / 200.0f;
     const int cx = width / 2;
-    const int cy = height / 2 + 10;
-    constexpr float rx = 96.0f;
-    constexpr float ry = 70.0f;
-    constexpr float inv_rx2 = 1.0f / (rx * rx);
-    constexpr float inv_ry2 = 1.0f / (ry * ry);
+    const int cy = height / 2 + static_cast<int>(std::round(10.0f * scale_y));
+    const float rx = 96.0f * scale_x;
+    const float ry = 70.0f * scale_y;
+    const float inv_rx2 = 1.0f / (rx * rx);
+    const float inv_ry2 = 1.0f / (ry * ry);
 
-    const int min_y = std::max(10, cy - static_cast<int>(ry));
-    const int max_y = std::min(height - 11, cy + static_cast<int>(ry));
-    const int min_x = std::max(10, cx - static_cast<int>(rx));
-    const int max_x = std::min(width - 11, cx + static_cast<int>(rx));
+    const int margin_y = static_cast<int>(std::round(10.0f * scale_y));
+    const int margin_x = static_cast<int>(std::round(10.0f * scale_x));
+    const int min_y = std::max(margin_y, cy - static_cast<int>(ry));
+    const int max_y = std::min(height - 1 - margin_y, cy + static_cast<int>(ry));
+    const int min_x = std::max(margin_x, cx - static_cast<int>(rx));
+    const int max_x = std::min(width - 1 - margin_x, cx + static_cast<int>(rx));
 
     for (int y = min_y; y <= max_y; ++y) {
         const float dy = static_cast<float>(y - cy);
@@ -246,12 +252,13 @@ void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std
     const std::size_t len = std::strlen(text);
     if (len == 0) return;
 
-    constexpr int char_step = 6;
-    const int total_width = static_cast<int>(len) * char_step - 2;
+    const int scale = std::max(1, width / 320);
+    const int char_step = 6 * scale;
+    const int total_width = static_cast<int>(len) * char_step - (2 * scale);
     const int start_x = (width - total_width) / 2;
-    const int start_y = 100;
+    const int start_y = height / 2;
 
-    // Pass 1: Draw black shadow (index 64) offset by (+1, +1)
+    // Pass 1: Draw black shadow (index 64) offset by (+scale, +scale)
     for (std::size_t n = 0; n < len; ++n) {
         char ch = text[n];
         if (ch >= 'a' && ch <= 'z') ch = static_cast<char>(ch - 'a' + 'A');
@@ -260,14 +267,18 @@ void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std
         const int gx = start_x + static_cast<int>(n) * char_step;
 
         for (int row = 0; row < 5; ++row) {
-            const int py = start_y + row + 1;
-            if (py < 0 || py >= height) continue;
-            const auto bits = surface_hud_font[glyph_idx + row];
-            for (int col = 0; col < 3; ++col) {
-                if (bits & (1 << col)) {
-                    const int px = gx + col + 1;
-                    if (px >= 0 && px < width) {
-                        framebuffer[py * width + px] = 64; // Dark shadow
+            for (int sy = 0; sy < scale; ++sy) {
+                const int py = start_y + (row * scale) + sy + scale;
+                if (py < 0 || py >= height) continue;
+                const auto bits = surface_hud_font[glyph_idx + row];
+                for (int col = 0; col < 3; ++col) {
+                    if (bits & (1 << col)) {
+                        for (int sx = 0; sx < scale; ++sx) {
+                            const int px = gx + (col * scale) + sx + scale;
+                            if (px >= 0 && px < width) {
+                                framebuffer[py * width + px] = 64; // Dark shadow
+                            }
+                        }
                     }
                 }
             }
@@ -283,14 +294,18 @@ void draw_surface_status_text(std::uint8_t *framebuffer, std::int32_t width, std
         const int gx = start_x + static_cast<int>(n) * char_step;
 
         for (int row = 0; row < 5; ++row) {
-            const int py = start_y + row;
-            if (py < 0 || py >= height) continue;
-            const auto bits = surface_hud_font[glyph_idx + row];
-            for (int col = 0; col < 3; ++col) {
-                if (bits & (1 << col)) {
-                    const int px = gx + col;
-                    if (px >= 0 && px < width) {
-                        framebuffer[py * width + px] = 127; // Crisp star-white
+            for (int sy = 0; sy < scale; ++sy) {
+                const int py = start_y + (row * scale) + sy;
+                if (py < 0 || py >= height) continue;
+                const auto bits = surface_hud_font[glyph_idx + row];
+                for (int col = 0; col < 3; ++col) {
+                    if (bits & (1 << col)) {
+                        for (int sx = 0; sx < scale; ++sx) {
+                            const int px = gx + (col * scale) + sx;
+                            if (px >= 0 && px < width) {
+                                framebuffer[py * width + px] = 127; // Crisp star-white
+                            }
+                        }
                     }
                 }
             }
@@ -320,7 +335,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        bool crt_shader,
                                                        bool subpixel_fidelity,
                                                        bool show_advanced_fx,
-                                                       int internal_res_mode) {
+                                                       int internal_res_mode,
+                                                       int draw_distance_mode) {
     std::vector<std::string> lines = {
         "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
         draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
@@ -337,6 +353,10 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                               : (internal_res_mode == 2) ? "1280X800 4X (R)"
                                                          : "320X200 1X (R)";
         lines.emplace_back(std::string("INTERNAL RES: ") + res_label);
+        const char *dist_label = (draw_distance_mode == 1) ? "EXTENDED 96Q (D)"
+                               : (draw_distance_mode == 2) ? "FAR 128Q (D)"
+                                                           : "STANDARD 64Q (D)";
+        lines.emplace_back(std::string("DRAW DISTANCE: ") + dist_label);
         lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
         lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
         lines.emplace_back("TAB / A: AUDIO SETTINGS");
