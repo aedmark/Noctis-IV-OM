@@ -17,6 +17,7 @@
 #include "stellar_coronal_flares.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
+#include "gallery.h"
 #include "starmap_exchange.h"
 #include "indexed_framebuffer.h"
 #include "input.h"
@@ -2984,6 +2985,9 @@ int main(int argc, char **argv) {
     std::string export_movie_deck_arg;
     double export_movie_fps_arg = 18.2;
     std::string export_movie_out_arg;
+    std::string export_image_arg;
+    std::string export_image_out_arg;
+    std::string export_image_fmt_arg;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -3073,6 +3077,12 @@ int main(int argc, char **argv) {
             export_movie_fps_arg = std::strtod(argv[++arg], nullptr);
         } else if (std::string_view(argv[arg]) == "--export-out" && arg + 1 < argc) {
             export_movie_out_arg = argv[++arg];
+        } else if ((std::string_view(argv[arg]) == "--export-image" || std::string_view(argv[arg]) == "--export-screenshot") && arg + 1 < argc) {
+            export_image_arg = argv[++arg];
+        } else if (std::string_view(argv[arg]) == "--export-image-out" && arg + 1 < argc) {
+            export_image_out_arg = argv[++arg];
+        } else if (std::string_view(argv[arg]) == "--export-image-format" && arg + 1 < argc) {
+            export_image_fmt_arg = argv[++arg];
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
@@ -3259,6 +3269,41 @@ int main(int argc, char **argv) {
             return 0;
         } else {
             std::fprintf(stderr, "movie_export deck=%s status=error message=%s\n", deck_buf, res.message.c_str());
+            return 1;
+        }
+    }
+    if (!export_image_arg.empty()) {
+        const auto gallery_dir = noctis::runtime_paths().gallery_dir;
+        const auto entries = noctis::scan_gallery(gallery_dir);
+        if (entries.empty()) {
+            std::fprintf(stderr, "image_export status=error message=no images on file\n");
+            return 1;
+        }
+        std::optional<std::size_t> found_idx;
+        if (export_image_arg == "latest" || export_image_arg == "newest") {
+            found_idx = entries.size() - 1;
+        } else {
+            found_idx = noctis::find_gallery_entry(entries, export_image_arg);
+        }
+        if (!found_idx) {
+            std::fprintf(stderr, "image_export id=%s status=error message=image not found\n", export_image_arg.c_str());
+            return 1;
+        }
+        const auto &entry = entries[*found_idx];
+        noctis::GalleryExportFormat fmt = noctis::GalleryExportFormat::png;
+        if (export_image_fmt_arg == "bmp" || export_image_fmt_arg == "BMP") {
+            fmt = noctis::GalleryExportFormat::bmp;
+        }
+        std::optional<std::filesystem::path> out_path;
+        if (!export_image_out_arg.empty()) {
+            out_path = std::filesystem::path(export_image_out_arg);
+        }
+        const bool ok = noctis::export_gallery_image(entry, out_path, fmt);
+        if (ok) {
+            std::printf("image_export id=%s status=ok\n", entry.id.c_str());
+            return 0;
+        } else {
+            std::fprintf(stderr, "image_export id=%s status=error message=failed to export image\n", entry.id.c_str());
             return 1;
         }
     }

@@ -21,6 +21,7 @@
 #include "simulation_clock.h"
 #include "startup_diagnostics.h"
 #include "stellar_coronal_flares.h"
+#include "gallery.h"
 #include <algorithm>
 
 const double deg = M_PI / 180;
@@ -5827,6 +5828,9 @@ nosecondarysun:
                     last_snapshot = slot->number;
                     const auto composed = noctis::compose_panorama(
                         {gallery / "WIDE9997.BMP", gallery / "WIDE9998.BMP", gallery / "WIDE9999.BMP"}, slot->path);
+                    if (composed.ok) {
+                        noctis::auto_export_screenshot_png(slot->path);
+                    }
                     const auto notice = (composed.ok ? "PANORAMA " : "PANORAMA FAILED ") + slot->path.stem().string();
                     noctis::show_overlay_notice(composed.ok ? (notice + " SAVED").c_str() : notice.c_str());
                 }

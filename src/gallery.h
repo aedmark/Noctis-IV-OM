@@ -56,18 +56,31 @@ enum class GalleryCommand : std::uint8_t {
     pan_left,
     pan_right,
     download,
+    export_png,
+    export_bmp,
+    toggle_format,
     open_folder,
+};
+
+enum class GalleryExportFormat : std::uint8_t {
+    png,
+    bmp
 };
 
 // Returns the user's standard Downloads directory.
 std::filesystem::path user_downloads_directory();
 
 // Exports or downloads the given gallery image:
-// - On Web (Emscripten): triggers an HTML5 Blob download via a virtual link click.
-// - On Desktop: copies the BMP to destination_override if set, or user's Downloads directory.
+// - On Web (Emscripten): triggers an HTML5 Blob download via a virtual link click (PNG or BMP).
+// - On Desktop: encodes PNG (default) or copies BMP to destination_override if set, or user's Downloads directory.
 // Returns true on success, false on failure.
 bool export_gallery_image(const GalleryEntry &entry,
-                          const std::optional<std::filesystem::path> &destination_override = std::nullopt);
+                          const std::optional<std::filesystem::path> &destination_override = std::nullopt,
+                          GalleryExportFormat format = GalleryExportFormat::png);
+
+// Automatically exports a snapshot or panorama image to the user's Downloads directory as a PNG.
+// Safe to call from anywhere; returns true if exported successfully.
+bool auto_export_screenshot_png(const std::filesystem::path &bmp_path);
 
 // Opens the specified directory (or file's parent folder) in the system file explorer:
 // - On Windows: explorer.exe / ShellExecute.
@@ -84,6 +97,7 @@ struct GalleryViewerState {
     std::size_t count{};
     bool zoomed{};
     float pan{};
+    GalleryExportFormat export_format = GalleryExportFormat::png;
 };
 
 constexpr float gallery_pan_step = 0.125F;

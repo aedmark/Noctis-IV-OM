@@ -71,18 +71,20 @@ void close_gallery_viewer() {
 #endif
 }
 
-void trigger_export() {
+void trigger_export(std::optional<GalleryExportFormat> forced_fmt = std::nullopt) {
     if (entries.empty() || state.index >= entries.size()) return;
     const auto &entry = entries[state.index];
-    const bool ok = export_gallery_image(entry);
+    const auto fmt = forced_fmt.value_or(state.export_format);
+    const bool ok = export_gallery_image(entry, std::nullopt, fmt);
     play_goesnet_chime(ok);
     toast_success = ok;
     toast_timer = 3.5F;
+    const std::string ext = (fmt == GalleryExportFormat::png) ? ".PNG" : ".BMP";
     if (ok) {
 #ifdef __EMSCRIPTEN__
-        toast_text = "DOWNLOADING " + entry.id + ".BMP";
+        toast_text = "DOWNLOADING " + entry.id + ext;
 #else
-        toast_text = "EXPORTED " + entry.id + ".BMP TO DOWNLOADS";
+        toast_text = "EXPORTED " + entry.id + ext + " TO DOWNLOADS";
 #endif
     } else {
         toast_text = "EXPORT FAILED";
@@ -164,6 +166,17 @@ bool gallery_viewer_input(const InputFrame &frame) {
         if (command == GalleryCommand::download) {
             trigger_export();
         }
+        if (command == GalleryCommand::export_png) {
+            trigger_export(GalleryExportFormat::png);
+        }
+        if (command == GalleryCommand::export_bmp) {
+            trigger_export(GalleryExportFormat::bmp);
+        }
+        if (command == GalleryCommand::toggle_format) {
+            toast_success = true;
+            toast_timer = 2.0F;
+            toast_text = (state.export_format == GalleryExportFormat::png) ? "EXPORT FORMAT: PNG" : "EXPORT FORMAT: BMP";
+        }
         if (command == GalleryCommand::open_folder) {
             trigger_open_folder();
         }
@@ -214,15 +227,18 @@ void render_gallery_viewer(int render_width, int render_height, const DisplayVie
     const float btn_y = panel.y + (bar - btn_h) * 0.5F;
     const float btn_pad_x = static_cast<float>(font) * 0.5F;
 
+    const bool is_png = (state.export_format == GalleryExportFormat::png);
 #ifdef __EMSCRIPTEN__
-    const char *export_label = "⬇ DOWNLOAD (D)";
+    const char *export_label = is_png ? "⬇ DOWNLOAD PNG (D)" : "⬇ DOWNLOAD BMP (D)";
 #else
-    const char *export_label = "⬇ EXPORT (D)";
+    const char *export_label = is_png ? "⬇ EXPORT PNG (D)" : "⬇ EXPORT BMP (D)";
     const char *folder_label = "📁 FOLDER (O)";
 #endif
+    const char *fmt_label = is_png ? "PNG (F)" : "BMP (F)";
     const char *close_label = "✕ CLOSE (ESC)";
 
     const float exp_w = MeasureText(export_label, btn_font) + btn_pad_x * 2.0F;
+    const float fmt_w = MeasureText(fmt_label, btn_font) + btn_pad_x * 2.0F;
 #ifndef __EMSCRIPTEN__
     const float fld_w = MeasureText(folder_label, btn_font) + btn_pad_x * 2.0F;
 #endif
@@ -233,9 +249,9 @@ void render_gallery_viewer(int render_width, int render_height, const DisplayVie
     const float header_mid_space = counter_start_x - title_end_x;
 
 #ifdef __EMSCRIPTEN__
-    const float total_btns_w = exp_w + 8.0F + cls_w;
+    const float total_btns_w = exp_w + 8.0F + fmt_w + 8.0F + cls_w;
 #else
-    const float total_btns_w = exp_w + 8.0F + fld_w + 8.0F + cls_w;
+    const float total_btns_w = exp_w + 8.0F + fmt_w + 8.0F + fld_w + 8.0F + cls_w;
 #endif
 
     if (header_mid_space >= total_btns_w) {
@@ -244,6 +260,13 @@ void render_gallery_viewer(int render_width, int render_height, const DisplayVie
             trigger_export();
         }
         cur_x += exp_w + 8.0F;
+        if (draw_button({cur_x, btn_y, fmt_w, btn_h}, fmt_label, btn_font)) {
+            state.export_format = is_png ? GalleryExportFormat::bmp : GalleryExportFormat::png;
+            toast_success = true;
+            toast_timer = 2.0F;
+            toast_text = (state.export_format == GalleryExportFormat::png) ? "EXPORT FORMAT: PNG" : "EXPORT FORMAT: BMP";
+        }
+        cur_x += fmt_w + 8.0F;
 #ifndef __EMSCRIPTEN__
         if (draw_button({cur_x, btn_y, fld_w, btn_h}, folder_label, btn_font)) {
             trigger_open_folder();
@@ -280,11 +303,11 @@ void render_gallery_viewer(int render_width, int render_height, const DisplayVie
     draw_text_shadowed(info, left, footer_y, font, text_color);
 
 #ifdef __EMSCRIPTEN__
-    const char *hints = state.zoomed ? "LEFT/RIGHT PAN   D DOWNLOAD   Z FIT   ESC CLOSE"
-                                     : "LEFT/RIGHT BROWSE   D DOWNLOAD   Z ZOOM   ESC CLOSE";
+    const char *hints = state.zoomed ? "LEFT/RIGHT PAN   D DOWNLOAD   F FORMAT   Z FIT   ESC CLOSE"
+                                     : "LEFT/RIGHT BROWSE   D DOWNLOAD   F FORMAT   Z ZOOM   ESC CLOSE";
 #else
-    const char *hints = state.zoomed ? "LEFT/RIGHT PAN   D EXPORT   O FOLDER   Z FIT   ESC CLOSE"
-                                     : "LEFT/RIGHT BROWSE   D EXPORT   O FOLDER   Z ZOOM   ESC CLOSE";
+    const char *hints = state.zoomed ? "LEFT/RIGHT PAN   D EXPORT   F FORMAT   O FOLDER   Z FIT   ESC CLOSE"
+                                     : "LEFT/RIGHT BROWSE   D EXPORT   F FORMAT   O FOLDER   Z ZOOM   ESC CLOSE";
 #endif
 
     const int hint_font = std::max(10, font * 4 / 5);

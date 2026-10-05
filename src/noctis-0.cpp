@@ -59,6 +59,7 @@
 #include "gamepad.h"
 #include "navigation_hud.h"
 #include "stellar_coronal_flares.h"
+#include "gallery.h"
 
 extern float hpoint(int32_t px, int32_t pz);
 
@@ -6240,6 +6241,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
     }
 
     if (write_indexed_bmp(snapfilename) && !forcenumber) {
+        noctis::auto_export_screenshot_png(snapfilename);
         const auto notice = "SNAPSHOT " + snapfilename.stem().string() + " SAVED";
         noctis::show_overlay_notice(notice.c_str());
     } else if (!forcenumber) {

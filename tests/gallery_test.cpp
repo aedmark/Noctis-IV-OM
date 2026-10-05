@@ -154,6 +154,14 @@ int main(int argc, char **argv) {
     ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::download, "d does not trigger download");
     commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'D'}; }), false);
     ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::download, "D does not trigger download");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'p'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::export_png, "p does not trigger export_png");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'P'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::export_png, "P does not trigger export_png");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'f'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::toggle_format, "f does not trigger toggle_format");
+    commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'F'}; }), false);
+    ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::toggle_format, "F does not trigger toggle_format");
     commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'o'}; }), false);
     ok &= require(commands.size() == 1 && commands[0] == GalleryCommand::open_folder, "o does not trigger open_folder");
     commands = gallery_commands_for_frame(frame_with([](InputFrame &f) { f.text = {'O'}; }), false);
@@ -161,6 +169,11 @@ int main(int argc, char **argv) {
     ok &= require(gallery_commands_for_frame({}, false).empty(), "idle frame produced commands");
 
     state.open = true;
+    state.export_format = GalleryExportFormat::png;
+    ok &= require(!apply_gallery_command(state, GalleryCommand::toggle_format), "toggle_format should not change image index");
+    ok &= require(state.export_format == GalleryExportFormat::bmp, "toggle_format should switch PNG to BMP");
+    ok &= require(!apply_gallery_command(state, GalleryCommand::toggle_format), "toggle_format should not change image index");
+    ok &= require(state.export_format == GalleryExportFormat::png, "toggle_format should switch BMP back to PNG");
     ok &= require(!apply_gallery_command(state, GalleryCommand::download), "download command reported image change");
     ok &= require(!apply_gallery_command(state, GalleryCommand::open_folder), "open_folder command reported image change");
 
@@ -170,12 +183,26 @@ int main(int argc, char **argv) {
 #endif
 
     const auto export_dir = root / "downloads_test";
-    ok &= require(export_gallery_image(entries[0], export_dir), "export_gallery_image failed");
-    ok &= require(std::filesystem::exists(export_dir / "SNAP0003.BMP"), "exported file does not exist");
+    // BMP export test
+    ok &= require(export_gallery_image(entries[0], export_dir, GalleryExportFormat::bmp), "export_gallery_image BMP failed");
+    ok &= require(std::filesystem::exists(export_dir / "SNAP0003.BMP"), "exported BMP file does not exist");
     ok &= require(std::filesystem::file_size(export_dir / "SNAP0003.BMP") == std::filesystem::file_size(entries[0].path),
                   "exported file size mismatch");
+
+    // PNG export test
+    ok &= require(export_gallery_image(entries[0], export_dir, GalleryExportFormat::png), "export_gallery_image PNG failed");
+    const auto png_path = export_dir / "SNAP0003.png";
+    ok &= require(std::filesystem::exists(png_path), "exported PNG file does not exist");
+    ok &= require(std::filesystem::file_size(png_path) > 0, "exported PNG file is empty");
+    {
+        std::ifstream png_in(png_path, std::ios::binary);
+        std::uint8_t sig[8] = {0};
+        png_in.read(reinterpret_cast<char *>(sig), 8);
+        ok &= require(sig[0] == 0x89 && sig[1] == 'P' && sig[2] == 'N' && sig[3] == 'G', "PNG magic bytes mismatch");
+    }
+
     // Overwrite test
-    ok &= require(export_gallery_image(entries[0], export_dir), "re-export overwrite failed");
+    ok &= require(export_gallery_image(entries[0], export_dir, GalleryExportFormat::png), "re-export overwrite failed");
 
     GalleryEntry missing_entry;
     missing_entry.path = root / "NONEXISTENT.BMP";

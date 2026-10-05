@@ -65,6 +65,8 @@ int main(int argc, char **argv) {
                       && contains(answer, "320X200"), "VIEW number mismatch");
     answer = execute_goes_command("VIEW 5_", context);
     ok &= require(answer.status == GoesResultStatus::not_found && contains(answer, "IMAGE NOT ON FILE."), "VIEW absent mismatch");
+    answer = execute_goes_command("VIEW EXPORT 4_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "IMAGE EXPORT OK"), "VIEW EXPORT mismatch");
     std::filesystem::remove_all(gallery);
 
     // MOVIE command test

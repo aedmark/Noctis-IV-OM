@@ -264,13 +264,58 @@ GoesResult gallery_listing(const std::filesystem::path &directory) {
         rows.push_back(entry->id + " " + gallery_kind_name(entry->kind));
     rows.push_back(std::string(divider));
     rows.push_back(std::to_string(entries.size()) + (entries.size() == 1 ? " IMAGE ON FILE." : " IMAGES ON FILE."));
-    rows.push_back("VIEW N TO DISPLAY.");
+    rows.push_back("VIEW N TO DISPLAY,");
+    rows.push_back("VIEW EXPORT N TO SAVE.");
     return result(GoesResultStatus::ok, std::move(rows));
 }
 
 GoesResult view_image(const std::filesystem::path &directory, std::string_view key) {
     const auto entries = scan_gallery(directory);
     if (entries.empty()) return result(GoesResultStatus::not_found, {"NO IMAGES ON FILE."});
+
+    std::string_view target_key = key;
+    bool do_export = false;
+    GalleryExportFormat export_fmt = GalleryExportFormat::png;
+
+    if (key.starts_with("EXPORT ") || key.starts_with("EXP ")) {
+        do_export = true;
+        const auto space = key.find(' ');
+        target_key = (space != std::string_view::npos) ? key.substr(space + 1) : "";
+    } else if (key.ends_with(" EXPORT") || key.ends_with(" EXP")) {
+        do_export = true;
+        const auto space = key.rfind(' ');
+        target_key = (space != std::string_view::npos) ? key.substr(0, space) : "";
+    }
+
+    if (do_export) {
+        if (target_key.ends_with(" BMP") || target_key.ends_with(" bmp")) {
+            export_fmt = GalleryExportFormat::bmp;
+            target_key = target_key.substr(0, target_key.rfind(' '));
+        } else if (target_key.ends_with(" PNG") || target_key.ends_with(" png")) {
+            export_fmt = GalleryExportFormat::png;
+            target_key = target_key.substr(0, target_key.rfind(' '));
+        }
+        const auto index = find_gallery_entry(entries, target_key);
+        if (!index) return result(GoesResultStatus::not_found, {"IMAGE NOT ON FILE.", "TYPE GALLERY FOR A", "LISTING."});
+        const auto &entry = entries[*index];
+        const bool ok = export_gallery_image(entry, std::nullopt, export_fmt);
+        const std::string ext = (export_fmt == GalleryExportFormat::png) ? ".PNG" : ".BMP";
+        if (ok) {
+            return result(GoesResultStatus::ok, {
+                "IMAGE EXPORT OK",
+                std::string(divider),
+                "EXPORTED " + entry.id + ext,
+                "SAVED TO DOWNLOADS"
+            });
+        } else {
+            return result(GoesResultStatus::write_failed, {
+                "IMAGE EXPORT FAILED",
+                std::string(divider),
+                "COULD NOT WRITE FILE"
+            });
+        }
+    }
+
     const auto index = find_gallery_entry(entries, key);
     if (!index) return result(GoesResultStatus::not_found, {"IMAGE NOT ON FILE.", "TYPE GALLERY FOR A", "LISTING."});
     const auto &entry = entries[*index];

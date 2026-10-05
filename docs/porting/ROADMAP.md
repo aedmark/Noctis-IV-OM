@@ -260,7 +260,7 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M11-W01 | In-engine screenshot & panorama download/export | DONE | Direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (key `D` or Export button: browser file download in Web via Emscripten JavaScript bridge, system Downloads export on desktop); verified in `tests/gallery_test.cpp` and 47/47 passing CTest suites |
+| M11-W01 | In-engine screenshot & panorama download/export | DONE | Direct in-engine export for captured snapshots and panoramas in the F4 Image Archive Viewer (key `D`/`P` or Export button, format toggle `F` for PNG/BMP: browser file download in Web via Emscripten JavaScript bridge, system Downloads export on desktop), headless CLI image export (`--export-image`), GOESnet terminal `VIEW EXPORT`, and automatic PNG export to Downloads upon capture (`M` snapshot, `N` panorama); verified in `tests/gallery_test.cpp` and passing CTest suites |
 | M11-W02 | Flight & maneuvering acoustics | DONE | Procedural sublight RCS attitude thrusters (onset cold-gas valve burst + continuous bandpass hiss during attitude changes), atmospheric descent buffeting turbulence scaled with entry velocity and air density, and dual-stage mechanical touchdown clunk on planetary landing impact/bounce; verified in `tests/audio_test.cpp` and 47/47 passing CTest suites |
 | M11-W03 | Gamepad and joystick flight controls | DONE | Dual-stick flight and surface traversal via Raylib Gamepad API (analog yaw/pitch/roll, trigger thrusters, context-sensitive B-button cancellation, dual-motor rumble feedback); verified in `tests/gamepad_test.cpp` and 47/47 passing CTest suites |
 | M11-W04 | Configurable controls & sensitivity persistence | DONE | User-configurable keybindings, mouse sensitivity sliders, mouse pitch inversion (push-forward = look-up default), gamepad deadzones, and settings persistence in `controls.ini`; verified in `tests/controls_test.cpp` and 47/47 passing CTest suites |
@@ -269,8 +269,8 @@ containers, not substitutes for that ledger.
 
 **Exit criteria**
 
-- Web players can download captured screenshots and panoramas directly to their computer with a single in-engine keypress or button in the F4 Image Archive without opening developer tools.
-- Desktop players can open the gallery folder or export captures directly from within the game.
+- Web players can download captured screenshots and panoramas directly to their computer (as PNG or BMP) with a single in-engine keypress or button in the F4 Image Archive without opening developer tools.
+- Desktop players can open the gallery folder, export captures directly as PNGs to Downloads, or automatically export PNGs on every snapshot/panorama capture.
 - All existing 47 automated test suites continue passing with 100% determinism.
 
 ## M12 — Celestial Cartography & Waypoint Navigation

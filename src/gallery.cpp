@@ -8,17 +8,9 @@
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#include <shellapi.h>
-#include <shlobj.h>
-#include <knownfolders.h>
-#elif defined(__linux__)
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 #endif
+
+#include <raylib.h>
 
 namespace noctis {
 
@@ -41,6 +33,27 @@ EM_JS(int, emscripten_download_file, (const char *path_str, const char *name_str
         return 1;
     } catch (err) {
         console.error('Noctis IV OM: Failed to download ' + vpath, err);
+        return 0;
+    }
+});
+
+EM_JS(int, emscripten_download_memory, (const void *buf_ptr, int buf_len, const char *name_str, const char *mime_str), {
+    var name = UTF8ToString(name_str);
+    var mime = UTF8ToString(mime_str);
+    try {
+        var data = new Uint8Array(HEAPU8.buffer, buf_ptr, buf_len);
+        var blob = new Blob([data], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+        return 1;
+    } catch (err) {
+        console.error('Noctis IV OM: Failed to download ' + name, err);
         return 0;
     }
 });
@@ -229,6 +242,12 @@ std::vector<GalleryCommand> gallery_commands_for_frame(const InputFrame &frame, 
     const bool download_text = std::any_of(frame.text.begin(), frame.text.end(),
                                            [](std::int32_t key) { return key == 'd' || key == 'D'; });
     if (download_text) commands.push_back(GalleryCommand::download);
+    const bool png_text = std::any_of(frame.text.begin(), frame.text.end(),
+                                      [](std::int32_t key) { return key == 'p' || key == 'P'; });
+    if (png_text) commands.push_back(GalleryCommand::export_png);
+    const bool toggle_format_text = std::any_of(frame.text.begin(), frame.text.end(),
+                                                [](std::int32_t key) { return key == 'f' || key == 'F'; });
+    if (toggle_format_text) commands.push_back(GalleryCommand::toggle_format);
     const bool open_folder_text = std::any_of(frame.text.begin(), frame.text.end(),
                                               [](std::int32_t key) { return key == 'o' || key == 'O'; });
     if (open_folder_text) commands.push_back(GalleryCommand::open_folder);
@@ -258,7 +277,13 @@ bool apply_gallery_command(GalleryViewerState &state, GalleryCommand command) {
     case GalleryCommand::pan_right:
         if (state.zoomed) state.pan = std::min(1.0F, state.pan + gallery_pan_step);
         return false;
+    case GalleryCommand::toggle_format:
+        state.export_format = (state.export_format == GalleryExportFormat::png)
+            ? GalleryExportFormat::bmp : GalleryExportFormat::png;
+        return false;
     case GalleryCommand::download:
+    case GalleryCommand::export_png:
+    case GalleryCommand::export_bmp:
     case GalleryCommand::open_folder:
         return false;
     }
@@ -267,61 +292,78 @@ bool apply_gallery_command(GalleryViewerState &state, GalleryCommand command) {
     return true;
 }
 
-std::filesystem::path user_downloads_directory() {
-#if defined(__EMSCRIPTEN__)
-    return {};
-#elif defined(_WIN32)
-    PWSTR value = nullptr;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Downloads, KF_FLAG_DEFAULT, nullptr, &value))) {
-        std::filesystem::path result(value);
-        CoTaskMemFree(value);
-        if (!result.empty()) return result;
-    }
-    const char *userprofile = std::getenv("USERPROFILE");
-    if (userprofile != nullptr && *userprofile != '\0') {
-        return std::filesystem::path(userprofile) / "Downloads";
-    }
-    return {};
-#elif defined(__linux__)
-    const char *xdg_download = std::getenv("XDG_DOWNLOAD_DIR");
-    if (xdg_download != nullptr && *xdg_download != '\0') {
-        return std::filesystem::path(xdg_download);
-    }
-    const char *home = std::getenv("HOME");
-    if (home != nullptr && *home != '\0') {
-        return std::filesystem::path(home) / "Downloads";
-    }
-    return {};
-#else
-    const char *home = std::getenv("HOME");
-    if (home != nullptr && *home != '\0') {
-        return std::filesystem::path(home) / "Downloads";
-    }
-    return {};
-#endif
-}
-
 bool export_gallery_image(const GalleryEntry &entry,
-                          const std::optional<std::filesystem::path> &destination_override) {
-#ifdef __EMSCRIPTEN__
+                          const std::optional<std::filesystem::path> &destination_override,
+                          GalleryExportFormat format) {
+    GalleryExportFormat effective_format = format;
+    std::filesystem::path dest_dir;
+    std::string explicit_filename;
+
+    if (destination_override) {
+        if (destination_override->has_extension()) {
+            const auto ext = destination_override->extension().string();
+            if (ext == ".png" || ext == ".PNG") {
+                effective_format = GalleryExportFormat::png;
+            } else if (ext == ".bmp" || ext == ".BMP") {
+                effective_format = GalleryExportFormat::bmp;
+            }
+            dest_dir = destination_override->parent_path();
+            explicit_filename = destination_override->filename().string();
+        } else {
+            dest_dir = *destination_override;
+        }
+    } else {
+        dest_dir = user_downloads_directory();
+    }
+
+    const std::string ext_str = (effective_format == GalleryExportFormat::png) ? ".png" : ".BMP";
+    const std::string filename = !explicit_filename.empty() ? explicit_filename : (entry.id + ext_str);
+
+    if (effective_format == GalleryExportFormat::png) {
+        auto decoded = load_gallery_image(entry.path);
+        if (!decoded || decoded->rgba.empty() || decoded->width <= 0 || decoded->height <= 0) {
+            return false;
+        }
+        Image img{
+            decoded->rgba.data(),
+            decoded->width,
+            decoded->height,
+            1,
+            PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+        };
+#if defined(__EMSCRIPTEN__)
+        if (!destination_override) {
+            int data_size = 0;
+            unsigned char *file_data = ExportImageToMemory(img, ".png", &data_size);
+            if (!file_data || data_size <= 0) return false;
+            int res = emscripten_download_memory(file_data, data_size, filename.c_str(), "image/png");
+            MemFree(file_data);
+            return res != 0;
+        }
+#endif
+        if (dest_dir.empty()) return false;
+        std::error_code ec;
+        std::filesystem::create_directories(dest_dir, ec);
+        if (ec) return false;
+        const auto target = dest_dir / filename;
+        return ExportImage(img, target.string().c_str());
+    }
+
+    // BMP export
+#if defined(__EMSCRIPTEN__)
     if (!destination_override) {
         std::error_code ec;
         if (!std::filesystem::is_regular_file(entry.path, ec) || ec) {
             return false;
         }
-        std::string filename = entry.path.filename().string();
-        if (filename.empty()) filename = entry.id + ".BMP";
         return emscripten_download_file(entry.path.string().c_str(), filename.c_str()) != 0;
     }
 #endif
-    const auto dest_dir = destination_override.value_or(user_downloads_directory());
     if (dest_dir.empty()) return false;
     std::error_code ec;
     std::filesystem::create_directories(dest_dir, ec);
     if (ec) return false;
     if (!std::filesystem::is_regular_file(entry.path, ec) || ec) return false;
-    std::string filename = entry.path.filename().string();
-    if (filename.empty()) filename = entry.id + ".BMP";
     const auto target = dest_dir / filename;
     if (std::filesystem::equivalent(entry.path, target, ec)) return true;
     ec.clear();
@@ -329,52 +371,37 @@ bool export_gallery_image(const GalleryEntry &entry,
     return !ec;
 }
 
-bool open_gallery_folder(const std::filesystem::path &path) {
+bool auto_export_screenshot_png(const std::filesystem::path &bmp_path) {
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(bmp_path, ec) || ec) {
+        return false;
+    }
+    auto decoded = load_gallery_image(bmp_path);
+    if (!decoded || decoded->rgba.empty() || decoded->width <= 0 || decoded->height <= 0) {
+        return false;
+    }
+    Image img{
+        decoded->rgba.data(),
+        decoded->width,
+        decoded->height,
+        1,
+        PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+    };
+    const std::string filename = bmp_path.stem().string() + ".png";
 #if defined(__EMSCRIPTEN__)
-    (void)path;
-    return false;
-#elif defined(_WIN32)
-    if (path.empty()) return false;
-    std::error_code ec;
-    std::filesystem::path folder = path;
-    if (std::filesystem::is_regular_file(path, ec)) {
-        folder = path.parent_path();
-    }
-    if (!std::filesystem::is_directory(folder, ec)) return false;
-    const auto folder_native = folder.wstring();
-    HINSTANCE res = ShellExecuteW(nullptr, L"open", folder_native.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-    return reinterpret_cast<INT_PTR>(res) > 32;
-#elif defined(__linux__)
-    if (path.empty()) return false;
-    std::error_code ec;
-    std::filesystem::path folder = path;
-    if (std::filesystem::is_regular_file(path, ec)) {
-        folder = path.parent_path();
-    }
-    if (!std::filesystem::is_directory(folder, ec)) return false;
-    pid_t pid = fork();
-    if (pid == 0) {
-        pid_t grandchild = fork();
-        if (grandchild == 0) {
-            int devnull = open("/dev/null", O_RDWR);
-            if (devnull >= 0) {
-                dup2(devnull, STDOUT_FILENO);
-                dup2(devnull, STDERR_FILENO);
-                close(devnull);
-            }
-            execlp("xdg-open", "xdg-open", folder.c_str(), static_cast<char *>(nullptr));
-            _exit(127);
-        }
-        _exit(0);
-    }
-    if (pid > 0) {
-        waitpid(pid, nullptr, 0);
-        return true;
-    }
-    return false;
+    int data_size = 0;
+    unsigned char *file_data = ExportImageToMemory(img, ".png", &data_size);
+    if (!file_data || data_size <= 0) return false;
+    int res = emscripten_download_memory(file_data, data_size, filename.c_str(), "image/png");
+    MemFree(file_data);
+    return res != 0;
 #else
-    (void)path;
-    return false;
+    const auto downloads = user_downloads_directory();
+    if (downloads.empty()) return false;
+    std::filesystem::create_directories(downloads, ec);
+    if (ec) return false;
+    const auto target = downloads / filename;
+    return ExportImage(img, target.string().c_str());
 #endif
 }
 
