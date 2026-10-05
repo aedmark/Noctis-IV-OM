@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 2.0.1</a>
+        <a class="nav-cta" href="index.html#download">Get 2.1.0</a>
       </nav>
     </div>
   </header>
@@ -184,6 +184,15 @@
     <p>Version 2.0.1 delivers an essential quality-of-life feature requested by the community: the ability to easily clear saved progress and start fresh from the initial Stardrifter configuration.</p>
     <p>In the <strong>Web Browser</strong> edition, progress previously saved permanently in browser IndexedDB storage without a simple in-game wipe mechanism. We have added a dedicated <strong>RESET SAVED DATA</strong> button directly to the Launch Screen card as well as an in-game top-bar overlay (visible whenever the mouse is released with <kbd>Esc</kbd> or <kbd>F10</kbd>). Clicking the button prompts for confirmation, cancels background autosaves, unlinks virtual files under <code>/persistent</code>, and cleanly deletes the browser's IndexedDB database before reloading fresh with pristine default catalogs.</p>
     <p>On <strong>Desktop</strong> builds (Linux and Windows), players and script authors can now pass the <code>--reset-data</code> flag to <code>nivlr</code>. This command cleanly clears player flight saves (<code>current.niv</code>, <code>surface.niv</code>), flight logs (<code>flight_log.json</code>, <code>flight_log.md</code>), and bookmarks (<code>bookmarks.ini</code>), and restores pristine default copies of <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code> from immutable seed defaults.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 2.1.0: The Starmap Exchange &amp; Community Cartography Update — Shareable Starmaps, Packet Invalidation Checks, and GOESnet Exchange</h2>
+    <p>Version 2.1.0 introduces full starmap sharing and exchange capabilities, empowering explorers to export, exchange, validate, and merge celestial discoveries, custom star and planet designations, and surface annotations across the community.</p>
+    <p>At the foundation of this update is the new <strong>Starmap Sharing Engine</strong> (<code>starmap_exchange</code>). Explorers can export their personal discoveries into compact, portable binary packets (<code>.nsm</code>) as well as structured, human-readable JSON files (<code>outbox.json</code> / <code>starmap.json</code>). Each packet features a native CRC32 payload checksum guarding against truncated transfers and file corruption.</p>
+    <p>To preserve catalog integrity across disparate user saves, the engine enforces strict <strong>astronomical invalidation rules</strong>: non-finite ID (NaN/Inf) rejection, zero coordinate rejection, galactic bounding limits, uppercase console character sanitization (<code>[A-Z0-9 _]</code>), and planetary orbital index bounds. The catalog's canonical seed objects (such as Fenia and Sol) are strictly immutable and protected from renaming or deletion. Furthermore, intelligent conflict resolution prevents accidental overwrites of existing player stars while rejecting duplicate name collisions.</p>
+    <p>Aboard the Stardrifter, vintage GOESnet commands have been revived: use <kbd>OUTBOX</kbd> (or <kbd>EXPORT</kbd> / <kbd>SHARE</kbd>) to generate discovery packets, <kbd>INBOX</kbd> (or <kbd>IMPORT</kbd>) to inspect, validate, and safely merge external packets into your catalog with dry-run support (<kbd>INBOX CHECK</kbd>), and <kbd>CLEAN</kbd> to compact <code>STARMAP.BIN</code> and reclaim space from obsolete tombstones.</p>
+    <p>On the desktop, explorers can manage packets directly from the terminal via <code>--export-starmap</code>, <code>--import-starmap</code>, and <code>--validate-starmap</code>. In the web browser, dedicated <strong>EXPORT STARMAP</strong> and <strong>IMPORT STARMAP</strong> buttons on the launch screen and in-game top-bar allow downloading and uploading discoveries directly to and from your browser's IndexedDB storage.</p>
   </section>
 </article>
 </body>

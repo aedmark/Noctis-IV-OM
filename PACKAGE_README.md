@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 2.0.1 Release
+# Noctis IV OM — Linux 2.1.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.1 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.1.0 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -33,6 +33,9 @@ You can also specify a custom profile path using `--user-data-dir DIRECTORY`.
 
 For a headless installation check, run `./nivlr --diagnostics`.
 To reset player saves, flight logs, and bookmarks and restore default catalogs, run `./nivlr --reset-data`.
+To export player discoveries to a starmap packet, run `./nivlr --export-starmap [PATH]`.
+To import and merge an external starmap packet, run `./nivlr --import-starmap <PATH>`.
+To dry-run inspect a packet without modifying catalogs, run `./nivlr --validate-starmap <PATH>`.
 
 ## Bring forward an older portable profile
 
@@ -86,12 +89,15 @@ building the game from source.
 
 ## Release status
 
-This is the 2.0.1 Maintenance Release (The Storage Reset & Fresh Start Patch),
-providing browser IndexedDB storage reset functionality and the `--reset-data` CLI command,
-alongside automated exploration journal logging (`LOG`) with Markdown/JSON export,
-seamless celestial naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`,
-starmap personal bookmark and waypoint navigation (`BM`), and the surface Explorer's
-Visor with real-time compass telemetry, coordinates, and Lander Return Beacon guidance.
+This is the 2.1.0 Feature Release (The Starmap Exchange & Community Cartography Update),
+introducing shareable binary (`.nsm`) and JSON starmap packets, native CRC32 payload checksums,
+rigorous astronomical validation and canonical seed protection, collision resolution,
+onboard GOESnet commands (`OUTBOX`, `INBOX`, `CLEAN`), CLI starmap management flags,
+and web browser starmap download/upload, alongside browser IndexedDB storage reset functionality,
+automated exploration journal logging (`LOG`) with Markdown/JSON export, seamless celestial
+naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`, starmap personal bookmark
+and waypoint navigation (`BM`), and the surface Explorer's Visor with real-time compass telemetry,
+coordinates, and Lander Return Beacon guidance.
 Please keep the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

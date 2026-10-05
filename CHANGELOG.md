@@ -5,7 +5,7 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
-## Unreleased (2.1.0) — Starmap Exchange & Community Cartography
+## 2.1.0 (2026-10-05) — Starmap Exchange & Community Cartography
 
 ### Features
 * **Starmap Sharing & Exchange Engine (`starmap_exchange`):**

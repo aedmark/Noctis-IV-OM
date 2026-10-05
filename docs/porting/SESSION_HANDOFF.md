@@ -4,10 +4,10 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Session identity
 
-- Date: 2026-10-04.
+- Date: 2026-10-05.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M12 (Celestial Cartography & Waypoint Navigation) complete.
-- Status: Release 2.0.1 (The Storage Reset & Fresh Start Patch) packaged, tagged, and published.
+- Branch: `master`; Milestone M16-W03 (Starmap Sharing & Invalidation Engine) complete.
+- Status: Release 2.1.0 (The Starmap Exchange & Community Cartography Update) packaged, tagged, and published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
