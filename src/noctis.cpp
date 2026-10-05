@@ -4878,8 +4878,9 @@ nop:
     }
 
     // Black background, which will be made hazy.
+    const uint32_t hud_boundary = static_cast<uint32_t>(2880 * internal_res_scale * internal_res_scale);
     if (!stspeed) {
-        memset(adapted + 2880, 0, (adapted_width * adapted_height) - 2880);
+        memset(adapted + hud_boundary, 0, (adapted_width * adapted_height) - hud_boundary);
     } else {
         pfade(adapted, 180, 8);
     }
@@ -4928,10 +4929,10 @@ nop:
             }
         }
 
-        psmooth_grays_ex(adapted + 2880);
+        psmooth_grays_ex(adapted + hud_boundary);
     }
 
-    mask_pixels_ex(adapted, 2880, 64);
+    mask_pixels_ex(adapted, hud_boundary, 64);
 
     if (l_dsd < 8 * nearstar_ray) {
         if (farstar) {
@@ -5763,14 +5764,23 @@ ext_1: //
 
         if (far_pixel_at(plx, ply, plz, 0, 1)) {
             const int32_t scale = internal_res_scale;
-            uint32_t index = vptr - adapted_width * 2 * scale;
+            const int32_t cx = static_cast<int32_t>(vptr % adapted_width);
+            const int32_t cy = static_cast<int32_t>(vptr / adapted_width) - 2 * scale;
 
             for (int16_t i = 0; i < 4; i++) {
-                int32_t voffset = (i > 1) ? adapted_width : 1;
-                int32_t signmod = (i % 2 == 0) ? -1 : 1;
+                const int32_t signmod = (i % 2 == 0) ? -1 : 1;
 
                 for (int16_t j = 4 * scale; j < 8 * scale; j++) {
-                    adapted[index + signmod * voffset * j] = 126;
+                    int32_t px = cx;
+                    int32_t py = cy;
+                    if (i > 1) {
+                        py += signmod * j;
+                    } else {
+                        px += signmod * j;
+                    }
+                    if (px >= 0 && px < adapted_width && py >= 0 && py < adapted_height) {
+                        adapted[py * adapted_width + px] = 126;
+                    }
                 }
             }
         }

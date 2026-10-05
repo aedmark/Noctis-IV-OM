@@ -2337,11 +2337,15 @@ void sky(uint16_t limits) {
                             }
                         }
                     } else {
-                        // 4x mode: 2x2 core + soft anti-aliased cross
-                        for (int dy = 0; dy < 2; ++dy) {
-                            uint32_t row = (center_y + dy) * adapted_width;
-                            for (int dx = 0; dx < 2; ++dx) {
-                                uint32_t p = row + (center_x + dx);
+                        // 4x mode: 4x4 core + soft 1-pixel anti-aliased perimeter
+                        for (int dy = 0; dy < 4; ++dy) {
+                            int py = center_y + dy;
+                            if (py < 0 || py >= adapted_height) continue;
+                            uint32_t row = static_cast<uint32_t>(py * adapted_width);
+                            for (int dx = 0; dx < 4; ++dx) {
+                                int px = center_x + dx;
+                                if (px < 0 || px >= adapted_width) continue;
+                                uint32_t p = row + static_cast<uint32_t>(px);
                                 int8_t color = adapted[p];
                                 adapted[p] &= 0xC0u;
                                 int8_t m = std::min(63, (color & 0x3F) + mask);
@@ -2350,12 +2354,15 @@ void sky(uint16_t limits) {
                         }
                         const int8_t edge_mask = mask >> 1u;
                         if (edge_mask > 2) {
-                            const int offsets[4][2] = {{-1, 0}, {2, 0}, {0, -1}, {0, 2}};
+                            const int offsets[8][2] = {
+                                {-1, 1}, {-1, 2}, {4, 1}, {4, 2},
+                                {1, -1}, {2, -1}, {1, 4}, {2, 4}
+                            };
                             for (const auto &off : offsets) {
                                 int px = center_x + off[0];
                                 int py = center_y + off[1];
                                 if (px >= 0 && px < adapted_width && py >= 0 && py < adapted_height) {
-                                    uint32_t p = py * adapted_width + px;
+                                    uint32_t p = static_cast<uint32_t>(py * adapted_width + px);
                                     int8_t color = adapted[p];
                                     adapted[p] &= 0xC0u;
                                     int8_t m = std::min(63, (color & 0x3F) + edge_mask);
@@ -3078,6 +3085,7 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
                 const int32_t scale = internal_res_scale;
                 const int32_t cx = static_cast<int32_t>(std::round(pxx));
                 const int32_t cy = static_cast<int32_t>(std::round(pyy));
+                vptr = static_cast<uint32_t>(adapted_width * cy + cx);
                 if (pixel_spreads) {
                     edge_color_1 = pixel_color >> 1u;
                     edge_color_2 = pixel_color >> 2u;
@@ -3125,8 +3133,8 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
                 return (1);
             }
             if (noctis::get_subpixel_fidelity()) {
+                vptr = (uint32_t) (adapted_width * (int32_t) std::round(pyy) + (int32_t) std::round(pxx));
                 if (pixel_spreads) {
-                    vptr = (uint32_t) (adapted_width * (int32_t) std::round(pyy) + (int32_t) std::round(pxx));
 
                     edge_color_1 = pixel_color >> 1u;
                     edge_color_2 = pixel_color >> 2u;
