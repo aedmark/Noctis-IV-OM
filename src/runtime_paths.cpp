@@ -274,4 +274,30 @@ RuntimeSetupResult prepare_runtime_storage(const RuntimePaths &paths) {
     return result;
 }
 
+bool reset_runtime_storage(const RuntimePaths &paths, std::string *error) {
+    std::error_code ec;
+    // Remove player saves, surface checkpoints, flight logs, and bookmarks
+    for (const char *name : {"current.niv", "current.bin", "surface.niv", "surface.bin",
+                             "flight_log.json", "flight_log.md", "bookmarks.ini", "guide-export.txt"}) {
+        std::filesystem::remove(paths.data_dir / name, ec);
+    }
+
+    // Restore pristine seed catalogs
+    for (const char *name : {"STARMAP.BIN", "GUIDE.BIN"}) {
+        const auto seed = paths.seed_data_dir / name;
+        const auto target = paths.data_dir / name;
+        if (std::filesystem::exists(seed, ec)) {
+            std::filesystem::copy_file(seed, target,
+                                       std::filesystem::copy_options::overwrite_existing, ec);
+            if (ec) {
+                if (error) {
+                    *error = "could not restore default catalog " + std::string(name) + ": " + ec.message();
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 } // namespace noctis

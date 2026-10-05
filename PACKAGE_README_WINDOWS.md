@@ -1,6 +1,6 @@
-# Noctis IV OM — Windows 2.0.0 Release
+# Noctis IV OM — Windows 2.0.1 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.1 release is
 built for 64-bit Windows. The Microsoft C/C++ runtime is statically linked so the
 package runs out-of-the-box without requiring separate Visual C++ Redistributable
 installations.
@@ -41,6 +41,12 @@ For the short graphics acceptance check, run:
 
 ```powershell
 .\nivlr.exe --graphical-smoke
+```
+
+To reset player saves, flight logs, and bookmarks and restore default catalogs, run:
+
+```powershell
+.\nivlr.exe --reset-data
 ```
 
 That command opens the real game window, presents three frames, and closes on
@@ -85,8 +91,9 @@ selects an explicit root containing `data\`, `gallery\`, `movies\`, and
 
 ## Release status
 
-This is the 2.0.0 Major Release (The Celestial Cartography & Explorer's Update),
-introducing automated exploration journal logging (`LOG`) with Markdown/JSON export,
+This is the 2.0.1 Maintenance Release (The Storage Reset & Fresh Start Patch),
+providing browser IndexedDB storage reset functionality and the `--reset-data` CLI command,
+alongside automated exploration journal logging (`LOG`) with Markdown/JSON export,
 seamless celestial naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`,
 starmap personal bookmark and waypoint navigation (`BM`), and the surface Explorer's
 Visor with real-time compass telemetry, coordinates, and Lander Return Beacon guidance. The Microsoft

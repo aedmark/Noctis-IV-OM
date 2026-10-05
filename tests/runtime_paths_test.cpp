@@ -135,6 +135,22 @@ int main() {
     ok &= require(noctis::runtime_paths().user_root != noctis::runtime_paths().executable_dir,
                   "system user_root should differ from executable_dir");
 
+    // Test reset_runtime_storage
+    write(portable_install / "data/current.niv", "save-data");
+    write(portable_install / "data/surface.niv", "surface-data");
+    write(portable_install / "data/flight_log.json", "log-data");
+    write(portable_install / "data/flight_log.md", "log-md");
+    write(portable_install / "data/bookmarks.ini", "bm-data");
+    write(portable_install / "data/STARMAP.BIN", "modified-map");
+    std::string reset_err;
+    ok &= require(noctis::reset_runtime_storage(portable_paths, &reset_err), "reset_runtime_storage failed");
+    ok &= require(!std::filesystem::exists(portable_install / "data/current.niv"), "reset did not delete current.niv");
+    ok &= require(!std::filesystem::exists(portable_install / "data/surface.niv"), "reset did not delete surface.niv");
+    ok &= require(!std::filesystem::exists(portable_install / "data/flight_log.json"), "reset did not delete flight_log.json");
+    ok &= require(!std::filesystem::exists(portable_install / "data/flight_log.md"), "reset did not delete flight_log.md");
+    ok &= require(!std::filesystem::exists(portable_install / "data/bookmarks.ini"), "reset did not delete bookmarks.ini");
+    ok &= require(read(portable_install / "data/STARMAP.BIN") == "portable-map", "reset did not restore seed STARMAP.BIN");
+
     std::filesystem::remove_all(test_root, ignored);
     return ok ? 0 : 1;
 }

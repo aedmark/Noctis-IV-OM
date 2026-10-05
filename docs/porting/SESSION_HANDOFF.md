@@ -7,7 +7,7 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-04.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
 - Branch: `master`; Milestone M12 (Celestial Cartography & Waypoint Navigation) complete.
-- Status: Release 2.0.0 (The Celestial Cartography & Explorer's Update) packaged, tagged, and published.
+- Status: Release 2.0.1 (The Storage Reset & Fresh Start Patch) packaged, tagged, and published.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
@@ -181,6 +181,12 @@ Replace this document at the end of every session; Git holds older versions.
 - **Release 2.0.0 (The Celestial Cartography & Explorer's Update):**
   - Packaged Linux, Windows, and Web release archives in `public-builds/2.0.0/` with SHA-256 checksums.
   - Tagged `v2.0.0` and pushed to remote master.
+- **Release 2.0.1 (The Storage Reset & Fresh Start Patch):**
+  - Web: Implemented browser IndexedDB storage reset via `Module.resetSavedData()` in `web/pre.js`. Added "RESET SAVED DATA" button to launch screen card and in-game top bar (visible when pointer lock is released via <kbd>Esc</kbd> or <kbd>F10</kbd>).
+  - Desktop: Added `noctis::reset_runtime_storage()` in `src/runtime_paths.h` and `--reset-data` CLI option in `src/noctis.cpp`, wiping user flight saves, bookmarks, and logs while restoring seed `STARMAP.BIN` and `GUIDE.BIN`.
+  - Automated tests: Added `reset_runtime_storage` tests in `tests/runtime_paths_test.cpp` and `tests/runtime_paths_fixture.cmake` (50/50 tests passing across all presets).
+  - Packaged Linux, Windows, and Web release archives in `public-builds/2.0.1/` with SHA-256 checksums.
+  - Tagged `v2.0.1` and pushed to remote master.
 
 ## Test suite and package status
 

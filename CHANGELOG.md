@@ -5,6 +5,18 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 2.0.1 (2026-10-05) — The Storage Reset & Fresh Start Patch
+
+### Features & Fixes
+* **IndexedDB Storage Reset (Web Browser):**
+  * Added a dedicated "RESET SAVED DATA" button on the launch card and in the in-game top-bar overlay (revealed when pointer lock is released via <kbd>Esc</kbd> or <kbd>F10</kbd>).
+  * Prompts for confirmation and cleanly clears the browser's IndexedDB persistent storage (`/persistent`), wiping modified catalogs, saves, flight logs, and bookmarks, then reloads fresh with clean default seed catalogs.
+  * Added `Module.resetSavedData()` in `web/pre.js` to coordinate MEMFS unlinking, sync cancellation, IDBFS database connection closure, and clean IndexedDB deletion.
+* **Storage Reset CLI Flag (Desktop):**
+  * Added `--reset-data` CLI option to desktop binaries (`nivlr` and `nivlr.exe`).
+  * Atomically wipes player save states (`current.niv`, `surface.niv`), flight logs (`flight_log.json`, `flight_log.md`), and bookmarks (`bookmarks.ini`), while restoring pristine seed copies of `STARMAP.BIN` and `GUIDE.BIN`.
+  * Verified in automated unit tests (`tests/runtime_paths_test.cpp` and `tests/runtime_paths_fixture.cmake`).
+
 ## 2.0.0 (2026-10-04) — The Celestial Cartography & Explorer's Update
 
 ### Features

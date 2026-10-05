@@ -71,6 +71,16 @@
       background: var(--accent);
       transition: width 0.2s;
     }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .actions button {
+      margin-top: 0;
+    }
     button {
       margin-top: 18px;
       padding: 8px 20px;
@@ -83,10 +93,48 @@
     }
     button:hover, button:focus-visible { background: rgba(0, 230, 195, 0.12); outline: none; }
     button[disabled] { opacity: 0.4; cursor: default; }
+    button.btn-secondary {
+      border-color: rgba(0, 185, 220, 0.45);
+      color: var(--muted);
+    }
+    button.btn-secondary:hover, button.btn-secondary:focus-visible {
+      border-color: #ff5252;
+      color: #ff5252;
+      background: rgba(255, 82, 82, 0.12);
+    }
+    .top-bar {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+    }
+    .top-bar[hidden] { display: none; }
+    .top-bar button {
+      margin: 0;
+      padding: 6px 14px;
+      font-size: 12px;
+      background: rgba(6, 10, 16, 0.85);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(0, 185, 220, 0.4);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      transition: all 0.15s ease;
+    }
+    .top-bar button:hover, .top-bar button:focus-visible {
+      border-color: #ff5252;
+      color: #ff5252;
+      background: rgba(255, 82, 82, 0.15);
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <div class="top-bar" id="game-controls" hidden>
+    <button id="ingame-reset" type="button" title="Clear IndexedDB saved progress, bookmarks, and catalogs to restart fresh">RESET SAVED DATA</button>
+  </div>
 
   <div class="overlay" id="launch">
     <div class="card">
@@ -97,7 +145,10 @@
         <kbd>F4</kbd> opens your image archive, <kbd>F11</kbd> toggles fullscreen, and <kbd>F10</kbd> toggles mouselook.
         <kbd>Esc</kbd> releases the mouse; click the game to capture it again.
         Your progress autosaves in this browser; just close the tab when you are done.</p>
-      <button id="start" disabled>LAUNCH</button>
+      <div class="actions">
+        <button id="start" disabled>LAUNCH</button>
+        <button id="reset-storage" type="button" class="btn-secondary" title="Clear IndexedDB saved progress, bookmarks, and catalogs to restart fresh">RESET SAVED DATA</button>
+      </div>
     </div>
   </div>
 
@@ -105,8 +156,51 @@
     var canvas = document.getElementById('canvas');
     var launch = document.getElementById('launch');
     var startButton = document.getElementById('start');
+    var resetButton = document.getElementById('reset-storage');
+    var ingameReset = document.getElementById('ingame-reset');
+    var gameControls = document.getElementById('game-controls');
     var statusText = document.getElementById('status');
     var progressBar = document.getElementById('progress');
+
+    function updateOverlayControls() {
+      if (gameControls) {
+        var hasLock = document.pointerLockElement === canvas;
+        gameControls.hidden = !launch.hidden || hasLock;
+      }
+    }
+
+    function promptAndResetData() {
+      var confirmed = window.confirm(
+        "Reset all saved data in this browser?\n\n" +
+        "This will permanently delete all flight logs, star and planet names, bookmarks, " +
+        "and player saves in IndexedDB, restarting the Stardrifter fresh.\n\n" +
+        "Are you sure you want to proceed?"
+      );
+      if (!confirmed) return;
+
+      if (statusText) statusText.textContent = 'Clearing IndexedDB saved data…';
+      if (startButton) startButton.disabled = true;
+      if (resetButton) resetButton.disabled = true;
+      if (ingameReset) ingameReset.disabled = true;
+
+      if (typeof Module !== 'undefined' && typeof Module.resetSavedData === 'function') {
+        Module.resetSavedData(function () {
+          window.location.reload();
+        });
+      } else if (window.indexedDB && window.indexedDB.deleteDatabase) {
+        var req = window.indexedDB.deleteDatabase('/persistent');
+        req.onsuccess = req.onerror = req.onblocked = function () {
+          window.location.reload();
+        };
+        setTimeout(function () { window.location.reload(); }, 1000);
+      } else {
+        window.location.reload();
+      }
+    }
+
+    if (resetButton) resetButton.addEventListener('click', promptAndResetData);
+    if (ingameReset) ingameReset.addEventListener('click', promptAndResetData);
+    document.addEventListener('pointerlockchange', updateOverlayControls);
 
     // Keep browser shortcuts (help, find, caret browsing, scrolling) away from
     // the game, but leave reload (F5) and developer tools (F12) alone.
@@ -198,6 +292,7 @@
       launch.hidden = true;
       canvas.focus();
       if (wantPointerLock) lockPointer();
+      updateOverlayControls();
     });
     window.addEventListener('error', function () {
       statusText.textContent = 'The game stopped unexpectedly. See the browser console for details.';

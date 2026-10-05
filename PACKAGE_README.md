@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 2.0.0 Release
+# Noctis IV OM — Linux 2.0.1 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.0.1 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -32,6 +32,7 @@ configuration in `$XDG_CONFIG_HOME/noctis-iv-om` (`~/.config/noctis-iv-om`).
 You can also specify a custom profile path using `--user-data-dir DIRECTORY`.
 
 For a headless installation check, run `./nivlr --diagnostics`.
+To reset player saves, flight logs, and bookmarks and restore default catalogs, run `./nivlr --reset-data`.
 
 ## Bring forward an older portable profile
 
@@ -85,8 +86,9 @@ building the game from source.
 
 ## Release status
 
-This is the 2.0.0 Major Release (The Celestial Cartography & Explorer's Update),
-introducing automated exploration journal logging (`LOG`) with Markdown/JSON export,
+This is the 2.0.1 Maintenance Release (The Storage Reset & Fresh Start Patch),
+providing browser IndexedDB storage reset functionality and the `--reset-data` CLI command,
+alongside automated exploration journal logging (`LOG`) with Markdown/JSON export,
 seamless celestial naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`,
 starmap personal bookmark and waypoint navigation (`BM`), and the surface Explorer's
 Visor with real-time compass telemetry, coordinates, and Lander Return Beacon guidance.

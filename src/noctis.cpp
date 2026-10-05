@@ -2867,6 +2867,7 @@ int main(int argc, char **argv) {
     bool persistence_fixture_mode         = false;
     bool movie_fixture_mode               = false;
     bool no_audio_mode                    = false;
+    bool reset_data_only                  = false;
     int drive_override                    = 0;
     const char *persistence_fixture_phase = nullptr;
     std::optional<double> fixture_universe_seconds;
@@ -2878,6 +2879,8 @@ int main(int argc, char **argv) {
             diagnostics_only = true;
         } else if (std::string_view(argv[arg]) == "--prepare-user-data") {
             prepare_user_data_only = true;
+        } else if (std::string_view(argv[arg]) == "--reset-data") {
+            reset_data_only = true;
         } else if (std::string_view(argv[arg]) == "--graphical-smoke") {
             graphical_smoke_mode = true;
         } else if (std::string_view(argv[arg]) == "--no-audio") {
@@ -2996,6 +2999,15 @@ int main(int argc, char **argv) {
     if (!storage.ok) {
         noctis::log_event("error", "runtime_storage", storage.message);
         return 1;
+    }
+    if (reset_data_only) {
+        std::string reset_error;
+        if (!noctis::reset_runtime_storage(noctis::runtime_paths(), &reset_error)) {
+            noctis::log_event("error", "runtime_storage", reset_error);
+            return 1;
+        }
+        noctis::log_event("info", "runtime_storage", "user data reset to clean defaults");
+        return 0;
     }
     configure_runtime_file_paths();
     noctis::load_display_settings(noctis::runtime_paths().config_dir);

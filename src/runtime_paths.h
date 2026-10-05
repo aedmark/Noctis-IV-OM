@@ -55,5 +55,6 @@ struct RuntimeSetupResult {
     std::optional<bool> portable_mode_override = std::nullopt);
 [[nodiscard]] const RuntimePaths &runtime_paths();
 [[nodiscard]] RuntimeSetupResult prepare_runtime_storage(const RuntimePaths &paths);
+[[nodiscard]] bool reset_runtime_storage(const RuntimePaths &paths, std::string *error = nullptr);
 
 } // namespace noctis

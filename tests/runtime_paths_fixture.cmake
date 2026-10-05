@@ -65,4 +65,15 @@ if(NOT invalid_result EQUAL 2 OR NOT invalid_report MATCHES "--migrate-from")
     message(FATAL_ERROR "invalid migration source was not rejected: ${invalid_result} ${invalid_report}")
 endif()
 
+execute_process(
+    COMMAND "${APP}" --reset-data --user-data-dir "${profile}"
+    WORKING_DIRECTORY "${unrelated}"
+    RESULT_VARIABLE reset_result ERROR_VARIABLE reset_report)
+if(NOT reset_result EQUAL 0 OR NOT reset_report MATCHES "user data reset to clean defaults")
+    message(FATAL_ERROR "--reset-data failed: ${reset_result} ${reset_report}")
+endif()
+if(EXISTS "${profile}/data/current.niv")
+    message(FATAL_ERROR "--reset-data did not remove current.niv")
+endif()
+
 message(STATUS "runtime path command, migration, preservation, and working-directory independence verified")

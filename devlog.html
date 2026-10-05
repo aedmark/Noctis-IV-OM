@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 2.0.0</a>
+        <a class="nav-cta" href="index.html#download">Get 2.0.1</a>
       </nav>
     </div>
   </header>
@@ -177,6 +177,13 @@
     <p>Naming stars, planets, and moons via GOESnet (<kbd>NAME</kbd> / <kbd>LABEL</kbd>) is now seamlessly persistent across launches, writing directly to <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code>. Starmap catalog caching and HUD telemetry sync ensure that whenever you name a celestial body, its new designation appears immediately on cockpit readouts and across all GOESnet navigation searches.</p>
     <p>With the new <strong>Starmap Bookmarks &amp; Waypoint Navigation</strong> system (<kbd>BM</kbd> / <kbd>BOOKMARK</kbd> / <kbd>WAYPOINT</kbd>), you can save personal waypoints across the stars. Manage bookmarks with <kbd>BM LIST</kbd>, record new landmarks with <kbd>BM ADD [label]</kbd>, lock guidance coordinates with <kbd>BM GOTO &lt;id&gt;</kbd>, and organize with <kbd>BM DEL</kbd> and <kbd>BM CLEAR</kbd>. Press <kbd>J</kbd> in the cockpit to instantly jump to the GOESnet bookmarks screen, or press <kbd>J</kbd> while walking on a planetary surface to drop an instant GPS surface waypoint at your exact latitude and longitude. All waypoints persist in <code>bookmarks.ini</code>.</p>
     <p>Finally, planetary surface exploration is elevated by <strong>The Explorer's Visor HUD</strong>. Press <kbd>V</kbd> to cycle between Standard, Explorer Telemetry, and Minimal visor modes with authentic suit servo audio feedback. Explorer Telemetry projects an unobtrusive 360&deg; scrolling cardinal compass tape, digital degree heading, planetary coordinates (<code>LAT</code> / <code>LON</code>), and elevation in meters (<code>ELEV</code>). Crucially, the <strong>Lander Return Beacon</strong> (<code>LDR</code>) provides real-time distance and an 8-way directional arrow pointing directly back to your landed exploration capsule, ensuring you can traverse planetary expanses with complete confidence.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 2.0.1: The Storage Reset &amp; Fresh Start Patch — Browser IndexedDB Storage Reset and Command-Line Data Clearing</h2>
+    <p>Version 2.0.1 delivers an essential quality-of-life feature requested by the community: the ability to easily clear saved progress and start fresh from the initial Stardrifter configuration.</p>
+    <p>In the <strong>Web Browser</strong> edition, progress previously saved permanently in browser IndexedDB storage without a simple in-game wipe mechanism. We have added a dedicated <strong>RESET SAVED DATA</strong> button directly to the Launch Screen card as well as an in-game top-bar overlay (visible whenever the mouse is released with <kbd>Esc</kbd> or <kbd>F10</kbd>). Clicking the button prompts for confirmation, cancels background autosaves, unlinks virtual files under <code>/persistent</code>, and cleanly deletes the browser's IndexedDB database before reloading fresh with pristine default catalogs.</p>
+    <p>On <strong>Desktop</strong> builds (Linux and Windows), players and script authors can now pass the <code>--reset-data</code> flag to <code>nivlr</code>. This command cleanly clears player flight saves (<code>current.niv</code>, <code>surface.niv</code>), flight logs (<code>flight_log.json</code>, <code>flight_log.md</code>), and bookmarks (<code>bookmarks.ini</code>), and restores pristine default copies of <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code> from immutable seed defaults.</p>
   </section>
 </article>
 </body>
