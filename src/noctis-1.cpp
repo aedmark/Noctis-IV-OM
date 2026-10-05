@@ -1,3 +1,4 @@
+#include "atmospheric_scattering.h"
 #include "audio.h"
 #include "brtl.h"
 #include "display.h"
@@ -3657,10 +3658,34 @@ void create_sky(int8_t atmosphere) {
     fg[3] *= 64 * dfs;
     fb[3] *= 64 * dfs;
 
+    const auto scattering_mode = noctis::get_atmospheric_scattering_mode();
+    const bool enhanced_scattering = (scattering_mode != noctis::AtmosphericScatteringMode::authentic) &&
+                                     (atmosphere != 0) &&
+                                     !surface_fixture_mode && !environment_fixture_mode;
+
     // se non c'? atmosfera, stelle sempre ben visibili.
     // alternativamente, si rendono visibili di notte.
     if (!atmosphere) {
         shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
+    } else if (enhanced_scattering) {
+        const auto twilight_data = noctis::compute_twilight_data(
+            crepzone, nightzone, sun_x_factor, sun_x, sun_y, sun_z, dsd1, pp_pressure,
+            nearstar_class, rainy);
+        noctis::apply_twilight_palette_filters(
+            fr[0], fg[0], fb[0],
+            fr[1], fg[1], fb[1],
+            fr[2], fg[2], fb[2],
+            fr[3], fg[3], fb[3],
+            nearstar_p_type[ip_targetted],
+            twilight_data,
+            scattering_mode,
+            rainy);
+
+        float star_lerp = twilight_data.night_factor;
+        float star_r = std::lerp(fr[1], 60.0f, star_lerp);
+        float star_g = std::lerp(fg[1], 62.0f, star_lerp);
+        float star_b = std::lerp(fb[1], 64.0f, star_lerp);
+        shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, star_r, star_g, star_b);
     } else {
         if (nightzone || dfs <= 0.2f) {
             shade((uint8_t *) surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
@@ -3791,6 +3816,39 @@ nightcolors:
 
     base_pp_temp     = pp_temp;
     base_pp_pressure = pp_pressure;
+}
+
+void update_surface_sky_background(int8_t atmosphere) {
+    if (!s_background) return;
+    memset(s_background, sky_brightness, st_bytes);
+    create_sky(atmosphere);
+
+    const auto scattering_mode = noctis::get_atmospheric_scattering_mode();
+    const bool enhanced_scattering = (scattering_mode != noctis::AtmosphericScatteringMode::authentic) &&
+                                     (atmosphere != 0) &&
+                                     !surface_fixture_mode && !environment_fixture_mode;
+    if (enhanced_scattering) {
+        const auto twilight_data = noctis::compute_twilight_data(
+            crepzone, nightzone, sun_x_factor, sun_x, sun_y, sun_z, dsd1, pp_pressure,
+            nearstar_class, rainy);
+        noctis::generate_twilight_sky_map(
+            s_background, st_bytes, bk_lines_to_horizon, sky_brightness,
+            twilight_data, scattering_mode, rainy);
+    } else {
+        uint16_t temp_vptr = 0;
+        for (int c = 0; c < bk_lines_to_horizon; c++) {
+            for (int m = 0; m < 360; m++) {
+                float c_crcy = (float) s_background[temp_vptr] * c;
+                c_crcy /= bk_lines_to_horizon;
+                if (nightzone) {
+                    s_background[temp_vptr] = c_crcy / 2;
+                } else {
+                    s_background[temp_vptr] = c_crcy;
+                }
+                temp_vptr++;
+            }
+        }
+    }
 }
 
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
@@ -4470,18 +4528,35 @@ nosecondarysun:
     create_sky(atmosphere);
     uint16_t temp_vptr = 0;
 
-    for (cpos = 0; cpos < bk_lines_to_horizon; cpos++) {
-        for (mpul = 0; mpul < 360; mpul++) {
-            crcy = (float) s_background[temp_vptr] * cpos;
-            crcy /= bk_lines_to_horizon;
+    const auto scattering_mode = noctis::get_atmospheric_scattering_mode();
+    const bool enhanced_scattering = (scattering_mode != noctis::AtmosphericScatteringMode::authentic) &&
+                                     (atmosphere != 0) &&
+                                     !surface_fixture_mode && !environment_fixture_mode;
 
-            if (nightzone) {
-                s_background[temp_vptr] = crcy / 2;
-            } else {
-                s_background[temp_vptr] = crcy;
+    if (enhanced_scattering) {
+        const auto twilight_data = noctis::compute_twilight_data(
+            crepzone, nightzone, sun_x_factor, sun_x, sun_y, sun_z, dsd1, pp_pressure,
+            nearstar_class, rainy);
+        noctis::generate_twilight_sky_map(
+            s_background, st_bytes, bk_lines_to_horizon, sky_brightness,
+            twilight_data, scattering_mode, rainy);
+        cpos = bk_lines_to_horizon;
+        mpul = 360;
+        crcy = (float) s_background[bk_lines_to_horizon * 360 - 1];
+    } else {
+        for (cpos = 0; cpos < bk_lines_to_horizon; cpos++) {
+            for (mpul = 0; mpul < 360; mpul++) {
+                crcy = (float) s_background[temp_vptr] * cpos;
+                crcy /= bk_lines_to_horizon;
+
+                if (nightzone) {
+                    s_background[temp_vptr] = crcy / 2;
+                } else {
+                    s_background[temp_vptr] = crcy;
+                }
+
+                temp_vptr++;
             }
-
-            temp_vptr++;
         }
     }
 
@@ -4917,7 +4992,14 @@ nosecondarysun:
         // disegna le stelle, se ? il caso di farlo.
         // il punto di vista ? dell'astrozattera,
         // ma gli angoli sono quelli del protagonista.
-        if (sky_brightness < 32 && rainy < 2.0) {
+        bool draw_stars = (sky_brightness < 32);
+        if (atmosphere && noctis::get_atmospheric_scattering_mode() != noctis::AtmosphericScatteringMode::authentic) {
+            float elev = nightzone ? -(static_cast<float>(crepzone) * 0.7826f) : (static_cast<float>(crepzone) * 0.7826f);
+            if (elev < -6.0f) {
+                draw_stars = true;
+            }
+        }
+        if (draw_stars && rainy < 2.0) {
             cam_x = backup_dzat_x;
             cam_y = backup_dzat_y;
             cam_z = backup_dzat_z;
@@ -4934,7 +5016,9 @@ nosecondarysun:
         // rispetto a molti fattori...
         // e vengono calcolate prima di entrare
         // nel ciclo di esplorazione.
-        if (!nightzone && rainy < 2.5) {
+        const bool sun_active = (!nightzone || (atmosphere && noctis::is_sun_limb_visible_at_twilight(crepzone, nightzone) &&
+                                               noctis::get_atmospheric_scattering_mode() != noctis::AtmosphericScatteringMode::authentic));
+        if (sun_active && rainy < 2.5) {
             alfa = user_alfa;
             beta = user_beta;
             change_angle_of_view();
@@ -5967,6 +6051,16 @@ nosecondarysun:
                         const auto new_mode = noctis::cycle_texture_filter_mode();
                         status(noctis::texture_filter_mode_name(new_mode), 100);
                         save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 's' || w == 'S') {
+                        const auto new_mode = noctis::cycle_atmospheric_scattering_mode();
+                        status(noctis::atmospheric_scattering_mode_name(new_mode), 100);
+                        save_surface_display_settings();
+                        if (atmosphere) {
+                            update_surface_sky_background(atmosphere);
+                            tavola_colori((const uint8_t *) surface_palette, 0, 256, 63, 63, 63);
+                        }
                         continue;
                     }
                 } else if (graphics_menu_status == 2) {

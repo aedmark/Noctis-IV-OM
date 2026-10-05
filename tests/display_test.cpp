@@ -345,6 +345,39 @@ int main() {
             ok &= require(noctis::get_texture_filter_mode() == noctis::TextureFilterMode::nearest, "restored to nearest");
         }
 
+        // 18. Atmospheric scattering cycling, names, getter/setter, and ini persistence
+        {
+            auto mode = noctis::AtmosphericScatteringMode::authentic;
+            mode = noctis::cycle_atmospheric_scattering_mode(mode);
+            ok &= require(mode == noctis::AtmosphericScatteringMode::realistic, "authentic cycles to realistic");
+            mode = noctis::cycle_atmospheric_scattering_mode(mode);
+            ok &= require(mode == noctis::AtmosphericScatteringMode::vibrant, "realistic cycles to vibrant");
+            mode = noctis::cycle_atmospheric_scattering_mode(mode);
+            ok &= require(mode == noctis::AtmosphericScatteringMode::authentic, "vibrant cycles to authentic");
+
+            ok &= require(std::string(noctis::atmospheric_scattering_mode_name(noctis::AtmosphericScatteringMode::authentic)) ==
+                              "SCATTERING: AUTHENTIC", "authentic name format");
+            ok &= require(std::string(noctis::atmospheric_scattering_mode_name(noctis::AtmosphericScatteringMode::realistic)) ==
+                              "SCATTERING: REALISTIC", "realistic name format");
+            ok &= require(std::string(noctis::atmospheric_scattering_mode_name(noctis::AtmosphericScatteringMode::vibrant)) ==
+                              "SCATTERING: VIBRANT", "vibrant name format");
+
+            noctis::set_atmospheric_scattering_mode(noctis::AtmosphericScatteringMode::realistic);
+            ok &= require(noctis::get_atmospheric_scattering_mode() == noctis::AtmosphericScatteringMode::realistic, "set realistic");
+
+            // Save and verify round-trip
+            noctis::save_display_settings(test_dir);
+            noctis::set_atmospheric_scattering_mode(noctis::AtmosphericScatteringMode::authentic);
+            ok &= require(noctis::get_atmospheric_scattering_mode() == noctis::AtmosphericScatteringMode::authentic, "reset to authentic");
+
+            noctis::load_display_settings(test_dir);
+            ok &= require(noctis::get_atmospheric_scattering_mode() == noctis::AtmosphericScatteringMode::realistic, "loaded realistic from ini");
+
+            // Clean up: restore to authentic
+            noctis::set_atmospheric_scattering_mode(noctis::AtmosphericScatteringMode::authentic);
+            ok &= require(noctis::get_atmospheric_scattering_mode() == noctis::AtmosphericScatteringMode::authentic, "restored to authentic");
+        }
+
         std::filesystem::remove_all(test_dir, ec);
     }
 

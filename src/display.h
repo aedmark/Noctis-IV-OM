@@ -1,5 +1,6 @@
 #pragma once
 
+#include "atmospheric_scattering.h"
 #include "upscale.h"
 
 #include <cstdint>
@@ -168,6 +169,7 @@ struct DisplaySettings {
     InternalResolutionMode internal_resolution = InternalResolutionMode::res_1x;
     DrawDistanceMode draw_distance = DrawDistanceMode::standard;
     TextureFilterMode texture_filter = TextureFilterMode::nearest;
+    AtmosphericScatteringMode atmospheric_scattering = AtmosphericScatteringMode::authentic;
     bool fullscreen = false;
     int timewarp_multiplier = 100;
     std::int8_t draw_hud = 1;

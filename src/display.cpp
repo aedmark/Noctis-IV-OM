@@ -790,6 +790,7 @@ DisplaySettings capture_display_settings() {
     s.internal_resolution = get_internal_resolution_mode();
     s.draw_distance = get_draw_distance_mode();
     s.texture_filter = get_texture_filter_mode();
+    s.atmospheric_scattering = get_atmospheric_scattering_mode();
     s.fullscreen = is_fullscreen();
     s.timewarp_multiplier = get_timewarp_multiplier();
     s.draw_hud = g_draw_hud;
@@ -806,6 +807,7 @@ void apply_display_settings(const DisplaySettings &settings) {
     set_internal_resolution_mode(settings.internal_resolution);
     set_draw_distance_mode(settings.draw_distance);
     set_texture_filter_mode(settings.texture_filter);
+    set_atmospheric_scattering_mode(settings.atmospheric_scattering);
     set_fullscreen(settings.fullscreen);
     set_timewarp_multiplier(settings.timewarp_multiplier);
     g_draw_hud = settings.draw_hud;
@@ -854,6 +856,11 @@ bool save_display_settings(const std::filesystem::path &config_dir) {
     if (settings.texture_filter == TextureFilterMode::bilinear) filter_str = "bilinear";
     else if (settings.texture_filter == TextureFilterMode::detailed) filter_str = "detailed";
     out << "texture_filter = " << filter_str << "\n";
+
+    const char *scattering_str = "authentic";
+    if (settings.atmospheric_scattering == AtmosphericScatteringMode::realistic) scattering_str = "realistic";
+    else if (settings.atmospheric_scattering == AtmosphericScatteringMode::vibrant) scattering_str = "vibrant";
+    out << "atmospheric_scattering = " << scattering_str << "\n";
 
     out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
 
@@ -922,6 +929,9 @@ bool load_display_settings(const std::filesystem::path &config_dir) {
             if (val == "nearest" || val == "point" || val == "off" || val == "0") settings.texture_filter = TextureFilterMode::nearest;
             else if (val == "bilinear" || val == "linear" || val == "smooth" || val == "1") settings.texture_filter = TextureFilterMode::bilinear;
             else if (val == "detailed" || val == "detail" || val == "grain" || val == "2") settings.texture_filter = TextureFilterMode::detailed;
+        } else if (key == "atmospheric_scattering" || key == "scattering" || key == "twilight") {
+            auto parsed = parse_atmospheric_scattering_mode(val);
+            if (parsed) settings.atmospheric_scattering = *parsed;
         } else if (key == "fullscreen") {
             settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "timewarp_multiplier") {

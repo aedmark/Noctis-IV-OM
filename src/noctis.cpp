@@ -2938,6 +2938,7 @@ int main(int argc, char **argv) {
     std::optional<noctis::InternalResolutionMode> resolution_override;
     std::optional<noctis::DrawDistanceMode> draw_distance_override;
     std::optional<noctis::TextureFilterMode> texture_filter_override;
+    std::optional<noctis::AtmosphericScatteringMode> atmospheric_scattering_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -3003,6 +3004,15 @@ int main(int argc, char **argv) {
                 noctis::log_event("error", "arguments", "Invalid texture filter: " + std::string(filter_arg) + " (expected nearest, bilinear, or detailed)");
                 return 2;
             }
+        } else if ((std::string_view(argv[arg]) == "--atmospheric-scattering" || std::string_view(argv[arg]) == "--scattering") && arg + 1 < argc) {
+            std::string_view scat_arg = argv[++arg];
+            auto parsed = noctis::parse_atmospheric_scattering_mode(scat_arg);
+            if (parsed) {
+                atmospheric_scattering_override = *parsed;
+            } else {
+                noctis::log_event("error", "arguments", "Invalid atmospheric scattering mode: " + std::string(scat_arg) + " (expected authentic, realistic, or vibrant)");
+                return 2;
+            }
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
@@ -3057,7 +3067,8 @@ int main(int argc, char **argv) {
                 "[--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] "
                 "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>] "
                 "[--draw-distance <standard|extended|far>] "
-                "[--texture-filter <nearest|bilinear|detailed>]");
+                "[--texture-filter <nearest|bilinear|detailed>] "
+                "[--atmospheric-scattering <authentic|realistic|vibrant>]");
             return 2;
         }
     }
@@ -3177,6 +3188,9 @@ int main(int argc, char **argv) {
     }
     if (texture_filter_override) {
         noctis::set_texture_filter_mode(*texture_filter_override);
+    }
+    if (atmospheric_scattering_override) {
+        noctis::set_atmospheric_scattering_mode(*atmospheric_scattering_override);
     }
     sync_internal_resolution_engine(noctis::get_internal_resolution_mode());
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
@@ -6741,6 +6755,10 @@ resynctoplanet:
                     const auto new_mode = noctis::cycle_texture_filter_mode();
                     status(noctis::texture_filter_mode_name(new_mode), 100);
                     save_display_settings_current();
+                } else if (mc == 's' || mc == 'S') {
+                    const auto new_mode = noctis::cycle_atmospheric_scattering_mode();
+                    status(noctis::atmospheric_scattering_mode_name(new_mode), 100);
+                    save_display_settings_current();
                 }
             } else if (graphics_menu_status == 2) {
                 if (mc == 9) {
@@ -7091,6 +7109,12 @@ resynctoplanet:
                     if (mc == 'x' || mc == 'X') {
                         const auto new_mode = noctis::cycle_texture_filter_mode();
                         status(noctis::texture_filter_mode_name(new_mode), 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 's' || mc == 'S') {
+                        const auto new_mode = noctis::cycle_atmospheric_scattering_mode();
+                        status(noctis::atmospheric_scattering_mode_name(new_mode), 100);
                         save_display_settings_current();
                         goto endmain;
                     }
