@@ -38,24 +38,27 @@ int main() {
                       && menu[2] == "LENS FLARES ALWAYS OFF (F)"
                       && menu[3] == "SEAMLESS BORDER (B)",
                   "F2 menu state text changed");
-    const auto adv_menu_1x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 0, 0, 0, 0);
-    ok &= require(adv_menu_1x.size() == 12 && adv_menu_1x[5] == "INTERNAL RES: 320X200 1X (R)"
+    const auto adv_menu_1x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 0, 0, 0, 0, 0);
+    ok &= require(adv_menu_1x.size() == 13 && adv_menu_1x[5] == "INTERNAL RES: 320X200 1X (R)"
                       && adv_menu_1x[6] == "DRAW DISTANCE: STANDARD 64Q (D)"
                       && adv_menu_1x[7] == "TEXTURE FILTER: NEAREST (X)"
-                      && adv_menu_1x[8] == "SCATTERING: AUTHENTIC (S)",
-                  "F2 advanced menu 1x resolution, standard draw distance, nearest filter, and authentic scattering line");
-    const auto adv_menu_2x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 1, 1, 1, 1);
-    ok &= require(adv_menu_2x.size() == 12 && adv_menu_2x[5] == "INTERNAL RES: 640X400 2X (R)"
+                      && adv_menu_1x[8] == "SCATTERING: AUTHENTIC (S)"
+                      && adv_menu_1x[9] == "CORONA FLARES: AUTHENTIC (E)",
+                  "F2 advanced menu 1x resolution, standard draw distance, nearest filter, authentic scattering, and authentic coronal flares line");
+    const auto adv_menu_2x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 1, 1, 1, 1, 1);
+    ok &= require(adv_menu_2x.size() == 13 && adv_menu_2x[5] == "INTERNAL RES: 640X400 2X (R)"
                       && adv_menu_2x[6] == "DRAW DISTANCE: EXTENDED 96Q (D)"
                       && adv_menu_2x[7] == "TEXTURE FILTER: BILINEAR (X)"
-                      && adv_menu_2x[8] == "SCATTERING: REALISTIC (S)",
-                  "F2 advanced menu 2x resolution, extended draw distance, bilinear filter, and realistic scattering line");
-    const auto adv_menu_4x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 2, 2, 2, 2);
-    ok &= require(adv_menu_4x.size() == 12 && adv_menu_4x[5] == "INTERNAL RES: 1280X800 4X (R)"
+                      && adv_menu_2x[8] == "SCATTERING: REALISTIC (S)"
+                      && adv_menu_2x[9] == "CORONA FLARES: REALISTIC (E)",
+                  "F2 advanced menu 2x resolution, extended draw distance, bilinear filter, realistic scattering, and realistic coronal flares line");
+    const auto adv_menu_4x = noctis::plus_visual_menu_lines(true, 1, false, 0, 0, false, false, true, 2, 2, 2, 2, 2);
+    ok &= require(adv_menu_4x.size() == 13 && adv_menu_4x[5] == "INTERNAL RES: 1280X800 4X (R)"
                       && adv_menu_4x[6] == "DRAW DISTANCE: FAR 128Q (D)"
                       && adv_menu_4x[7] == "TEXTURE FILTER: DETAILED (X)"
-                      && adv_menu_4x[8] == "SCATTERING: VIBRANT (S)",
-                  "F2 advanced menu 4x resolution, far draw distance, detailed filter, and vibrant scattering line");
+                      && adv_menu_4x[8] == "SCATTERING: VIBRANT (S)"
+                      && adv_menu_4x[9] == "CORONA FLARES: VIBRANT (E)",
+                  "F2 advanced menu 4x resolution, far draw distance, detailed filter, vibrant scattering, and vibrant coronal flares line");
     const auto movie = noctis::plus_movie_menu_lines(7, 3, false, true, false, false, 0.0);
     const auto recording = noctis::plus_movie_menu_lines(7, 3, true, false, true, false, 12.5);
     ok &= require(movie.size() == 5 && movie[1].find("007 EXISTS") != std::string::npos

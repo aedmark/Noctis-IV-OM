@@ -14,6 +14,7 @@
 #include "flight_log.h"
 #include "bookmarks.h"
 #include "navigation_hud.h"
+#include "stellar_coronal_flares.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
 #include "starmap_exchange.h"
@@ -2939,6 +2940,7 @@ int main(int argc, char **argv) {
     std::optional<noctis::DrawDistanceMode> draw_distance_override;
     std::optional<noctis::TextureFilterMode> texture_filter_override;
     std::optional<noctis::AtmosphericScatteringMode> atmospheric_scattering_override;
+    std::optional<noctis::CoronalFlaresMode> coronal_flares_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -3013,6 +3015,15 @@ int main(int argc, char **argv) {
                 noctis::log_event("error", "arguments", "Invalid atmospheric scattering mode: " + std::string(scat_arg) + " (expected authentic, realistic, or vibrant)");
                 return 2;
             }
+        } else if ((std::string_view(argv[arg]) == "--coronal-flares" || std::string_view(argv[arg]) == "--corona") && arg + 1 < argc) {
+            std::string_view cor_arg = argv[++arg];
+            auto parsed = noctis::parse_coronal_flares_mode(cor_arg);
+            if (parsed) {
+                coronal_flares_override = *parsed;
+            } else {
+                noctis::log_event("error", "arguments", "Invalid coronal flares mode: " + std::string(cor_arg) + " (expected authentic, realistic, or vibrant)");
+                return 2;
+            }
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
@@ -3068,7 +3079,8 @@ int main(int argc, char **argv) {
                 "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>] "
                 "[--draw-distance <standard|extended|far>] "
                 "[--texture-filter <nearest|bilinear|detailed>] "
-                "[--atmospheric-scattering <authentic|realistic|vibrant>]");
+                "[--atmospheric-scattering <authentic|realistic|vibrant>] "
+                "[--coronal-flares <authentic|realistic|vibrant>]");
             return 2;
         }
     }
@@ -3191,6 +3203,9 @@ int main(int argc, char **argv) {
     }
     if (atmospheric_scattering_override) {
         noctis::set_atmospheric_scattering_mode(*atmospheric_scattering_override);
+    }
+    if (coronal_flares_override) {
+        noctis::set_coronal_flares_mode(*coronal_flares_override);
     }
     sync_internal_resolution_engine(noctis::get_internal_resolution_mode());
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
@@ -6488,6 +6503,14 @@ resynctoplanet:
             break;
         }
 
+        const auto coronal_mode = noctis::get_coronal_flares_mode();
+        if (coronal_mode != noctis::CoronalFlaresMode::authentic &&
+            !surface_fixture_mode && !environment_fixture_mode && !orbit_surface_fixture_mode &&
+            !landing_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
+            uint16_t star_seed = legacy_u16_from_double(nearstar_identity * 12345);
+            noctis::apply_enhanced_spectral_palette(ir, ig, ib, ir2, ig2, ib2, mc, coronal_mode, secs, star_seed);
+        }
+
         satur = (6.4 * dsd) / nearstar_ray;
 
         if (satur > 44) {
@@ -6759,6 +6782,11 @@ resynctoplanet:
                     const auto new_mode = noctis::cycle_atmospheric_scattering_mode();
                     status(noctis::atmospheric_scattering_mode_name(new_mode), 100);
                     save_display_settings_current();
+                } else if (mc == 'e' || mc == 'E') {
+                    const auto new_mode = noctis::cycle_coronal_flares_mode();
+                    status(noctis::coronal_flares_mode_name(new_mode), 100);
+                    save_display_settings_current();
+                    sky_palette_ok = 0;
                 }
             } else if (graphics_menu_status == 2) {
                 if (mc == 9) {
@@ -7116,6 +7144,13 @@ resynctoplanet:
                         const auto new_mode = noctis::cycle_atmospheric_scattering_mode();
                         status(noctis::atmospheric_scattering_mode_name(new_mode), 100);
                         save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'e' || mc == 'E') {
+                        const auto new_mode = noctis::cycle_coronal_flares_mode();
+                        status(noctis::coronal_flares_mode_name(new_mode), 100);
+                        save_display_settings_current();
+                        sky_palette_ok = 0;
                         goto endmain;
                     }
                 } else if (graphics_menu_status == 2) {

@@ -13,6 +13,7 @@ extern bool landing_fixture_mode;
 extern bool environment_fixture_mode;
 extern bool content_fixture_mode;
 extern bool orbit_surface_fixture_mode;
+extern bool oakenshield_fixture_mode;
 extern const char *surface_fixture_name;
 extern std::uint32_t last_snapshot;
 extern std::int8_t option_mouse_look;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atmospheric_scattering.h"
+#include "stellar_coronal_flares.h"
 #include "upscale.h"
 
 #include <cstdint>
@@ -170,6 +171,7 @@ struct DisplaySettings {
     DrawDistanceMode draw_distance = DrawDistanceMode::standard;
     TextureFilterMode texture_filter = TextureFilterMode::nearest;
     AtmosphericScatteringMode atmospheric_scattering = AtmosphericScatteringMode::authentic;
+    CoronalFlaresMode coronal_flares = CoronalFlaresMode::authentic;
     bool fullscreen = false;
     int timewarp_multiplier = 100;
     std::int8_t draw_hud = 1;

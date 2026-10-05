@@ -378,6 +378,39 @@ int main() {
             ok &= require(noctis::get_atmospheric_scattering_mode() == noctis::AtmosphericScatteringMode::authentic, "restored to authentic");
         }
 
+        // 19. Coronal flares cycling, names, getter/setter, and ini persistence
+        {
+            auto mode = noctis::CoronalFlaresMode::authentic;
+            mode = noctis::cycle_coronal_flares_mode(mode);
+            ok &= require(mode == noctis::CoronalFlaresMode::realistic, "authentic cycles to realistic");
+            mode = noctis::cycle_coronal_flares_mode(mode);
+            ok &= require(mode == noctis::CoronalFlaresMode::vibrant, "realistic cycles to vibrant");
+            mode = noctis::cycle_coronal_flares_mode(mode);
+            ok &= require(mode == noctis::CoronalFlaresMode::authentic, "vibrant cycles to authentic");
+
+            ok &= require(std::string(noctis::coronal_flares_mode_name(noctis::CoronalFlaresMode::authentic)) ==
+                              "CORONA FLARES: AUTHENTIC", "authentic name format");
+            ok &= require(std::string(noctis::coronal_flares_mode_name(noctis::CoronalFlaresMode::realistic)) ==
+                              "CORONA FLARES: REALISTIC", "realistic name format");
+            ok &= require(std::string(noctis::coronal_flares_mode_name(noctis::CoronalFlaresMode::vibrant)) ==
+                              "CORONA FLARES: VIBRANT", "vibrant name format");
+
+            noctis::set_coronal_flares_mode(noctis::CoronalFlaresMode::realistic);
+            ok &= require(noctis::get_coronal_flares_mode() == noctis::CoronalFlaresMode::realistic, "set realistic");
+
+            // Save and verify round-trip
+            noctis::save_display_settings(test_dir);
+            noctis::set_coronal_flares_mode(noctis::CoronalFlaresMode::authentic);
+            ok &= require(noctis::get_coronal_flares_mode() == noctis::CoronalFlaresMode::authentic, "reset to authentic");
+
+            noctis::load_display_settings(test_dir);
+            ok &= require(noctis::get_coronal_flares_mode() == noctis::CoronalFlaresMode::realistic, "loaded realistic from ini");
+
+            // Clean up: restore to authentic
+            noctis::set_coronal_flares_mode(noctis::CoronalFlaresMode::authentic);
+            ok &= require(noctis::get_coronal_flares_mode() == noctis::CoronalFlaresMode::authentic, "restored to authentic");
+        }
+
         std::filesystem::remove_all(test_dir, ec);
     }
 

@@ -58,6 +58,7 @@
 #include "controls_config.h"
 #include "gamepad.h"
 #include "navigation_hud.h"
+#include "stellar_coronal_flares.h"
 
 extern float hpoint(int32_t px, int32_t pz);
 
@@ -2697,6 +2698,18 @@ void white_globe(uint8_t *target, double x, double y, double z, float mag_factor
     center_y  = ry + y_centro_f + 0.5;
     mag       = (mag_factor * 100 + 1.5) * internal_res_scale;
     fgm       = fgm_factor * mag; // full globe magnitude
+
+    const auto coronal_mode = noctis::get_coronal_flares_mode();
+    if (coronal_mode != noctis::CoronalFlaresMode::authentic &&
+        !surface_fixture_mode && !environment_fixture_mode && !orbit_surface_fixture_mode &&
+        !landing_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
+        uint16_t star_seed = legacy_u16_from_double(nearstar_identity * 12345);
+        noctis::render_coronal_globe(target, adapted_width, adapted_height, internal_res_scale,
+                                     center_x, center_y, mag, fgm,
+                                     nearstar_class, secs, star_seed, coronal_mode);
+        return;
+    }
+
     shade_ext = mag - fgm;
 
     if (shade_ext < 1) {
@@ -2811,6 +2824,18 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor, 
     center_y  = ry + y_centro_f + 0.5;
     mag       = (mag_factor * 100 + 1.5) * internal_res_scale;
     fgm       = fgm_factor * mag; // full globe magnitude
+
+    const auto coronal_mode = noctis::get_coronal_flares_mode();
+    if (coronal_mode != noctis::CoronalFlaresMode::authentic &&
+        !surface_fixture_mode && !environment_fixture_mode && !orbit_surface_fixture_mode &&
+        !landing_fixture_mode && !content_fixture_mode && !oakenshield_fixture_mode) {
+        uint16_t star_seed = legacy_u16_from_double(nearstar_identity * 12345);
+        noctis::render_coronal_sun(target, adapted_width, adapted_height, internal_res_scale,
+                                   center_x, center_y, mag, fgm,
+                                   nearstar_class, secs, star_seed, coronal_mode);
+        return;
+    }
+
     shade_ext = mag - fgm;
 
     if (shade_ext < 1) {
@@ -5848,7 +5873,8 @@ void draw_plus_overlay(bool surface) {
                                                           static_cast<int>(noctis::get_internal_resolution_mode()),
                                                           static_cast<int>(noctis::get_draw_distance_mode()),
                                                           static_cast<int>(noctis::get_texture_filter_mode()),
-                                                          static_cast<int>(noctis::get_atmospheric_scattering_mode()));
+                                                          static_cast<int>(noctis::get_atmospheric_scattering_mode()),
+                                                          static_cast<int>(noctis::get_coronal_flares_mode()));
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);

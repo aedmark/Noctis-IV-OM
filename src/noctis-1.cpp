@@ -20,6 +20,7 @@
 #include "runtime_paths.h"
 #include "simulation_clock.h"
 #include "startup_diagnostics.h"
+#include "stellar_coronal_flares.h"
 #include <algorithm>
 
 const double deg = M_PI / 180;
@@ -6061,6 +6062,12 @@ nosecondarysun:
                             update_surface_sky_background(atmosphere);
                             tavola_colori((const uint8_t *) surface_palette, 0, 256, 63, 63, 63);
                         }
+                        continue;
+                    }
+                    if (w == 'e' || w == 'E') {
+                        const auto new_mode = noctis::cycle_coronal_flares_mode();
+                        status(noctis::coronal_flares_mode_name(new_mode), 100);
+                        save_surface_display_settings();
                         continue;
                     }
                 } else if (graphics_menu_status == 2) {

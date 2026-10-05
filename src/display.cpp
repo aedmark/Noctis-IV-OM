@@ -791,6 +791,7 @@ DisplaySettings capture_display_settings() {
     s.draw_distance = get_draw_distance_mode();
     s.texture_filter = get_texture_filter_mode();
     s.atmospheric_scattering = get_atmospheric_scattering_mode();
+    s.coronal_flares = get_coronal_flares_mode();
     s.fullscreen = is_fullscreen();
     s.timewarp_multiplier = get_timewarp_multiplier();
     s.draw_hud = g_draw_hud;
@@ -808,6 +809,7 @@ void apply_display_settings(const DisplaySettings &settings) {
     set_draw_distance_mode(settings.draw_distance);
     set_texture_filter_mode(settings.texture_filter);
     set_atmospheric_scattering_mode(settings.atmospheric_scattering);
+    set_coronal_flares_mode(settings.coronal_flares);
     set_fullscreen(settings.fullscreen);
     set_timewarp_multiplier(settings.timewarp_multiplier);
     g_draw_hud = settings.draw_hud;
@@ -861,6 +863,11 @@ bool save_display_settings(const std::filesystem::path &config_dir) {
     if (settings.atmospheric_scattering == AtmosphericScatteringMode::realistic) scattering_str = "realistic";
     else if (settings.atmospheric_scattering == AtmosphericScatteringMode::vibrant) scattering_str = "vibrant";
     out << "atmospheric_scattering = " << scattering_str << "\n";
+
+    const char *coronal_str = "authentic";
+    if (settings.coronal_flares == CoronalFlaresMode::realistic) coronal_str = "realistic";
+    else if (settings.coronal_flares == CoronalFlaresMode::vibrant) coronal_str = "vibrant";
+    out << "coronal_flares = " << coronal_str << "\n";
 
     out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
 
@@ -932,6 +939,9 @@ bool load_display_settings(const std::filesystem::path &config_dir) {
         } else if (key == "atmospheric_scattering" || key == "scattering" || key == "twilight") {
             auto parsed = parse_atmospheric_scattering_mode(val);
             if (parsed) settings.atmospheric_scattering = *parsed;
+        } else if (key == "coronal_flares" || key == "stellar_flares" || key == "corona") {
+            auto parsed = parse_coronal_flares_mode(val);
+            if (parsed) settings.coronal_flares = *parsed;
         } else if (key == "fullscreen") {
             settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "timewarp_multiplier") {

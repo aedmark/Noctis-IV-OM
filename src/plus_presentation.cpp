@@ -338,7 +338,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        int internal_res_mode,
                                                        int draw_distance_mode,
                                                        int texture_filter_mode,
-                                                       int atmospheric_scattering_mode) {
+                                                       int atmospheric_scattering_mode,
+                                                       int coronal_flares_mode) {
     std::vector<std::string> lines = {
         "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
         draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
@@ -356,8 +357,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                          : "320X200 1X (R)";
         lines.emplace_back(std::string("INTERNAL RES: ") + res_label);
         const char *dist_label = (draw_distance_mode == 1) ? "EXTENDED 96Q (D)"
-                               : (draw_distance_mode == 2) ? "FAR 128Q (D)"
-                                                           : "STANDARD 64Q (D)";
+                                : (draw_distance_mode == 2) ? "FAR 128Q (D)"
+                                                            : "STANDARD 64Q (D)";
         lines.emplace_back(std::string("DRAW DISTANCE: ") + dist_label);
         const char *filter_label = (texture_filter_mode == 1) ? "BILINEAR (X)"
                                  : (texture_filter_mode == 2) ? "DETAILED (X)"
@@ -367,6 +368,10 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                : (atmospheric_scattering_mode == 2) ? "VIBRANT (S)"
                                                                     : "AUTHENTIC (S)";
         lines.emplace_back(std::string("SCATTERING: ") + scat_label);
+        const char *coronal_label = (coronal_flares_mode == 1) ? "REALISTIC (E)"
+                                  : (coronal_flares_mode == 2) ? "VIBRANT (E)"
+                                                               : "AUTHENTIC (E)";
+        lines.emplace_back(std::string("CORONA FLARES: ") + coronal_label);
         lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
         lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
         lines.emplace_back("TAB / A: AUDIO SETTINGS");
