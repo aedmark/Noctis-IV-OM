@@ -164,14 +164,22 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2, int32_
             m2 = 1 + fast_random(mask_2);
 
             for (n2 = 0; n2 < m2; n2++) {
-                uint16_t tdi       = 320 * (_y_ + fast_random(7)) + _x_ + fast_random(7);
+                int32_t tdi       = adapted_width * (_y_ + fast_random(7)) + _x_ + fast_random(7);
                 uint8_t tcl        = colorgrade + fast_random(colormask);
-                adapted[tdi + 3]   = tcl;
-                adapted[tdi + 4]   = tcl;
-                adapted[tdi + 5]   = tcl;
-                adapted[tdi - 636] = tcl;
-                adapted[tdi - 316] = tcl;
-                adapted[tdi + 324] = tcl;
+                if (tdi + 5 < adapted_width * adapted_height) {
+                    adapted[tdi + 3]   = tcl;
+                    adapted[tdi + 4]   = tcl;
+                    adapted[tdi + 5]   = tcl;
+                }
+                if (tdi >= adapted_width * 2) {
+                    adapted[tdi - (adapted_width * 2 - 4)] = tcl;
+                }
+                if (tdi >= adapted_width) {
+                    adapted[tdi - (adapted_width - 4)] = tcl;
+                }
+                if (tdi + adapted_width + 4 < adapted_width * adapted_height) {
+                    adapted[tdi + (adapted_width + 4)] = tcl;
+                }
             }
         }
     }
@@ -1899,7 +1907,7 @@ void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base, int16_t variatio
 
 void nebular_sky() {
     // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
-    uint16_t pqw  = QUADWORDS;
+    uint32_t pqw  = QUADWORDS;
     uint16_t seed = brtl_random(10000);
     QUADWORDS     = st_bytes / 4;
     // es: s_background[di]
@@ -1938,7 +1946,8 @@ void cloudy_sky(int16_t density, int16_t smooths) {
     // Cielo con nuvole sparse, di tipo terrestre.
     int16_t n = brtl_random(density + albedo);
     float x, y, cx, cy, r, b;
-    uint16_t p, pqw = QUADWORDS;
+    uint16_t p;
+    uint32_t pqw = QUADWORDS;
     QUADWORDS = st_bytes / 4;
 
     while (n > 0) {
@@ -3998,7 +4007,7 @@ void planetary_main() {
     const int8_t surface_body_type =
         (ip_targetted >= 0 && ip_targetted < nearstar_nob) ? nearstar_p_type[ip_targetted] : 0;
     const int16_t widesnappingangle = 71;
-    uint16_t pqw                    = QUADWORDS;
+    uint32_t pqw                    = QUADWORDS;
     int32_t cpos;
     int8_t bfa              = 0;
     int8_t flash            = 1;
@@ -5610,7 +5619,7 @@ nosecondarysun:
 
             waveblur--;
         } else {
-            QUADWORDS = 160 + openhudcount * 80;
+            QUADWORDS = (160 + openhudcount * 80) * internal_res_scale * internal_res_scale;
             psmooth_64(adapted, 160);
             psmooth_64(adapted, 160);
             QUADWORDS = pqw;
@@ -5625,7 +5634,7 @@ nosecondarysun:
             --fcs_status_delay;
         }
         surrounding(draw_hud || graphics_menu_status || about || movie_recorder.menu_open(), openhudcount);
-        QUADWORDS = 16000;
+        QUADWORDS = (adapted_width * adapted_height) / 4;
 
         {
             noctis::AudioTelemetry telemetry{};
@@ -5947,6 +5956,12 @@ nosecondarysun:
                     if (w == 'g' || w == 'G') {
                         const bool active = noctis::toggle_subpixel_fidelity();
                         status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
+                        save_surface_display_settings();
+                        continue;
+                    }
+                    if (w == 'r' || w == 'R') {
+                        const auto new_mode = noctis::cycle_internal_resolution_mode();
+                        status(noctis::internal_resolution_mode_name(new_mode), 100);
                         save_surface_display_settings();
                         continue;
                     }

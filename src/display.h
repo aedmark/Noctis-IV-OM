@@ -88,12 +88,29 @@ inline void set_subpixel_fidelity(bool enabled) { g_subpixel_fidelity = enabled;
 inline bool toggle_subpixel_fidelity() { g_subpixel_fidelity = !g_subpixel_fidelity; return g_subpixel_fidelity; }
 #endif
 
+// Internal resolution modes (Milestone 13 - Phase 1)
+enum class InternalResolutionMode : std::uint8_t {
+    res_1x, // 320x200 (1x Authentic)
+    res_2x, // 640x400 (2x Enhanced)
+    res_4x  // 1280x800 (4x Ultra)
+};
+
+InternalResolutionMode get_internal_resolution_mode();
+void set_internal_resolution_mode(InternalResolutionMode mode);
+InternalResolutionMode cycle_internal_resolution_mode(InternalResolutionMode current);
+InternalResolutionMode cycle_internal_resolution_mode();
+const char *internal_resolution_mode_name(InternalResolutionMode mode);
+int internal_resolution_scale(InternalResolutionMode mode);
+using InternalResolutionChangeCallback = void (*)(InternalResolutionMode mode);
+void set_internal_resolution_change_callback(InternalResolutionChangeCallback cb);
+
 // Display Settings Structure & Persistence (Milestone 10)
 struct DisplaySettings {
     AspectRatioMode aspect_ratio = AspectRatioMode::crt_4_3;
     UpscaleMode upscale_mode = UpscaleMode::crisp_pixel;
     bool crt_shader = false;
     bool subpixel_fidelity = false;
+    InternalResolutionMode internal_resolution = InternalResolutionMode::res_1x;
     bool fullscreen = false;
     int timewarp_multiplier = 100;
     std::int8_t draw_hud = 1;

@@ -42,7 +42,7 @@
 //           screen update buffer.
 #define oc_bytes 40000 //   objectschart    map objects on the surface;
 //           atmospheric overlay.
-#define sc_bytes (640 * 480) //   adapted         the hidden video page?�
+#define sc_bytes (1280 * 800 + 1024) //   adapted         the hidden video page�
 //          2 bytes (support for polymap)
 //           would give 64002. But I extended
 //          it to 64Kb + 4 bytes to avoid it
@@ -85,23 +85,24 @@
 #define offsets_map -29926
 #define globes_map -22586
 
-#define adapted_width 320
-#define adapted_height 200
+inline int32_t internal_res_scale = 1;
+inline int32_t adapted_width = 320;
+inline int32_t adapted_height = 200;
 
 // Limits, relative to the center of the screen, for 3D sticks.
 
-#define stk_lbx -(adapted_width / 2 - 10)
-#define stk_lby -(adapted_height / 2 - 10)
+#define stk_lbx -(adapted_width / 2 - 10 * internal_res_scale)
+#define stk_lby -(adapted_height / 2 - 10 * internal_res_scale)
 #define stk_ubx (adapted_width / 2)
-#define stk_uby (adapted_height / 2 - 10)
+#define stk_uby (adapted_height / 2 - 10 * internal_res_scale)
 
 // Working parameters for "tdpolygs.h", the polygonal 3D library.
 
 #define VERTEXES_PER_POLYGON 4
 
-#define VIEW_WIDTH (adapted_width - 14)
-#define VIEW_HEIGHT (adapted_height - 20)
-#define VIEW_X_CENTER (adapted_width / 2 - 2)
+#define VIEW_WIDTH (adapted_width - 14 * internal_res_scale)
+#define VIEW_HEIGHT (adapted_height - 20 * internal_res_scale)
+#define VIEW_X_CENTER (adapted_width / 2 - 2 * internal_res_scale)
 #define VIEW_Y_CENTER (adapted_height / 2)
 
 #define lbx ((-VIEW_WIDTH / 2) + VIEW_X_CENTER)

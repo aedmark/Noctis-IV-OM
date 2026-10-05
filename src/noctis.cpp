@@ -360,17 +360,18 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
         rx /= rz;
         rx += VIEW_X_CENTER;
         ry /= rz;
-        ry += VIEW_Y_CENTER - 2;
+        ry += VIEW_Y_CENTER - 2 * internal_res_scale;
 
-        if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
-            uint16_t offset = (320 * ((uint16_t) ry)) + ((uint16_t) rx);
+        const int32_t scale = internal_res_scale;
+        if (rx > 10 * scale && ry > 10 * scale && rx < adapted_width - 10 * scale && ry < adapted_height - 10 * scale) {
+            uint32_t offset = (adapted_width * ((uint32_t) ry)) + ((uint32_t) rx);
 
             for (int16_t i = 0; i < 4; i++) {
-                int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
-                int16_t mod2 = (i == 1 || i == 2) ? 1 : -1;
+                int32_t mod1 = (i == 1 || i == 3) ? 1 : -1;
+                int32_t mod2 = (i == 1 || i == 2) ? 1 : -1;
 
-                for (int16_t j = 7; j > 3; j--) {
-                    adapted[offset + mod1 * 320 * j + mod2 * j] = 126;
+                for (int32_t j = 7 * scale; j > 3 * scale; j--) {
+                    adapted[offset + mod1 * adapted_width * j + mod2 * j] = 126;
                 }
             }
         }
@@ -648,6 +649,23 @@ void apply_native_state(const noctis::NativeSaveState &state) {
 }
 
 } // namespace
+
+void sync_internal_resolution_engine(noctis::InternalResolutionMode /*mode*/) {
+    QUADWORDS = static_cast<uint32_t>((adapted_width * adapted_height) / 4);
+    pqw = QUADWORDS;
+    lbxl = lbx;
+    ubxl = ubx;
+    lbyl = lby;
+    ubyl = uby;
+    lbxf = static_cast<float>(static_cast<int32_t>(lbx));
+    ubxf = static_cast<float>(static_cast<int32_t>(ubx));
+    lbyf = static_cast<float>(static_cast<int32_t>(lby));
+    ubyf = static_cast<float>(static_cast<int32_t>(uby));
+    x_centro_f = VIEW_X_CENTER;
+    y_centro_f = VIEW_Y_CENTER;
+    dpp = 210.0f * internal_res_scale;
+    change_camera_lens();
+}
 
 void save_display_settings_current() {
     noctis::set_setting_draw_hud(draw_hud);
@@ -2669,7 +2687,7 @@ int16_t opencapdelta        = 0;
 int16_t holdtomiddle        = 0;
 int8_t leftturn, rightturn, arrowcolor, farstar = 0;
 char temp_distance_buffer[16];
-uint16_t pqw;
+uint32_t pqw;
 float hold_z;
 float tmp_float;
 int32_t p1, p2, p3, p4;
@@ -2917,6 +2935,7 @@ int main(int argc, char **argv) {
     std::optional<std::filesystem::path> user_data_override;
     std::optional<std::filesystem::path> migration_source;
     std::optional<bool> portable_mode_override;
+    std::optional<noctis::InternalResolutionMode> resolution_override;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -2946,6 +2965,18 @@ int main(int argc, char **argv) {
             drive_override = -1;
         } else if (std::string_view(argv[arg]) == "--standard-drive") {
             drive_override = 1;
+        } else if ((std::string_view(argv[arg]) == "--resolution" || std::string_view(argv[arg]) == "--internal-res") && arg + 1 < argc) {
+            std::string_view res_arg = argv[++arg];
+            if (res_arg == "1x" || res_arg == "1" || res_arg == "320x200") {
+                resolution_override = noctis::InternalResolutionMode::res_1x;
+            } else if (res_arg == "2x" || res_arg == "2" || res_arg == "640x400") {
+                resolution_override = noctis::InternalResolutionMode::res_2x;
+            } else if (res_arg == "4x" || res_arg == "4" || res_arg == "1280x800") {
+                resolution_override = noctis::InternalResolutionMode::res_4x;
+            } else {
+                noctis::log_event("error", "arguments", "Invalid resolution: " + std::string(res_arg) + " (expected 1x, 2x, or 4x)");
+                return 2;
+            }
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
@@ -2998,7 +3029,7 @@ int main(int argc, char **argv) {
                 "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data|--reset-data] "
                 "[--export-starmap [PATH]] [--import-starmap PATH] [--validate-starmap PATH] "
                 "[--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] "
-                "[--omega-drive|--standard-drive]");
+                "[--omega-drive|--standard-drive] [--resolution <1x|2x|4x>]");
             return 2;
         }
     }
@@ -3108,7 +3139,12 @@ int main(int argc, char **argv) {
         noctis::log_event("info", "starmap_exchange", rep.summary_message);
         return 0;
     }
+    noctis::set_internal_resolution_change_callback(sync_internal_resolution_engine);
     noctis::load_display_settings(noctis::runtime_paths().config_dir);
+    if (resolution_override) {
+        noctis::set_internal_resolution_mode(*resolution_override);
+    }
+    sync_internal_resolution_engine(noctis::get_internal_resolution_mode());
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
     noctis::load_controls_settings(noctis::runtime_paths().config_dir);
     draw_hud        = noctis::get_setting_draw_hud();
@@ -3761,14 +3797,14 @@ int main(int argc, char **argv) {
         return 0;
     }
     memset(adapted, 0, QUADWORDS * 4);
-    QUADWORDS -= 1440;
+    QUADWORDS -= 1440 * internal_res_scale * internal_res_scale;
     pqw = QUADWORDS;
     if (!surface_fixture_mode && !landing_fixture_mode && !orbit_surface_fixture_mode && !environment_fixture_mode &&
         !content_fixture_mode && !oakenshield_fixture_mode) {
         handle_input();
     }
     mpul = 0;
-    dpp  = 210;
+    dpp  = 210.0f * internal_res_scale;
     change_camera_lens();
     //   0..64  Vehicle, computer selections, artifacts. Cobalt Blue, depending
     //   on the color from the star.
@@ -4174,7 +4210,7 @@ int main(int argc, char **argv) {
             opencapdelta = -2;
             holdtomiddle = 1;
             pp_gravity   = 1;
-            QUADWORDS    = 16000;
+            QUADWORDS    = (adapted_width * adapted_height) / 4;
             memset(adapted, 0, adapted_width * adapted_height);
             QUADWORDS = pqw;
 
@@ -4248,6 +4284,28 @@ void swapBuffers() {
     ClearBackground(BLACK);
 
     static std::vector<std::uint8_t> pixels(adapted_width * adapted_height * 4);
+    if (screen_texture.width != adapted_width || screen_texture.height != adapted_height) {
+        if (IsTextureValid(screen_texture)) {
+            UnloadTexture(screen_texture);
+        }
+        if (IsTextureValid(screen_texture_2x)) {
+            UnloadTexture(screen_texture_2x);
+        }
+        auto image     = GenImageColor(adapted_width, adapted_height, {});
+        screen_texture = LoadTextureFromImage(image);
+        SetTextureFilter(screen_texture, TEXTURE_FILTER_POINT);
+        UnloadImage(image);
+
+        auto image_2x     = GenImageColor(adapted_width * 2, adapted_height * 2, {});
+        screen_texture_2x = LoadTextureFromImage(image_2x);
+        SetTextureFilter(screen_texture_2x, TEXTURE_FILTER_POINT);
+        UnloadImage(image_2x);
+
+        pixels.resize(adapted_width * adapted_height * 4);
+    }
+    if (pixels.size() != static_cast<std::size_t>(adapted_width * adapted_height * 4)) {
+        pixels.resize(adapted_width * adapted_height * 4);
+    }
     noctis::expand_indexed_rgba(adapted, adapted_width * adapted_height, currpal, pixels.data());
     if (suit_torch) {
         noctis::apply_suit_torch_rgba(pixels.data(), adapted, adapted_width, adapted_height);
@@ -4267,6 +4325,9 @@ void swapBuffers() {
 
     if (upscale_mode == noctis::UpscaleMode::edge_scale2x) {
         static std::vector<std::uint32_t> pixels_2x((adapted_width * 2) * (adapted_height * 2));
+        if (pixels_2x.size() != static_cast<std::size_t>((adapted_width * 2) * (adapted_height * 2))) {
+            pixels_2x.resize((adapted_width * 2) * (adapted_height * 2));
+        }
         noctis::scale2x_rgba(reinterpret_cast<const std::uint32_t *>(pixels.data()),
                              adapted_width, adapted_height, pixels_2x.data());
         UpdateTexture(screen_texture_2x, pixels_2x.data());
@@ -5667,13 +5728,14 @@ ext_1: //
         planet_xyz(ip_targetted);
 
         if (far_pixel_at(plx, ply, plz, 0, 1)) {
-            uint16_t index = vptr - 640;
+            const int32_t scale = internal_res_scale;
+            uint32_t index = vptr - adapted_width * 2 * scale;
 
             for (int16_t i = 0; i < 4; i++) {
-                int16_t voffset = (i > 1) ? 320 : 1;
-                int16_t signmod = (i % 2 == 0) ? -1 : 1;
+                int32_t voffset = (i > 1) ? adapted_width : 1;
+                int32_t signmod = (i % 2 == 0) ? -1 : 1;
 
-                for (int16_t j = 4; j < 8; j++) {
+                for (int16_t j = 4 * scale; j < 8 * scale; j++) {
                     adapted[index + signmod * voffset * j] = 126;
                 }
             }
@@ -6213,7 +6275,7 @@ resynctoplanet:
     }
 
     // Page swap.
-    QUADWORDS = 16000;
+    QUADWORDS = (adapted_width * adapted_height) / 4;
 
     if (_delay == 13) {
         _delay = 0;
@@ -6611,6 +6673,10 @@ resynctoplanet:
                     const bool active = noctis::toggle_subpixel_fidelity();
                     status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
                     save_display_settings_current();
+                } else if (mc == 'r' || mc == 'R') {
+                    const auto new_mode = noctis::cycle_internal_resolution_mode();
+                    status(noctis::internal_resolution_mode_name(new_mode), 100);
+                    save_display_settings_current();
                 }
             } else if (graphics_menu_status == 2) {
                 if (mc == 9) {
@@ -6943,6 +7009,12 @@ resynctoplanet:
                     if (mc == 'g') {
                         const bool active = noctis::toggle_subpixel_fidelity();
                         status(active ? "FIDELITY: SUB-PIXEL" : "FIDELITY: LEGACY", 100);
+                        save_display_settings_current();
+                        goto endmain;
+                    }
+                    if (mc == 'r' || mc == 'R') {
+                        const auto new_mode = noctis::cycle_internal_resolution_mode();
+                        status(noctis::internal_resolution_mode_name(new_mode), 100);
                         save_display_settings_current();
                         goto endmain;
                     }

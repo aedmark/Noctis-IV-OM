@@ -319,7 +319,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        int upscale_mode,
                                                        bool crt_shader,
                                                        bool subpixel_fidelity,
-                                                       bool show_advanced_fx) {
+                                                       bool show_advanced_fx,
+                                                       int internal_res_mode) {
     std::vector<std::string> lines = {
         "NOCTIS IV OM VISUAL EFFECTS SETTINGS",
         draw_hud ? "HUD TEXT ON (T)" : "HUD TEXT OFF (T)",
@@ -332,6 +333,10 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                   : (upscale_mode == 2) ? "SMOOTH BILINEAR (U)"
                                                         : "CRISP PIXEL 1X (U)";
         lines.emplace_back(std::string("UPSCALE: ") + upscale_label);
+        const char *res_label = (internal_res_mode == 1) ? "640X400 2X (R)"
+                              : (internal_res_mode == 2) ? "1280X800 4X (R)"
+                                                         : "320X200 1X (R)";
+        lines.emplace_back(std::string("INTERNAL RES: ") + res_label);
         lines.emplace_back(crt_shader ? "CRT SHADER ON (C)" : "CRT SHADER OFF (C)");
         lines.emplace_back(subpixel_fidelity ? "FIDELITY: SUB-PIXEL (G)" : "FIDELITY: LEGACY (G)");
         lines.emplace_back("TAB / A: AUDIO SETTINGS");

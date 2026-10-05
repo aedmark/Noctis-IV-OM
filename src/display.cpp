@@ -2,6 +2,7 @@
 #include "audio.h"
 #include "runtime_paths.h"
 #include "simulation_clock.h"
+#include "noctis-d.h"
 
 #include <raylib.h>
 
@@ -21,6 +22,8 @@ namespace noctis {
 
 namespace {
 AspectRatioMode g_current_aspect_mode = AspectRatioMode::crt_4_3;
+InternalResolutionMode g_internal_resolution_mode = InternalResolutionMode::res_1x;
+InternalResolutionChangeCallback g_res_change_callback = nullptr;
 bool g_fullscreen_configured = false;
 std::int8_t g_draw_hud = 1;
 std::int8_t g_lens_flare_mode = 0;
@@ -135,6 +138,57 @@ std::int8_t get_setting_lens_flare_mode() { return g_lens_flare_mode; }
 void set_setting_lens_flare_mode(std::int8_t val) { g_lens_flare_mode = val; }
 std::int8_t get_setting_seamless_border() { return g_seamless_border; }
 void set_setting_seamless_border(std::int8_t val) { g_seamless_border = val; }
+
+InternalResolutionMode cycle_internal_resolution_mode(InternalResolutionMode current) {
+    switch (current) {
+        case InternalResolutionMode::res_1x: return InternalResolutionMode::res_2x;
+        case InternalResolutionMode::res_2x: return InternalResolutionMode::res_4x;
+        case InternalResolutionMode::res_4x: return InternalResolutionMode::res_1x;
+    }
+    return InternalResolutionMode::res_1x;
+}
+
+InternalResolutionMode cycle_internal_resolution_mode() {
+    auto next = cycle_internal_resolution_mode(g_internal_resolution_mode);
+    set_internal_resolution_mode(next);
+    return next;
+}
+
+const char *internal_resolution_mode_name(InternalResolutionMode mode) {
+    switch (mode) {
+        case InternalResolutionMode::res_1x: return "INTERNAL RES: 320X200 (1X)";
+        case InternalResolutionMode::res_2x: return "INTERNAL RES: 640X400 (2X)";
+        case InternalResolutionMode::res_4x: return "INTERNAL RES: 1280X800 (4X)";
+    }
+    return "INTERNAL RES: 320X200 (1X)";
+}
+
+int internal_resolution_scale(InternalResolutionMode mode) {
+    switch (mode) {
+        case InternalResolutionMode::res_1x: return 1;
+        case InternalResolutionMode::res_2x: return 2;
+        case InternalResolutionMode::res_4x: return 4;
+    }
+    return 1;
+}
+
+InternalResolutionMode get_internal_resolution_mode() {
+    return g_internal_resolution_mode;
+}
+
+void set_internal_resolution_change_callback(InternalResolutionChangeCallback cb) {
+    g_res_change_callback = cb;
+}
+
+void set_internal_resolution_mode(InternalResolutionMode mode) {
+    g_internal_resolution_mode = mode;
+    internal_res_scale = internal_resolution_scale(mode);
+    adapted_width = 320 * internal_res_scale;
+    adapted_height = 200 * internal_res_scale;
+    if (g_res_change_callback) {
+        g_res_change_callback(mode);
+    }
+}
 
 void render_high_dpi_hud(const char *status_text, int delay, int render_width, int render_height,
                          const DisplayViewport &viewport) {
@@ -691,6 +745,7 @@ DisplaySettings capture_display_settings() {
     s.upscale_mode = get_upscale_mode();
     s.crt_shader = is_crt_shader_enabled();
     s.subpixel_fidelity = get_subpixel_fidelity();
+    s.internal_resolution = get_internal_resolution_mode();
     s.fullscreen = is_fullscreen();
     s.timewarp_multiplier = get_timewarp_multiplier();
     s.draw_hud = g_draw_hud;
@@ -704,6 +759,7 @@ void apply_display_settings(const DisplaySettings &settings) {
     set_upscale_mode(settings.upscale_mode);
     set_crt_shader_enabled(settings.crt_shader);
     set_subpixel_fidelity(settings.subpixel_fidelity);
+    set_internal_resolution_mode(settings.internal_resolution);
     set_fullscreen(settings.fullscreen);
     set_timewarp_multiplier(settings.timewarp_multiplier);
     g_draw_hud = settings.draw_hud;
@@ -737,6 +793,12 @@ bool save_display_settings(const std::filesystem::path &config_dir) {
 
     out << "crt_shader = " << (settings.crt_shader ? 1 : 0) << "\n";
     out << "subpixel_fidelity = " << (settings.subpixel_fidelity ? 1 : 0) << "\n";
+
+    const char *res_str = "1x";
+    if (settings.internal_resolution == InternalResolutionMode::res_2x) res_str = "2x";
+    else if (settings.internal_resolution == InternalResolutionMode::res_4x) res_str = "4x";
+    out << "internal_resolution = " << res_str << "\n";
+
     out << "fullscreen = " << (settings.fullscreen ? 1 : 0) << "\n";
 
     out << "timewarp_multiplier = " << settings.timewarp_multiplier << "\n";
@@ -792,6 +854,10 @@ bool load_display_settings(const std::filesystem::path &config_dir) {
             settings.crt_shader = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "subpixel_fidelity") {
             settings.subpixel_fidelity = (val == "1" || val == "true" || val == "on" || val == "yes");
+        } else if (key == "internal_resolution" || key == "resolution" || key == "internal_res") {
+            if (val == "1x" || val == "1" || val == "320x200") settings.internal_resolution = InternalResolutionMode::res_1x;
+            else if (val == "2x" || val == "2" || val == "640x400") settings.internal_resolution = InternalResolutionMode::res_2x;
+            else if (val == "4x" || val == "4" || val == "1280x800") settings.internal_resolution = InternalResolutionMode::res_4x;
         } else if (key == "fullscreen") {
             settings.fullscreen = (val == "1" || val == "true" || val == "on" || val == "yes");
         } else if (key == "timewarp_multiplier") {

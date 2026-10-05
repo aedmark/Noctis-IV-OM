@@ -63,7 +63,7 @@ extern float hpoint(int32_t px, int32_t pz);
 
 // Date and specific functions imported from ASSEMBLY.H
 
-uint16_t QUADWORDS = 16000;
+uint32_t QUADWORDS = 16000;
 
 // Video memory. Because Noctis was originally written to use Mode 0x13, this
 // represents a sequence of 64,000 color indices.
@@ -94,15 +94,22 @@ void tavola_colori(const uint8_t *new_palette, uint16_t starting_color, uint16_t
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
 void area_clear(uint8_t *dest, int32_t x, int32_t y, int32_t x2, int32_t y2, int32_t l, int32_t h, uint8_t pattern) {
+    if (!dest) return;
     if (l == 0 || h == 0) {
         l = x2 - x;
         h = y2 - y;
     }
+    if (l <= 0 || h <= 0) return;
 
-    for (int32_t xPos = x; xPos < x + l; xPos++) {
-        for (int32_t yPos = y; yPos < y + h; yPos++) {
-            uint32_t netIndex = (yPos * adapted_width) + xPos;
-            dest[netIndex]    = pattern;
+    int32_t x_start = std::max<int32_t>(0, x);
+    int32_t x_end   = std::min<int32_t>(adapted_width, x + l);
+    int32_t y_start = std::max<int32_t>(0, y);
+    int32_t y_end   = std::min<int32_t>(adapted_height, y + h);
+
+    for (int32_t yPos = y_start; yPos < y_end; yPos++) {
+        uint32_t row = yPos * adapted_width;
+        for (int32_t xPos = x_start; xPos < x_end; xPos++) {
+            dest[row + xPos] = pattern;
         }
     }
 }
@@ -193,12 +200,15 @@ void psmooth_grays_ex(uint8_t *target) {
 
 // Produces the fading effect seen during vimana flight.
 void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
-    // Don't know why count is set as it is.
-    uint16_t count   = (QUADWORDS - 80u) << 2u;
-    uint8_t *shifted = (target + segshift * 16);
-    // Quasi-offset might need to be cleared.
+    if (!target) return;
+    const uint32_t total_pixels = static_cast<uint32_t>(adapted_width * adapted_height);
+    const uint32_t shift_offset = static_cast<uint32_t>(segshift * 16 * internal_res_scale * internal_res_scale);
+    if (shift_offset >= total_pixels) return;
 
-    for (uint16_t i = 0; i < count; i++) {
+    uint32_t count   = total_pixels - shift_offset;
+    uint8_t *shifted = target + shift_offset;
+
+    for (uint32_t i = 0; i < count; i++) {
         uint8_t color = shifted[i];
         color &= 0x3Fu;
 
@@ -213,39 +223,28 @@ void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
 }
 
 // Color version: 4 shades of 64 intensity each.
-void psmooth_64(uint8_t *target, uint16_t segshift) {
-    // Who knows why this is offset as it is... Definitely not me.
-    uint16_t count = (QUADWORDS - 80u) << 2u;
-    // We might need to align the shifted pointer to a 16 byte interval to match
-    // the former offset clearing. Sketchy.
-    uint8_t *shifted = (target + (segshift * 16));
+void psmooth_64_ex(uint8_t *target, uint16_t segshift) {
+    if (!target) return;
+    const uint32_t total_pixels = static_cast<uint32_t>(adapted_width * adapted_height);
+    const uint32_t shift_offset = static_cast<uint32_t>(segshift * 16 * internal_res_scale * internal_res_scale);
+    const uint32_t margin = static_cast<uint32_t>(adapted_width * 2 + 1);
+    if (shift_offset + margin >= total_pixels) return;
 
-    uint8_t avg, orig;
+    uint32_t count = total_pixels - shift_offset - margin;
+    uint8_t *shifted = target + shift_offset;
+
     for (uint32_t i = 0; i < count; i++) {
-        orig = shifted[i + 320] & 0xC0u;
-        avg  = (((shifted[i + 320] & 0x3Fu) + (shifted[i + 640] & 0x3Fu)) +
-               ((shifted[i + 321] & 0x3Fu) + (shifted[i + 641] & 0x3Fu))) /
-              4;
+        uint8_t orig = shifted[i + adapted_width] & 0xC0u;
+        uint8_t avg  = (((shifted[i + adapted_width] & 0x3Fu) + (shifted[i + adapted_width * 2] & 0x3Fu)) +
+                       ((shifted[i + adapted_width + 1] & 0x3Fu) + (shifted[i + adapted_width * 2 + 1] & 0x3Fu))) /
+                      4;
 
         shifted[i] = avg | orig;
     }
 }
 
-void psmooth_64_ex(uint8_t *target, uint16_t segshift) {
-    // Who knows why this is offset as it is... Definitely not me.
-    uint32_t count = (adapted_width * adapted_height) - (80 * 4);
-
-    uint8_t *shifted = (target + (segshift * 16));
-
-    uint8_t avg, orig;
-    for (uint32_t i = 0; i < count; i++) {
-        orig = shifted[i + adapted_width] & 0xC0u;
-        avg  = (((shifted[i + adapted_width] & 0x3Fu) + (shifted[i + adapted_width * 2] & 0x3Fu)) +
-               ((shifted[i + adapted_width + 1] & 0x3Fu) + (shifted[i + adapted_width * 2 + 1] & 0x3Fu))) /
-              4;
-
-        shifted[i] = avg | orig;
-    }
+void psmooth_64(uint8_t *target, uint16_t segshift) {
+    psmooth_64_ex(target, segshift);
 }
 
 // Circular version of the smoothing process.
@@ -2145,25 +2144,59 @@ void background(uint16_t start, uint8_t *target, uint8_t *background, uint8_t *o
                 uint16_t screenshift) {
     uint16_t tex_loc = start /*+ 4*/;
 
-    for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
-        uint16_t word = ((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si]);
-        if (word >= 64000) {
-            uint16_t offset =
-                (((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si])) - 64000;
+    if (internal_res_scale <= 1) {
+        for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
+            uint16_t word = ((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si]);
+            if (word >= 64000) {
+                uint16_t offset =
+                    (((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si])) - 64000;
 
-            tex_loc += offset;
-        } else {
-            uint16_t screen_loc = ((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si]);
-            screen_loc += screenshift;
-            uint8_t color = background[tex_loc];
+                tex_loc += offset;
+            } else {
+                uint16_t screen_loc = ((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si]);
+                screen_loc += screenshift;
+                uint8_t color = background[tex_loc];
 
-            memset(&target[screen_loc], color, 5);
-            memset(&target[screen_loc + 320], color, 5);
-            memset(&target[screen_loc + 640], color, 5);
-            memset(&target[screen_loc + 960], color, 5);
-            memset(&target[screen_loc + 1280], color, 5);
+                memset(&target[screen_loc], color, 5);
+                memset(&target[screen_loc + 320], color, 5);
+                memset(&target[screen_loc + 640], color, 5);
+                memset(&target[screen_loc + 960], color, 5);
+                memset(&target[screen_loc + 1280], color, 5);
 
-            tex_loc += 1;
+                tex_loc += 1;
+            }
+        }
+    } else {
+        const int32_t scale = internal_res_scale;
+        const int32_t block_w = 5 * scale;
+        const int32_t block_h = 5 * scale;
+        for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
+            uint16_t word = ((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si]);
+            if (word >= 64000) {
+                uint16_t offset =
+                    (((uint16_t) (((uint16_t) offsetsmap[si + 1]) << 8u)) | ((uint16_t) offsetsmap[si])) - 64000;
+
+                tex_loc += offset;
+            } else {
+                int32_t base_offset = static_cast<int16_t>(word + screenshift);
+                int32_t base_x = (base_offset % 320) * scale;
+                int32_t base_y = (base_offset / 320) * scale;
+                uint8_t color = background[tex_loc];
+
+                for (int dy = 0; dy < block_h; ++dy) {
+                    int32_t py = base_y + dy;
+                    if (py < 0 || py >= adapted_height) continue;
+                    uint32_t row_idx = static_cast<uint32_t>(py * adapted_width);
+                    for (int dx = 0; dx < block_w; ++dx) {
+                        int32_t px = base_x + dx;
+                        if (px >= 0 && px < adapted_width) {
+                            target[row_idx + px] = color;
+                        }
+                    }
+                }
+
+                tex_loc += 1;
+            }
         }
     }
 }
@@ -2522,16 +2555,16 @@ void glowing_globe(int16_t start, uint8_t *target, const uint8_t *offsetsmap, ui
     /*  320 = Largh. schermo, 100 = max x/y pixels della mappa,
         0.66 = massimo fattore d'ingrandimento con punti di 4 pixels. */
 
-    if (rx < -226 || rx > 226) {
+    if (rx < -226 * internal_res_scale || rx > 226 * internal_res_scale) {
         return; // 172 = (320 / 2) + (100 * 0.66)
     }
 
-    if (ry < -166 || ry > 166) {
+    if (ry < -166 * internal_res_scale || ry > 166 * internal_res_scale) {
         return; // 132 = (200 / 2) + (100 * 0.66)
     }
 
-    center_x = (uint16_t) (rx + x_centro_f);
-    center_y = (uint16_t) (ry + y_centro_f);
+    center_x = (int32_t) (rx + x_centro_f);
+    center_y = (int32_t) (ry + y_centro_f);
     start -= terminator_start;
 
     while (start < 0) {
@@ -2545,21 +2578,23 @@ void glowing_globe(int16_t start, uint8_t *target, const uint8_t *offsetsmap, ui
             if ((curr & 0x03u) == 0) {
                 int16_t offset = (int8_t) offsetsmap[j];
                 temp           = offset;
-                temp           = (uint16_t) round(((int16_t) temp) * mag_factor);
-                uint16_t pos   = temp + center_y;
-                if (pos > 10 && pos < 190) { // Y bounds.
+                temp           = (int32_t) round(((int32_t) temp) * mag_factor * internal_res_scale);
+                int32_t y_pos  = temp + center_y;
+                if (y_pos > 10 * internal_res_scale && y_pos < adapted_height - 10 * internal_res_scale) { // Y bounds.
                     offset = (int8_t) offsetsmap[j + 1];
-                    pos    = 320 * pos;
+                    uint32_t pos   = adapted_width * y_pos;
                     temp   = offset;
-                    temp   = (uint16_t) round(((int16_t) temp) * mag_factor);
-                    offset = temp + center_x;
-                    // X bounds. Don't ask why it's 6. It just works.
-                    if (offset > 6 && offset < 310) {
-                        pos += offset;
-                        if (curr < terminator_arc) {
-                            target[pos] = colorMask;
-                        } else {
-                            target[pos] = color;
+                    temp   = (int32_t) round(((int32_t) temp) * mag_factor * internal_res_scale);
+                    int32_t x_offset = temp + center_x;
+                    // X bounds.
+                    if (x_offset > 6 * internal_res_scale && x_offset < adapted_width - 10 * internal_res_scale) {
+                        pos += x_offset;
+                        if (pos < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                            if (curr < terminator_arc) {
+                                target[pos] = colorMask;
+                            } else {
+                                target[pos] = color;
+                            }
                         }
                     }
                 }
@@ -2617,17 +2652,17 @@ void white_globe(uint8_t *target, double x, double y, double z, float mag_factor
     /*  320 = Largh. schermo, 100 = max x/y pixels della mappa,
         3.00 = massimo fattore d'ingrandimento con dispersione. */
 
-    if (rx < -460 || rx > 460) {
+    if (rx < -460 * internal_res_scale || rx > 460 * internal_res_scale) {
         return; // 460 = (320 / 2) + (100 * 3.00)
     }
 
-    if (ry < -400 || ry > 400) {
+    if (ry < -400 * internal_res_scale || ry > 400 * internal_res_scale) {
         return; // 400 = (200 / 2) + (100 * 3.00)
     }
 
     center_x  = rx + x_centro_f + 0.5;
     center_y  = ry + y_centro_f + 0.5;
-    mag       = mag_factor * 100 + 1.5;
+    mag       = (mag_factor * 100 + 1.5) * internal_res_scale;
     fgm       = fgm_factor * mag; // full globe magnitude
     shade_ext = mag - fgm;
 
@@ -2649,7 +2684,8 @@ void white_globe(uint8_t *target, double x, double y, double z, float mag_factor
         xx = center_x - mag;
 
         while (xx < xb) {
-            if (xx > 9 && xx < 313 && yy > 9 && yy < 190) {
+            if (xx > 9 * internal_res_scale && xx < adapted_width - 7 * internal_res_scale &&
+                yy > 9 * internal_res_scale && yy < adapted_height - 10 * internal_res_scale) {
                 zz = xa * xa + ya * ya;
 
                 if (zz < magsq) {
@@ -2659,19 +2695,21 @@ void white_globe(uint8_t *target, double x, double y, double z, float mag_factor
                         pix = 0x3F;
                     }
 
-                    pixptr = (uint16_t) (320 * ((int16_t) yy)) + (int16_t) xx;
-                    pix += target[pixptr];
+                    uint32_t pixptr = static_cast<uint32_t>(adapted_width * static_cast<int32_t>(yy) + static_cast<int32_t>(xx));
+                    if (pixptr + adapted_width + 1 < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                        pix += target[pixptr];
 
-                    if (pix > 0x3F) {
-                        target[pixptr]       = 0x3F;
-                        target[pixptr + 1]   = 0x3F;
-                        target[pixptr + 320] = 0x3F;
-                        target[pixptr + 321] = 0x3F;
-                    } else {
-                        target[pixptr]       = pix;
-                        target[pixptr + 1]   = pix;
-                        target[pixptr + 320] = pix;
-                        target[pixptr + 321] = pix;
+                        if (pix > 0x3F) {
+                            target[pixptr]                     = 0x3F;
+                            target[pixptr + 1]                 = 0x3F;
+                            target[pixptr + adapted_width]     = 0x3F;
+                            target[pixptr + adapted_width + 1] = 0x3F;
+                        } else {
+                            target[pixptr]                     = pix;
+                            target[pixptr + 1]                 = pix;
+                            target[pixptr + adapted_width]     = pix;
+                            target[pixptr + adapted_width + 1] = pix;
+                        }
                     }
                 }
             }
@@ -2728,17 +2766,17 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor, 
     /*  320 = Largh. schermo, 100 = max x/y pixels della mappa,
         3.00 = massimo fattore d'ingrandimento con dispersione. */
 
-    if (rx < -460 || rx > 460) {
+    if (rx < -460 * internal_res_scale || rx > 460 * internal_res_scale) {
         return; // 460 = (320 / 2) + (100 * 3.00)
     }
 
-    if (ry < -400 || ry > 400) {
+    if (ry < -400 * internal_res_scale || ry > 400 * internal_res_scale) {
         return; // 400 = (200 / 2) + (100 * 3.00)
     }
 
     center_x  = rx + x_centro_f + 0.5;
     center_y  = ry + y_centro_f + 0.5;
-    mag       = mag_factor * 100 + 1.5;
+    mag       = (mag_factor * 100 + 1.5) * internal_res_scale;
     fgm       = fgm_factor * mag; // full globe magnitude
     shade_ext = mag - fgm;
 
@@ -2759,7 +2797,8 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor, 
         xx = center_x - mag;
 
         while (xx < xb) {
-            if (xx > 9 && xx < 313 && yy > 9 && yy < 190) {
+            if (xx > 9 * internal_res_scale && xx < adapted_width - 7 * internal_res_scale &&
+                yy > 9 * internal_res_scale && yy < adapted_height - 10 * internal_res_scale) {
                 zz = xa * xa + ya * ya;
 
                 if (zz < magsq) {
@@ -2769,13 +2808,15 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor, 
                         pix = 0x3F;
                     }
 
-                    pixptr = ((int16_t) (((int16_t) 320) * ((int16_t) yy))) + (int16_t) xx;
-                    pix += target[pixptr];
+                    uint32_t pixptr = static_cast<uint32_t>(adapted_width * static_cast<int32_t>(yy) + static_cast<int32_t>(xx));
+                    if (pixptr < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                        pix += target[pixptr];
 
-                    if (pix > 0x3F) {
-                        target[pixptr] = 0x3F;
-                    } else {
-                        target[pixptr] = pix;
+                        if (pix > 0x3F) {
+                            target[pixptr] = 0x3F;
+                        } else {
+                            target[pixptr] = pix;
+                        }
                     }
                 }
             }
@@ -2832,16 +2873,21 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight, do
         if (interval < 0) {
             k = -interval / rz;
         } else {
-            k = 10 / interval;
+            k = (10 / interval) * internal_res_scale;
         }
 
-        xs = (int32_t) (rx / rz + xshift);
-        ys = (int32_t) (ry / rz + yshift);
+        xs = (int32_t) (rx / rz + xshift * internal_res_scale);
+        ys = (int32_t) (ry / rz + yshift * internal_res_scale);
 
-        if (xs > -150 && ys > -90 && xs < 160 && ys < 90) {
+        if (xs > stk_lbx && ys > stk_lby && xs < stk_ubx && ys < stk_uby) {
+            uint32_t sample_idx = static_cast<uint32_t>(xs + VIEW_X_CENTER + adapted_width * (ys + VIEW_Y_CENTER));
             switch (condition) {
             case 1:
-                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
+                if (sample_idx < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                    temp = adapted[sample_idx];
+                } else {
+                    temp = 0;
+                }
 
                 if (temp < 64) {
                     goto exit_local;
@@ -2850,7 +2896,11 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight, do
                 break;
 
             case 2:
-                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
+                if (sample_idx < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                    temp = adapted[sample_idx];
+                } else {
+                    temp = 0;
+                }
 
                 if (temp < 64 || temp > 127) {
                     goto exit_local;
@@ -2912,7 +2962,7 @@ int8_t pixilating_effect = LIGHT_EMITTING;
 int8_t pixel_spreads     = 1;
 uint8_t multicolourmask  = 0xC0;
 
-void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color) {
+void single_pixel_at_ptr(uint32_t offset, uint8_t pixel_color) {
     if (offset >= adapted_width * adapted_height) {
         return;
     }
@@ -3047,10 +3097,10 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
                     const auto c10 = static_cast<uint8_t>(std::round(pixel_color * u * (1.0 - v)));
                     const auto c01 = static_cast<uint8_t>(std::round(pixel_color * (1.0 - u) * v));
                     const auto c11 = static_cast<uint8_t>(std::round(pixel_color * u * v));
-                    if (c00 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * y0 + x0), c00);
-                    if (c10 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * y0 + (x0 + 1)), c10);
-                    if (c01 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * (y0 + 1) + x0), c01);
-                    if (c11 > 0) single_pixel_at_ptr(static_cast<uint16_t>(adapted_width * (y0 + 1) + (x0 + 1)), c11);
+                    if (c00 > 0) single_pixel_at_ptr(static_cast<uint32_t>(adapted_width * y0 + x0), c00);
+                    if (c10 > 0) single_pixel_at_ptr(static_cast<uint32_t>(adapted_width * y0 + (x0 + 1)), c10);
+                    if (c01 > 0) single_pixel_at_ptr(static_cast<uint32_t>(adapted_width * (y0 + 1) + x0), c01);
+                    if (c11 > 0) single_pixel_at_ptr(static_cast<uint32_t>(adapted_width * (y0 + 1) + (x0 + 1)), c11);
                 }
             } else {
                 vptr = (uint32_t) (adapted_width * (int32_t) pyy + pxx);
@@ -3667,7 +3717,8 @@ no_moons:
 // Smooth the surface of a planet: fast 4x4 average.
 
 void ssmooth(uint8_t *target) {
-    uint32_t limit = ((uint32_t) QUADWORDS << 2u) - (360u << 2u);
+    constexpr uint32_t texture_bytes = 64000u;
+    uint32_t limit = texture_bytes - (360u << 2u);
 
     for (uint32_t i = 0; i < limit; i++) {
         // 4 columns of 4 pixels each.
@@ -3697,7 +3748,8 @@ void lssmooth(uint8_t *target) {
     // The final sample reads one row and one column ahead in the 360-wide
     // orbital texture. Stop before that border rather than using the
     // unrelated 320-pixel display-width allowance from the legacy port.
-    uint32_t limit = ((uint32_t) QUADWORDS << 2u) - 361u;
+    constexpr uint32_t texture_bytes = 64000u;
+    uint32_t limit = texture_bytes - 361u;
 
     for (uint32_t i = 0; i < limit; i++) {
         uint8_t sample = target[i] & 0xC0u;
@@ -4047,7 +4099,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     int16_t plwp, c;
     uint16_t seed = 0;
     int8_t knot1  = 0, brt;
-    int16_t QW    = QUADWORDS;
+    uint32_t QW   = QUADWORDS;
     float r1, r2, r3, g1, g2, g3, b1, b2, b3;
     uint8_t *overlay = (uint8_t *) objectschart;
 
@@ -5592,54 +5644,95 @@ float tp_pulse = 118, pp_pulse = 118;
 void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
     if (!draw_hud && !about && !graphics_menu_status && !movie_recorder.menu_open()) return;
     int32_t j, i, n;
-    uint32_t spot;
     n = 0;
 
     if (!l) {
         l = 32767;
     }
 
-    spot = y * adapted_width + x;
+    if (internal_res_scale <= 1) {
+        uint32_t spot = y * adapted_width + x;
 
-    while (text[n] && n < l) {
-        char ch = text[n];
-        if (ch >= 'a' && ch <= 'z') {
-            ch = static_cast<char>(ch - 'a' + 'A');
-        }
-        if (ch < 32 || ch > 96) {
-            ch = ' ';
-        }
-        j = (ch - 32) * 5;
+        while (text[n] && n < l) {
+            char ch = text[n];
+            if (ch >= 'a' && ch <= 'z') {
+                ch = static_cast<char>(ch - 'a' + 'A');
+            }
+            if (ch < 32 || ch > 96) {
+                ch = ' ';
+            }
+            j = (ch - 32) * 5;
 
-        if (spot + 2 + adapted_width * 4 < adapted_width * adapted_height) {
-            for (i = 0; i < 5; i++) {
-                if (digimap[j + i] & 1) {
-                    adapted[spot + 0] = 191 - adapted[spot + 0];
+            if (spot + 2 + adapted_width * 4 < static_cast<uint32_t>(adapted_width * adapted_height)) {
+                for (i = 0; i < 5; i++) {
+                    if (digimap[j + i] & 1) {
+                        adapted[spot + 0] = 191 - adapted[spot + 0];
+                    }
+
+                    if (digimap[j + i] & 2) {
+                        adapted[spot + 1] = 191 - adapted[spot + 1];
+                    }
+
+                    if (digimap[j + i] & 4) {
+                        adapted[spot + 2] = 191 - adapted[spot + 2];
+                    }
+
+                    spot += adapted_width;
                 }
 
-                if (digimap[j + i] & 2) {
-                    adapted[spot + 1] = 191 - adapted[spot + 1];
-                }
-
-                if (digimap[j + i] & 4) {
-                    adapted[spot + 2] = 191 - adapted[spot + 2];
-                }
-
-                spot += adapted_width;
+                spot -= adapted_width * 5;
             }
 
-            spot -= adapted_width * 5;
+            spot += 4;
+            n++;
         }
+    } else {
+        const int32_t scale = internal_res_scale;
+        int32_t cur_x = x * scale;
+        const int32_t base_y = y * scale;
 
-        spot += 4;
-        n++;
+        while (text[n] && n < l) {
+            char ch = text[n];
+            if (ch >= 'a' && ch <= 'z') {
+                ch = static_cast<char>(ch - 'a' + 'A');
+            }
+            if (ch < 32 || ch > 96) {
+                ch = ' ';
+            }
+            j = (ch - 32) * 5;
+
+            for (i = 0; i < 5; ++i) {
+                const uint8_t row_bits = digimap[j + i];
+                for (int b = 0; b < 3; ++b) {
+                    if (row_bits & (1 << b)) {
+                        const int32_t px_base = cur_x + b * scale;
+                        const int32_t py_base = base_y + i * scale;
+                        for (int dy = 0; dy < scale; ++dy) {
+                            const int32_t py = py_base + dy;
+                            if (py < 0 || py >= adapted_height) continue;
+                            const uint32_t row_offset = static_cast<uint32_t>(py * adapted_width);
+                            for (int dx = 0; dx < scale; ++dx) {
+                                const int32_t px = px_base + dx;
+                                if (px >= 0 && px < adapted_width) {
+                                    adapted[row_offset + px] = 191 - adapted[row_offset + px];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            cur_x += 4 * scale;
+            n++;
+        }
     }
 }
 
 void draw_plus_overlay(bool surface) {
     if (!about && !graphics_menu_status && !movie_recorder.menu_open()) return;
+    const int scale = internal_res_scale;
     if (about) {
-        area_clear(adapted, 11, 130, 0, 0, 298, 42, 112);
+        area_clear(adapted, 11 * scale, 130 * scale, 0, 0, 298 * scale, 42 * scale, 112);
         const auto &lines = noctis::plus_help_lines(surface);
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0,
@@ -5652,10 +5745,11 @@ void draw_plus_overlay(bool surface) {
                                                           static_cast<int>(noctis::get_upscale_mode()),
                                                           noctis::is_crt_shader_enabled(),
                                                           noctis::get_subpixel_fidelity(),
-                                                          true);
+                                                          true,
+                                                          static_cast<int>(noctis::get_internal_resolution_mode()));
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
-        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
+        area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
@@ -5670,7 +5764,7 @@ void draw_plus_overlay(bool surface) {
             noctis::is_audio_muted());
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
-        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
+        area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
@@ -5689,12 +5783,12 @@ void draw_plus_overlay(bool surface) {
             ctrl.rumble_enabled);
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
-        area_clear(adapted, 11, box_y, 0, 0, 298, box_h, 112);
+        area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);
         for (std::size_t index = 0; index < lines.size(); ++index) {
             wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
     } else {
-        area_clear(adapted, 11, 130, 0, 0, 298, 42, 112);
+        area_clear(adapted, 11 * scale, 130 * scale, 0, 0, 298 * scale, 42 * scale, 112);
         const auto lines = noctis::plus_movie_menu_lines(
             movie_recorder.deck(), movie_recorder.cadence(), movie_recorder.black_flash(),
             movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir), movie_recorder.recording(),
@@ -5710,39 +5804,76 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     int32_t lsecs, lptr;
     float pp_delta, ccom;
 
-    if (draw_hud) for (lptr = 0; lptr < 04; lptr++) {
-        area_clear(adapted, 10, openhudcount + 9 - lptr, 0, 0, adapted_width - 20, 1, 54 + surlight + 3 * lptr);
+    const int32_t scale = internal_res_scale;
+    if (scale <= 1) {
+        if (draw_hud) for (lptr = 0; lptr < 04; lptr++) {
+            area_clear(adapted, 10, openhudcount + 9 - lptr, 0, 0, adapted_width - 20, 1, 54 + surlight + 3 * lptr);
+        }
+
+        for (lptr = 0; lptr < 10; lptr++) {
+            area_clear(adapted, 0, 9 - lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
+        }
+
+        for (lptr = 0; lptr < 10; lptr++) {
+            area_clear(adapted, 0, (adapted_height - 10) + lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
+        }
+
+        for (lptr = 0; lptr < 10; lptr++) {
+            const auto inset = seamless_border ? 10 - (lptr + 1) : 10;
+            const auto height = seamless_border ? adapted_height - 2 * inset : adapted_height - 20;
+            area_clear(adapted, 9 - lptr, inset, 0, 0, 1, height, 64 + surlight - lptr);
+            area_clear(adapted, (adapted_width - 10) + lptr, inset, 0, 0, 1, height, 64 + surlight - lptr);
+        }
+
+        lptr = 64 + 3 * surlight;
+
+        if (lptr > 127) {
+            lptr = 127;
+        }
+
+        area_clear(adapted, 9, 9, 0, 0, 4, 4, lptr);
+        smootharound_64(adapted, 9, 9, 5, 1);
+        area_clear(adapted, adapted_width - 12, 9, 0, 0, 4, 4, lptr);
+        smootharound_64(adapted, adapted_width - 12, 9, 5, 1);
+        area_clear(adapted, 9, adapted_height - 12, 0, 0, 4, 4, lptr);
+        smootharound_64(adapted, 9, adapted_height - 12, 5, 1);
+        area_clear(adapted, adapted_width - 12, adapted_height - 12, 0, 0, 4, 4, lptr);
+        smootharound_64(adapted, adapted_width - 12, adapted_height - 12, 5, 1);
+    } else {
+        if (draw_hud) for (lptr = 0; lptr < 4 * scale; lptr++) {
+            area_clear(adapted, 10 * scale, openhudcount * scale + (10 * scale - 1) - lptr, 0, 0, adapted_width - 20 * scale, 1, 54 + surlight + 3 * (lptr / scale));
+        }
+
+        for (lptr = 0; lptr < 10 * scale; lptr++) {
+            area_clear(adapted, 0, (10 * scale - 1) - lptr, 0, 0, adapted_width, 1, 64 + surlight - (lptr / scale));
+        }
+
+        for (lptr = 0; lptr < 10 * scale; lptr++) {
+            area_clear(adapted, 0, (adapted_height - 10 * scale) + lptr, 0, 0, adapted_width, 1, 64 + surlight - (lptr / scale));
+        }
+
+        for (lptr = 0; lptr < 10 * scale; lptr++) {
+            const auto inset = seamless_border ? 10 * scale - (lptr + 1) : 10 * scale;
+            const auto height = seamless_border ? adapted_height - 2 * inset : adapted_height - 20 * scale;
+            area_clear(adapted, (10 * scale - 1) - lptr, inset, 0, 0, 1, height, 64 + surlight - (lptr / scale));
+            area_clear(adapted, (adapted_width - 10 * scale) + lptr, inset, 0, 0, 1, height, 64 + surlight - (lptr / scale));
+        }
+
+        lptr = 64 + 3 * surlight;
+
+        if (lptr > 127) {
+            lptr = 127;
+        }
+
+        area_clear(adapted, 9 * scale, 9 * scale, 0, 0, 4 * scale, 4 * scale, lptr);
+        smootharound_64(adapted, 9 * scale, 9 * scale, 5 * scale, 1);
+        area_clear(adapted, adapted_width - 12 * scale, 9 * scale, 0, 0, 4 * scale, 4 * scale, lptr);
+        smootharound_64(adapted, adapted_width - 12 * scale, 9 * scale, 5 * scale, 1);
+        area_clear(adapted, 9 * scale, adapted_height - 12 * scale, 0, 0, 4 * scale, 4 * scale, lptr);
+        smootharound_64(adapted, 9 * scale, adapted_height - 12 * scale, 5 * scale, 1);
+        area_clear(adapted, adapted_width - 12 * scale, adapted_height - 12 * scale, 0, 0, 4 * scale, 4 * scale, lptr);
+        smootharound_64(adapted, adapted_width - 12 * scale, adapted_height - 12 * scale, 5 * scale, 1);
     }
-
-    for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 0, 9 - lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
-    }
-
-    for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 0, (adapted_height - 10) + lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
-    }
-
-    for (lptr = 0; lptr < 10; lptr++) {
-        const auto inset = seamless_border ? 10 - (lptr + 1) : 10;
-        const auto height = seamless_border ? adapted_height - 2 * inset : adapted_height - 20;
-        area_clear(adapted, 9 - lptr, inset, 0, 0, 1, height, 64 + surlight - lptr);
-        area_clear(adapted, (adapted_width - 10) + lptr, inset, 0, 0, 1, height, 64 + surlight - lptr);
-    }
-
-    lptr = 64 + 3 * surlight;
-
-    if (lptr > 127) {
-        lptr = 127;
-    }
-
-    area_clear(adapted, 9, 9, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, 9, 9, 5, 1);
-    area_clear(adapted, adapted_width - 12, 9, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, adapted_width - 12, 9, 5, 1);
-    area_clear(adapted, 9, adapted_height - 12, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, 9, adapted_height - 12, 5, 1);
-    area_clear(adapted, adapted_width - 12, adapted_height - 12, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, adapted_width - 12, adapted_height - 12, 5, 1);
     // Print time on outer HUD.
     const auto triads = noctis::split_triad_time(secs);
     snprintf((char *) outhudbuffer, sizeof(outhudbuffer), "EPOC %d & %03hu.%03hu.%03hu", epoc,
@@ -5764,8 +5895,8 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
             strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_x)) >> 14u) - 100));
             strcat((char *) outhudbuffer, ".");
             strcat((char *) outhudbuffer, alphavalue((((int32_t) (pos_z)) >> 14u) - 100));
-            area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
-            area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+            area_clear(adapted, 254 * scale, 1 * scale, 0, 0, 5 * scale, 7 * scale, 64 + 0);
+            area_clear(adapted, 256 * scale, 8 * scale, 0, 0, 1 * scale, 1 * scale, 64 + 63);
             ccom = 360 - user_beta;
 
             if (ccom > 359) {
@@ -5784,8 +5915,8 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
                           hdg.degrees, static_cast<int>(hdg.cardinal.size()), hdg.cardinal.data());
             strcat((char *) outhudbuffer, hdg_buf);
 
-            area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
-            area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+            area_clear(adapted, 254 * scale, 1 * scale, 0, 0, 5 * scale, 7 * scale, 64 + 0);
+            area_clear(adapted, 256 * scale, 8 * scale, 0, 0, 1 * scale, 1 * scale, 64 + 63);
 
             ccom = static_cast<float>(hdg.degrees);
             cpos = (int16_t) (ccom / 9);
@@ -5874,7 +6005,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
              "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE "
              "%3.0f PPS",
              tp_gravity, tp_temp, tp_pressure, tp_pulse);
-    wrouthud(2, adapted_height - 8, 0, (char *) outhudbuffer);
+    wrouthud(2, 192, 0, (char *) outhudbuffer);
 }
 
 extern int32_t star_label_pos;
@@ -5891,8 +6022,7 @@ bool write_indexed_bmp(const std::filesystem::path &path) {
     const bool header_read = fread(header, 1, sizeof(header), source) == sizeof(header);
     fclose(source);
     if (!header_read) return false;
-    // The archived template declares stale bfSize/biSizeImage values; fix them for a 320x200 frame.
-    noctis::normalize_indexed_bmp_header(header, 320, 200);
+    noctis::normalize_indexed_bmp_header(header, static_cast<uint32_t>(adapted_width), static_cast<uint32_t>(adapted_height));
 
     FILE *output = fopen(path.string().c_str(), "wb");
     if (output == nullptr) return false;
@@ -5907,8 +6037,8 @@ bool write_indexed_bmp(const std::filesystem::path &path) {
             && fwrite(&red, 1, 1, output) == 1
             && fwrite(&reserved, 1, 1, output) == 1;
     }
-    for (int32_t row = 63680; ok && row >= 0; row -= 320) {
-        ok = fwrite(adapted + row, 1, 320, output) == 320;
+    for (int32_t row = (adapted_height - 1) * adapted_width; ok && row >= 0; row -= adapted_width) {
+        ok = fwrite(adapted + row, 1, adapted_width, output) == static_cast<std::size_t>(adapted_width);
     }
     ok = fclose(output) == 0 && ok;
     if (!ok) {
@@ -5941,8 +6071,9 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         snapfilename = noctis::runtime_paths().gallery_dir / filename;
     }
 
+    const int scale = internal_res_scale;
     if (showdata) {
-        area_clear(adapted, 2, 191, 0, 0, 316, 7, 64 + 63);
+        area_clear(adapted, 2 * scale, 191 * scale, 0, 0, 316 * scale, 7 * scale, 64 + 63);
 
         parsis_x = round(dzat_x);
         parsis_y = round(dzat_y);
@@ -5970,12 +6101,12 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         wrouthud(3, 192, 0, (char *) outhudbuffer);
 
         if (ap_targetted == 1 && star_label_pos != -1) {
-            area_clear(adapted, 14, 14, 0, 0, 102, 7, 64 + 63);
+            area_clear(adapted, 14 * scale, 14 * scale, 0, 0, 102 * scale, 7 * scale, 64 + 63);
             wrouthud(15, 15, 20, (char *) star_label);
         }
 
         if (ip_targetted != -1 && planet_label_pos != -1) {
-            area_clear(adapted, 14, 23, 0, 0, 102, 7, 64 + 63);
+            area_clear(adapted, 14 * scale, 23 * scale, 0, 0, 102 * scale, 7 * scale, 64 + 63);
             wrouthud(15, 24, 20, (char *) planet_label);
         }
     }

@@ -25,7 +25,8 @@ const std::vector<std::string> plus_visual_menu_lines(bool draw_hud,
                                                        int upscale_mode = 0,
                                                        bool crt_shader = false,
                                                        bool subpixel_fidelity = false,
-                                                       bool show_advanced_fx = false);
+                                                       bool show_advanced_fx = false,
+                                                       int internal_res_mode = 0);
 const std::vector<std::string> plus_audio_menu_lines(int selected_category,
                                                      float master_vol,
                                                      float cabin_vol,

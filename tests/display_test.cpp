@@ -1,5 +1,6 @@
 #include "display.h"
 #include "simulation_clock.h"
+#include "noctis-d.h"
 
 #include <cmath>
 #include <cstdio>
@@ -193,6 +194,7 @@ int main() {
                 << "invalid line without equal sign\n"
                 << "aspect_ratio = 4:3\n"
                 << "upscale_mode = smooth\n"
+                << "internal_resolution = 4x\n"
                 << "timewarp_multiplier = 99999\n" // Clamped to 5000
                 << "lens_flare_mode = -99\n";      // Clamped to -1
         }
@@ -200,8 +202,60 @@ int main() {
         ok &= require(corrupt_load, "corrupt load recovers gracefully");
         ok &= require(noctis::get_aspect_ratio_mode() == noctis::AspectRatioMode::crt_4_3, "aspect_ratio parsed 4:3");
         ok &= require(noctis::get_upscale_mode() == noctis::UpscaleMode::smooth_bilinear, "upscale_mode parsed smooth");
+        ok &= require(noctis::get_internal_resolution_mode() == noctis::InternalResolutionMode::res_4x, "internal_resolution parsed 4x");
         ok &= require(noctis::get_timewarp_multiplier() == 5000, "timewarp_multiplier clamped to 5000");
         ok &= require(noctis::get_setting_lens_flare_mode() == -1, "lens_flare_mode clamped to -1");
+
+        // 15. Internal resolution cycling, scales, names, callback, and ini persistence
+        {
+            auto res = noctis::InternalResolutionMode::res_1x;
+            res = noctis::cycle_internal_resolution_mode(res);
+            ok &= require(res == noctis::InternalResolutionMode::res_2x, "res_1x cycles to res_2x");
+            res = noctis::cycle_internal_resolution_mode(res);
+            ok &= require(res == noctis::InternalResolutionMode::res_4x, "res_2x cycles to res_4x");
+            res = noctis::cycle_internal_resolution_mode(res);
+            ok &= require(res == noctis::InternalResolutionMode::res_1x, "res_4x cycles to res_1x");
+
+            ok &= require(noctis::internal_resolution_scale(noctis::InternalResolutionMode::res_1x) == 1, "res_1x scale is 1");
+            ok &= require(noctis::internal_resolution_scale(noctis::InternalResolutionMode::res_2x) == 2, "res_2x scale is 2");
+            ok &= require(noctis::internal_resolution_scale(noctis::InternalResolutionMode::res_4x) == 4, "res_4x scale is 4");
+
+            ok &= require(std::string(noctis::internal_resolution_mode_name(noctis::InternalResolutionMode::res_1x)) ==
+                              "INTERNAL RES: 320X200 (1X)", "res_1x name format");
+            ok &= require(std::string(noctis::internal_resolution_mode_name(noctis::InternalResolutionMode::res_2x)) ==
+                              "INTERNAL RES: 640X400 (2X)", "res_2x name format");
+            ok &= require(std::string(noctis::internal_resolution_mode_name(noctis::InternalResolutionMode::res_4x)) ==
+                              "INTERNAL RES: 1280X800 (4X)", "res_4x name format");
+
+            static noctis::InternalResolutionMode callback_received = noctis::InternalResolutionMode::res_1x;
+            noctis::set_internal_resolution_change_callback([](noctis::InternalResolutionMode m) {
+                callback_received = m;
+            });
+
+            noctis::set_internal_resolution_mode(noctis::InternalResolutionMode::res_2x);
+            ok &= require(callback_received == noctis::InternalResolutionMode::res_2x, "callback fired with res_2x");
+            ok &= require(internal_res_scale == 2, "internal_res_scale updated to 2");
+            ok &= require(adapted_width == 640, "adapted_width updated to 640");
+            ok &= require(adapted_height == 400, "adapted_height updated to 400");
+
+            // Save and verify round-trip
+            noctis::save_display_settings(test_dir);
+            noctis::set_internal_resolution_mode(noctis::InternalResolutionMode::res_1x);
+            ok &= require(noctis::get_internal_resolution_mode() == noctis::InternalResolutionMode::res_1x, "reset to 1x");
+
+            noctis::load_display_settings(test_dir);
+            ok &= require(noctis::get_internal_resolution_mode() == noctis::InternalResolutionMode::res_2x, "loaded 2x from ini");
+            ok &= require(internal_res_scale == 2, "internal_res_scale restored to 2");
+            ok &= require(adapted_width == 640, "adapted_width restored to 640");
+            ok &= require(adapted_height == 400, "adapted_height restored to 400");
+
+            // Clean up: restore to 1x
+            noctis::set_internal_resolution_change_callback(nullptr);
+            noctis::set_internal_resolution_mode(noctis::InternalResolutionMode::res_1x);
+            ok &= require(internal_res_scale == 1, "internal_res_scale restored to 1");
+            ok &= require(adapted_width == 320, "adapted_width restored to 320");
+            ok &= require(adapted_height == 200, "adapted_height restored to 200");
+        }
 
         std::filesystem::remove_all(test_dir, ec);
     }

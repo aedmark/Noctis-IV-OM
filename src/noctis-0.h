@@ -3,7 +3,8 @@
 #include "input.h"
 #include <filesystem>
 
-extern uint16_t QUADWORDS;
+extern uint32_t QUADWORDS;
+extern uint32_t pqw;
 extern uint8_t *adapted;
 extern uint8_t range8088[64 * 3];
 extern uint8_t tmppal[768];
@@ -316,7 +317,7 @@ extern int8_t lens_flares_init();
 extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight, double ylight, double zlight,
                             double interval, int16_t added, int8_t on_hud, int8_t condition, int16_t xshift,
                             int16_t yshift);
-extern void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color);
+extern void single_pixel_at_ptr(uint32_t offset, uint8_t pixel_color);
 extern int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, uint8_t unconditioned_color);
 extern uint8_t *digimap2;
 extern void cupola(float y_or, float brk);

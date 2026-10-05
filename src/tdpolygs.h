@@ -105,7 +105,7 @@ float dpp = 200;
  * repetitions, etc.
  * (ps, I changed the base to 16, texture sixteenths). */
 
-const uint16_t MPIY = 199; // Maximum PIXEL on Y.
+const uint16_t MPIY = 1600; // Maximum PIXEL on Y.
 
 float EMU_K       = 16;                         // Cost of FPU emulation
 int32_t H_MATRIXS = 16;                         // Number of repetitions. 16-128
@@ -1126,10 +1126,9 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
 
     // Pre-work assignments.
     int32_t tempu = 0, tempv = 0;
-    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0, reallytempfakedi = 0;
+    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakesi = 0;
+    uint32_t fakedi = 0, tempfakedi = 0, reallytempfakedi = 0;
     uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
-    adapted[0xFA00] = tinta;
-    adapted[0xFA01] = escrescenze;
 
     // Tracking cycle. (NOTE: This makes no sense.)
     for (uint32_t i = min_y; i <= max_y;) {
@@ -1210,7 +1209,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tbh = tdh;
         fakedi++;
         tbl = tah;
-        tch = adapted[0xFA00];
+        tch = tinta;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))]; // NOTE; Fudge factor to account for
                                            // loss of offset on txtr.
@@ -1281,7 +1280,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
-        tch += adapted[0xFA00];
+        tch += tinta;
         tdx += fakesi;
         tch >>= 1u;
         adapted[fakedi + 3] &= 0xC0u;
@@ -1298,7 +1297,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tbh = tdh;
         fakedi++;
         tbl = tah;
-        tch = adapted[0xFA00];
+        tch = tinta;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
         tax += tbp;
@@ -1313,8 +1312,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto bmpm320;
         tch = tempch;
-        tch -= adapted[0xFA00];
-        tch += adapted[0xFA01];
+        tch -= tinta;
+        tch += escrescenze;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
         adapted[fakedi + (adapted_width * 2) + 3] = tch;
         fakedi                                    = tempfakedi;
@@ -1391,7 +1390,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tbh = tdh;
         fakedi += 2;
         tbl = tah;
-        tch = adapted[0xFA00];
+        tch = tinta;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))]; // NOTE; Fudge factor to account for
                                            // loss of offset on txtr.
@@ -1462,7 +1461,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
-        tch += adapted[0xFA00];
+        tch += tinta;
         tdx += fakesi;
         tch >>= 1u;
         adapted[fakedi + 2] &= 0xC0u;
@@ -1481,7 +1480,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tbh = tdh;
         fakedi += 2;
         tbl = tah;
-        tch = adapted[0xFA00];
+        tch = tinta;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
         tax += tbp;
@@ -1497,11 +1496,11 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto c_bmpm320;
         tch = tempch;
-        tch -= adapted[0xFA00];
-        tch += adapted[0xFA01];
+        tch -= tinta;
+        tch += escrescenze;
         tch += txtr[texture_offset(static_cast<uint16_t>(tbx - 4))];
-        adapted[fakedi + 640 + 2] = tch;
-        adapted[fakedi + 640 + 3] = tch;
+        adapted[fakedi + (adapted_width * 2) + 2] = tch;
+        adapted[fakedi + (adapted_width * 2) + 3] = tch;
         fakedi                    = tempfakedi;
         tdx += fakesi;
         tcl--;
@@ -1530,9 +1529,9 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi += tdx;
 
     duplicate:
-        tdl                   = adapted[fakedi - 316];
+        tdl                   = adapted[fakedi - (adapted_width - 4)];
         adapted[fakedi + 4]   = tdl;
-        adapted[fakedi + 324] = tdl;
+        adapted[fakedi + (adapted_width + 4)] = tdl;
         fakedi++;
         tax--;
         if (tax != 0)

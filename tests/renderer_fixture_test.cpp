@@ -46,7 +46,7 @@ void reset_renderer() {
 }
 
 int main() {
-    constexpr std::size_t visible_bytes = adapted_width * adapted_height;
+    const std::size_t visible_bytes = adapted_width * adapted_height;
 
     reset_renderer();
     const std::array<float, 4> flat_x{-120.0F, 120.0F, 120.0F, -120.0F};
