@@ -2187,19 +2187,21 @@ void background(uint16_t start, uint8_t *target, uint8_t *background, uint8_t *o
 
                 tex_loc += offset;
             } else {
-                int32_t base_offset = static_cast<int16_t>(word + screenshift);
-                int32_t base_x = (base_offset % 320) * scale;
-                int32_t base_y = (base_offset / 320) * scale;
-                uint8_t color = background[tex_loc];
+                uint16_t screen_loc = static_cast<uint16_t>(word + screenshift);
+                if (screen_loc < 64000) {
+                    int32_t base_x = (screen_loc % 320) * scale;
+                    int32_t base_y = (screen_loc / 320) * scale;
+                    uint8_t color = background[tex_loc];
 
-                for (int dy = 0; dy < block_h; ++dy) {
-                    int32_t py = base_y + dy;
-                    if (py < 0 || py >= adapted_height) continue;
-                    uint32_t row_idx = static_cast<uint32_t>(py * adapted_width);
-                    for (int dx = 0; dx < block_w; ++dx) {
-                        int32_t px = base_x + dx;
-                        if (px >= 0 && px < adapted_width) {
-                            target[row_idx + px] = color;
+                    for (int dy = 0; dy < block_h; ++dy) {
+                        int32_t py = base_y + dy;
+                        if (py < 0 || py >= adapted_height) continue;
+                        uint32_t row_idx = static_cast<uint32_t>(py * adapted_width);
+                        for (int dx = 0; dx < block_w; ++dx) {
+                            int32_t px = base_x + dx;
+                            if (px >= 0 && px < adapted_width) {
+                                target[row_idx + px] = color;
+                            }
                         }
                     }
                 }

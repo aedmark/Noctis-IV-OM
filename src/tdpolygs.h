@@ -1192,7 +1192,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     // Pre-work assignments.
     int32_t tempu = 0, tempv = 0;
     uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakesi = 0;
-    uint32_t fakedi = 0, tempfakedi = 0, reallytempfakedi = 0;
+    uint32_t fakedi = 0, tempfakedi = 0;
     uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
 
     // Tracking cycle. (NOTE: This makes no sense.)
@@ -1384,8 +1384,6 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tempu = u;
         tempv = v;
 
-        reallytempfakedi = tempfakedi;
-
         u = projected_i32((_x * tempXsize) * k4);
         v = projected_i32((_y * tempYsize) * k4);
 
@@ -1495,8 +1493,6 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
             goto c_bumper;
 
     c_common:
-        fakedi = reallytempfakedi;
-        fakedi += 32;
         goto c_row;
 
     // Inter-scanline code: between one scanline and the next.
