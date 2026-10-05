@@ -23,6 +23,8 @@
 #include "legacy_numeric.h"
 #include "legacy_save.h"
 #include "movie_capture.h"
+#include "movie_player.h"
+#include "video_export.h"
 #include "native_save.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
@@ -722,6 +724,7 @@ void run_goesnet_module() {
                                              nearstar_y,
                                              nearstar_z,
                                              paths.gallery_dir,
+                                             paths.movies_dir,
                                              paths.config_dir / "bookmarks.ini",
                                              nearstar_identity,
                                              std::move(sname),
@@ -752,6 +755,8 @@ void run_goesnet_module() {
         }
     } else if (answer.action == noctis::GoesResultAction::open_image) {
         open_cockpit_gallery(answer.image_id);
+    } else if (answer.action == noctis::GoesResultAction::open_movie) {
+        noctis::open_movie_player(noctis::runtime_paths().movies_dir, answer.movie_deck);
     } else if (answer.target && answer.action == noctis::GoesResultAction::set_local_target) {
         if (!ap_reached) {
             status("NEED RECAL", 75);
@@ -2743,21 +2748,56 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
         if (movie_recorder.recording()) {
             movie_recorder.stop();
             status("STOP REC", 100);
+#if defined(__EMSCRIPTEN__)
+            char deck_name[16];
+            std::snprintf(deck_name, sizeof(deck_name), "noctis_deck_%03u", movie_recorder.deck() > 1 ? movie_recorder.deck() - 1 : 1);
+            noctis::stop_browser_video_recording(deck_name);
+#endif
             return true;
         }
         const auto result = movie_recorder.start_or_resume(noctis::runtime_paths().movies_dir);
-        if (result == noctis::MovieStartResult::started)
+        if (result == noctis::MovieStartResult::started) {
             status("RECORDING", 100);
-        else if (result == noctis::MovieStartResult::resumed)
+#if defined(__EMSCRIPTEN__)
+            noctis::start_browser_video_recording(static_cast<int>(movie_recorder.captured_fps() > 0 ? movie_recorder.captured_fps() : 18.2));
+#endif
+        } else if (result == noctis::MovieStartResult::resumed) {
             status("RESUME REC", 100);
-        else if (result == noctis::MovieStartResult::occupied)
+        } else if (result == noctis::MovieStartResult::occupied) {
             status("DECK EXISTS", 100);
-        else
+        } else {
             status("MOVIE ERROR", 100);
+        }
         return true;
     }
     if (!movie_recorder.menu_open() || movie_recorder.session_active())
         return false;
+    if (key == 'v' || key == 'V' || key == ' ') {
+        if (noctis::open_movie_player(noctis::runtime_paths().movies_dir, movie_recorder.deck())) {
+            movie_recorder.close_menu();
+            return true;
+        } else {
+            status("NO MOVIE FRAMES", 100);
+            return true;
+        }
+    }
+    if (key == 'x' || key == 'X') {
+        const auto deck_path = movie_recorder.deck_path(noctis::runtime_paths().movies_dir);
+        if (movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir)) {
+            noctis::VideoExportOptions opts;
+            opts.deck_dir = deck_path;
+            opts.fps = 18.2;
+            opts.format = noctis::VideoFormat::mp4;
+            if (noctis::start_video_export_async(opts)) {
+                status("EXPORTING MP4", 100);
+            } else {
+                status("EXPORT IN PROGRESS", 100);
+            }
+        } else {
+            status("DECK EMPTY", 100);
+        }
+        return true;
+    }
     if (key == '+' || key == '-') {
         movie_recorder.change_cadence(key == '+' ? 1 : -1);
         status("MOVIE RATE", 100);
@@ -2941,6 +2981,9 @@ int main(int argc, char **argv) {
     std::optional<noctis::TextureFilterMode> texture_filter_override;
     std::optional<noctis::AtmosphericScatteringMode> atmospheric_scattering_override;
     std::optional<noctis::CoronalFlaresMode> coronal_flares_override;
+    std::string export_movie_deck_arg;
+    double export_movie_fps_arg = 18.2;
+    std::string export_movie_out_arg;
     for (int arg = 1; arg < argc; ++arg) {
         if (std::string_view(argv[arg]) == "--diagnostics") {
             diagnostics_only = true;
@@ -3024,6 +3067,12 @@ int main(int argc, char **argv) {
                 noctis::log_event("error", "arguments", "Invalid coronal flares mode: " + std::string(cor_arg) + " (expected authentic, realistic, or vibrant)");
                 return 2;
             }
+        } else if ((std::string_view(argv[arg]) == "--export-movie" || std::string_view(argv[arg]) == "--export-video") && arg + 1 < argc) {
+            export_movie_deck_arg = argv[++arg];
+        } else if (std::string_view(argv[arg]) == "--export-fps" && arg + 1 < argc) {
+            export_movie_fps_arg = std::strtod(argv[++arg], nullptr);
+        } else if (std::string_view(argv[arg]) == "--export-out" && arg + 1 < argc) {
+            export_movie_out_arg = argv[++arg];
         } else if (std::string_view(argv[arg]) == "--user-data-dir" && arg + 1 < argc) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
@@ -3190,6 +3239,29 @@ int main(int argc, char **argv) {
         noctis::log_event("info", "starmap_exchange", rep.summary_message);
         return 0;
     }
+    if (!export_movie_deck_arg.empty()) {
+        const auto movies_dir = noctis::runtime_paths().movies_dir;
+        std::uint16_t deck_num = static_cast<std::uint16_t>(std::strtoul(export_movie_deck_arg.c_str(), nullptr, 10));
+        char deck_buf[8];
+        std::snprintf(deck_buf, sizeof(deck_buf), "%03u", deck_num);
+        const auto deck_dir = movies_dir / deck_buf;
+
+        noctis::VideoExportOptions opts;
+        opts.deck_dir = deck_dir;
+        opts.fps = export_movie_fps_arg > 0.0 ? export_movie_fps_arg : 18.2;
+        if (!export_movie_out_arg.empty()) {
+            opts.output_path = export_movie_out_arg;
+        }
+
+        const auto res = noctis::export_video_sync(opts);
+        if (res.success) {
+            std::printf("movie_export deck=%s status=ok output=%s\n", deck_buf, res.output_file.string().c_str());
+            return 0;
+        } else {
+            std::fprintf(stderr, "movie_export deck=%s status=error message=%s\n", deck_buf, res.message.c_str());
+            return 1;
+        }
+    }
     noctis::set_internal_resolution_change_callback(sync_internal_resolution_engine);
     noctis::load_display_settings(noctis::runtime_paths().config_dir);
     if (resolution_override) {
@@ -3282,7 +3354,11 @@ int main(int argc, char **argv) {
             status(active ? "CRT SHADER: ACTIVE" : "CRT SHADER: DISABLED", 50);
             save_display_settings_current();
         });
-        noctis::set_overlay_input_handler(noctis::gallery_viewer_input);
+        noctis::set_overlay_input_handler([](const noctis::InputFrame &frame) -> bool {
+            if (noctis::gallery_viewer_open()) return noctis::gallery_viewer_input(frame);
+            if (noctis::movie_player_open()) return noctis::movie_player_input(frame);
+            return false;
+        });
     }
 
     for (ir = 0; ir < 256; ir++) {
@@ -4310,6 +4386,7 @@ int main(int argc, char **argv) {
     if (graphical_smoke_mode) {
         noctis::log_event("info", "graphical_smoke", "window opened, resources loaded, and three frames presented");
         noctis::shutdown_gallery_viewer();
+        noctis::shutdown_movie_player();
         UnloadTexture(screen_texture);
         UnloadTexture(screen_texture_2x);
         noctis::cleanup_display_shaders();
@@ -4418,6 +4495,7 @@ void swapBuffers() {
     noctis::render_volume_slider_overlay(render_w, render_h, viewport, fcs_status_delay,
                                          graphics_menu_status == 2);
     noctis::render_gallery_viewer(render_w, render_h, viewport);
+    noctis::render_movie_player(render_w, render_h, viewport);
 
     // Frame limiter: 18.2 FPS canonical simulation tick (55 ms);
     // 62.5 FPS (~16 ms) during timewarp or on observation deck when ROOFSPEED is enabled.

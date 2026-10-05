@@ -15,7 +15,14 @@ int main() {
     using namespace noctis;
     bool ok = true;
 
-    ok &= require(goes_command_registry().size() == 20, "registry size changed");
+    ok &= require(goes_command_registry().size() == 21, "registry size changed");
+    const auto *movie_cmd = find_goes_command("MOVIE");
+    ok &= require(movie_cmd != nullptr && movie_cmd->command == GoesCommand::movie
+                      && movie_cmd->disposition == GoesCommandDisposition::required_native,
+                  "MOVIE dispatch metadata mismatch");
+    const auto *play_alias = find_goes_command("PLAY");
+    ok &= require(play_alias != nullptr && play_alias->command == GoesCommand::movie,
+                  "PLAY alias mismatch");
     const auto *target = find_goes_command("ST");
     ok &= require(target != nullptr && target->command == GoesCommand::set_target
                       && target->disposition == GoesCommandDisposition::required_native,

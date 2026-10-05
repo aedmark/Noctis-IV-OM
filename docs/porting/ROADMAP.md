@@ -312,9 +312,9 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M14-W01 | In-browser WebM video recording | PLANNED | Direct canvas capture and video download via browser `MediaRecorder` API without requiring external frame stitching |
-| M14-W02 | Desktop automated MP4/WebM video export | PLANNED | In-engine export command invoking system or bundled ffmpeg to encode recorded Moviemaker decks directly to video files in user Downloads |
-| M14-W03 | In-cockpit Moviemaker deck preview | PLANNED | Play back recorded Moviemaker decks directly on cockpit bulkhead screens or observation deck projector |
+| M14-W01 | In-browser WebM video recording | DONE | Direct canvas capture and video download via browser `MediaRecorder` API in Emscripten bridge (`start_browser_video_recording`, `stop_browser_video_recording`), synchronized with F3 Moviemaker capture cycle without external frame stitching; verified in `src/video_export.cpp` and `src/noctis.cpp` |
+| M14-W02 | Desktop automated MP4/WebM video export | DONE | Automated in-engine export invoking system/bundled FFmpeg (`-c:v libx264` / `-c:v libvpx-vp9`), non-blocking background worker thread (`export_movie_deck_async`), direct placement into user's Downloads directory, CLI export flags (`--export-movie <deck>`, `--export-fps`, `--export-out`), and GOESnet terminal `MOVIE EXPORT <deck>`; verified in `tests/video_export_test.cpp` and `tests/goesnet_commands_test.cpp` |
+| M14-W03 | In-cockpit Moviemaker deck preview | DONE | In-cockpit high-DPI projector viewer with CRT framing, playback engine (Play/Pause, Step, Home/End, Loop, Framerate cycling 6-60 FPS), interactive draggable timeline scrubber bar, export button, F3 Moviemaker panel shortcuts (`V` for preview, `X` for export), and GOESnet `MOVIE [PLAY <deck>]`; verified in `tests/movie_player_test.cpp` and 55 passing test suites |
 
 **Exit criteria**
 

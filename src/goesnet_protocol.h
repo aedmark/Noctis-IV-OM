@@ -34,6 +34,7 @@ enum class GoesCommand : std::uint8_t {
     flight_log,
     name_object,
     bookmarks,
+    movie,
     unknown,
 };
 
@@ -104,6 +105,7 @@ enum class GoesResultAction : std::uint8_t {
     catalog_changed,
     export_created,
     open_image,
+    open_movie,
 };
 
 struct GoesResult {
@@ -118,6 +120,7 @@ struct GoesResult {
     };
     std::optional<Target> target;
     std::string image_id;
+    std::uint16_t movie_deck = 0;
 };
 
 std::string format_goes_rows(const std::vector<std::string_view> &rows);

@@ -66,6 +66,39 @@ int main(int argc, char **argv) {
     answer = execute_goes_command("VIEW 5_", context);
     ok &= require(answer.status == GoesResultStatus::not_found && contains(answer, "IMAGE NOT ON FILE."), "VIEW absent mismatch");
     std::filesystem::remove_all(gallery);
+
+    // MOVIE command test
+    const auto movies = std::filesystem::path(argv[4]).parent_path() / "goesnet-movies";
+    std::filesystem::remove_all(movies);
+    std::filesystem::create_directories(movies / "001");
+    context.movies_path = movies;
+
+    answer = execute_goes_command("MOVIE_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "NO RECORDED DECKS."), "empty MOVIE mismatch");
+
+    for (int i = 1; i <= 4; ++i) {
+        char name[32];
+        std::snprintf(name, sizeof(name), "%08d.BMP", i);
+        std::vector<char> bmp(1078 + 320 * 200, 0);
+        bmp[0] = 'B'; bmp[1] = 'M'; bmp[10] = 0x36; bmp[11] = 0x04; bmp[14] = 40;
+        bmp[18] = 0x40; bmp[19] = 0x01; bmp[22] = static_cast<char>(200); bmp[26] = 1; bmp[28] = 8;
+        std::ofstream(movies / "001" / name, std::ios::binary).write(bmp.data(), static_cast<std::streamsize>(bmp.size()));
+    }
+
+    answer = execute_goes_command("MOVIE_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "DECK 001: 4 FRAMES"), "MOVIE listing mismatch");
+
+    answer = execute_goes_command("MOVIE PLAY 1_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && answer.action == GoesResultAction::open_movie && answer.movie_deck == 1, "MOVIE PLAY mismatch");
+
+    answer = execute_goes_command("MOVIE 999_", context);
+    ok &= require(answer.status == GoesResultStatus::not_found && contains(answer, "DECK NOT FOUND."), "MOVIE absent mismatch");
+
+    answer = execute_goes_command("HELP MOVIE_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "MOVIE [DECK/CMD]"), "HELP MOVIE mismatch");
+
+    std::filesystem::remove_all(movies);
+
     answer = execute_goes_command("PAR MIRACLE_", context);
     ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "SUBJECT: STAR;")
                       && contains(answer, "NAME: MIRACLE") && contains(answer, "X=3979984")

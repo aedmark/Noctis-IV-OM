@@ -5,6 +5,8 @@
 #include "galaxy_sector.h"
 #include "gallery.h"
 #include "goesnet_data.h"
+#include "video_export.h"
+#include "runtime_paths.h"
 #include "starmap_exchange.h"
 #include "star_properties.h"
 #include "system_properties.h"
@@ -208,6 +210,11 @@ GoesResult help(std::string_view topic) {
         if (topic == "CLEAN") {
             return result(GoesResultStatus::ok, {"CLEAN", std::string(divider),
                 "COMPACT STARMAP FILE", "REMOVES TOMBSTONES", "RECLAIMS DISK SPACE"});
+        }
+        if (topic == "MOVIE" || topic == "MOVIES" || topic == "MVI") {
+            return result(GoesResultStatus::ok, {"MOVIE [DECK/CMD]", std::string(divider),
+                "LIST RECORDED DECKS", "MOVIE PLAY <DECK>", "PREVIEWS DECK IN HUD",
+                "MOVIE EXPORT <DECK>", "EXPORTS MP4 TO FILE"});
         }
         const auto *entry = find_goes_command(topic);
         if (!entry) return result(GoesResultStatus::not_found, {"UNKNOWN HELP TOPIC"});
@@ -479,6 +486,98 @@ GoesResult handle_bookmarks_command(std::string_view argument, const GoesCommand
         "OR BM DEL <ID>",
     });
 }
+
+GoesResult handle_movie_command(const std::filesystem::path &movies_path, std::string_view argument) {
+    const auto effective_path = !movies_path.empty() ? movies_path : (runtime_paths().movies_dir);
+    const auto decks = scan_movie_decks(effective_path);
+
+    if (argument.empty() || argument == "LIST") {
+        if (decks.empty()) {
+            return result(GoesResultStatus::ok, {
+                " NO RECORDED DECKS. ",
+                std::string(divider),
+                "USE F3 MOVIEMAKER",
+                "TO RECORD GAMEPLAY",
+                "IMAGE SEQUENCES."
+            });
+        }
+        std::vector<std::string> rows;
+        rows.push_back(" MOVIEDECK ARCHIVE  ");
+        rows.push_back(std::string(divider));
+        for (const auto &d : decks) {
+            char line[40];
+            std::snprintf(line, sizeof(line), "DECK %s: %zu FRAMES", d.deck_str.c_str(), d.frame_count);
+            rows.emplace_back(line);
+        }
+        rows.push_back(std::string(divider));
+        rows.push_back(std::to_string(decks.size()) + (decks.size() == 1 ? " DECK ON FILE." : " DECKS ON FILE."));
+        rows.push_back("MOVIE PLAY [N] TO VIEW");
+        rows.push_back("MOVIE EXPORT [N] TO MP4");
+        return result(GoesResultStatus::ok, std::move(rows));
+    }
+
+    if (argument.starts_with("EXPORT")) {
+        auto sub = trim_spaces(argument.substr(6));
+        std::size_t num = 0;
+        if (sub.empty() && !decks.empty()) {
+            num = decks.back().deck;
+        } else if (!parse_positive(sub, num)) {
+            return result(GoesResultStatus::usage_error, {"INVALID DECK NUMBER", "USE MOVIE EXPORT <N>"});
+        }
+
+        const MovieDeckEntry *target_deck = nullptr;
+        for (const auto &d : decks) {
+            if (d.deck == num) { target_deck = &d; break; }
+        }
+        if (!target_deck) {
+            return result(GoesResultStatus::not_found, {"DECK NOT FOUND.", "TYPE MOVIE FOR LIST."});
+        }
+
+        VideoExportOptions opts;
+        opts.deck_dir = target_deck->path;
+        opts.fps = target_deck->fps;
+        opts.format = VideoFormat::mp4;
+        start_video_export_async(opts);
+
+        return result(GoesResultStatus::ok, {
+            " EXPORTING MOVIEDECK ",
+            std::string(divider),
+            "DECK " + target_deck->deck_str + ": " + std::to_string(target_deck->frame_count) + " FRAMES",
+            "ENCODING IN PROGRESS",
+            "SAVING TO DOWNLOADS",
+        }, GoesResultAction::export_created);
+    }
+
+    auto play_arg = argument;
+    if (play_arg.starts_with("PLAY")) {
+        play_arg = trim_spaces(play_arg.substr(4));
+    }
+
+    std::size_t num = 0;
+    if (play_arg.empty() && !decks.empty()) {
+        num = decks.back().deck;
+    } else if (!parse_positive(play_arg, num)) {
+        return result(GoesResultStatus::usage_error, {"INVALID DECK NUMBER", "USE MOVIE PLAY <N>"});
+    }
+
+    const MovieDeckEntry *target_deck = nullptr;
+    for (const auto &d : decks) {
+        if (d.deck == num) { target_deck = &d; break; }
+    }
+    if (!target_deck) {
+        return result(GoesResultStatus::not_found, {"DECK NOT FOUND.", "TYPE MOVIE FOR LIST."});
+    }
+
+    auto res = result(GoesResultStatus::ok, {
+        " OPENING MOVIEDECK   ",
+        std::string(divider),
+        "DECK " + target_deck->deck_str + " (" + std::to_string(target_deck->frame_count) + " FRAMES)",
+        "STARDRIFTER PROJECTOR",
+        "ESC TO CLOSE VIEWER.",
+    }, GoesResultAction::open_movie);
+    res.movie_deck = target_deck->deck;
+    return res;
+}
 } // namespace
 
 GoesResult execute_goes_command(std::string_view console_line, const GoesCommandContext &context) {
@@ -488,6 +587,7 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.command == GoesCommand::help) return help(request.argument);
     if (request.command == GoesCommand::gallery) return gallery_listing(context.gallery_path);
     if (request.command == GoesCommand::view_image) return view_image(context.gallery_path, request.argument);
+    if (request.command == GoesCommand::movie) return handle_movie_command(context.movies_path, request.argument);
     if (request.command == GoesCommand::flight_log) {
         if (request.argument.empty()) {
             return result(GoesResultStatus::ok, active_flight_log().format_goes_summary());

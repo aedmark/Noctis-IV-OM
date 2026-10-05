@@ -18,6 +18,7 @@ struct GoesCommandContext {
     double local_star_y{};
     double local_star_z{};
     std::filesystem::path gallery_path;
+    std::filesystem::path movies_path;
     std::filesystem::path bookmarks_path;
     double current_star_id{0.0};
     std::string current_star_name;

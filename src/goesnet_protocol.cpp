@@ -6,7 +6,7 @@
 namespace noctis {
 namespace {
 
-constexpr std::array<GoesCommandDescriptor, 21> registry{{
+constexpr std::array<GoesCommandDescriptor, 22> registry{{
     {GoesCommand::clear, "CLR", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
     {GoesCommand::help, "HELP", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::parameters, "PAR", GoesArgumentShape::object_with_optional_range, GoesCommandDisposition::required_native, false},
@@ -27,6 +27,7 @@ constexpr std::array<GoesCommandDescriptor, 21> registry{{
     {GoesCommand::flight_log, "LOG", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::name_object, "NAME", GoesArgumentShape::object_and_note, GoesCommandDisposition::required_native, true},
     {GoesCommand::bookmarks, "BM", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
+    {GoesCommand::movie, "MOVIE", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::unknown, "", GoesArgumentShape::none, GoesCommandDisposition::resident, false},
 }};
 
@@ -70,6 +71,7 @@ const GoesCommandDescriptor *find_goes_command(std::string_view name) {
     if (name == "BOOKMARK" || name == "BOOKMARKS" || name == "WAYPOINT" || name == "WAYPOINTS") name = "BM";
     if (name == "EXPORT" || name == "SHARE") name = "OUTBOX";
     if (name == "IMPORT") name = "INBOX";
+    if (name == "MOVIES" || name == "MVI" || name == "PLAY") name = "MOVIE";
     const auto found = std::find_if(registry.begin(), registry.end() - 1,
                                     [name](const auto &entry) { return entry.name == name; });
     return found == registry.end() - 1 ? nullptr : &*found;

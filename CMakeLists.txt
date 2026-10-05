@@ -72,6 +72,8 @@ set(SOURCE_FILES
     src/stellar_coronal_flares.cpp
     src/upscale.cpp
     src/movie_capture.cpp
+    src/video_export.cpp
+    src/movie_player.cpp
     src/goesnet_protocol.cpp
     src/goesnet_data.cpp
     src/starmap_exchange.cpp
@@ -311,6 +313,28 @@ if(BUILD_TESTING)
         -DAPP=$<TARGET_FILE:nivlr>
         -DRESOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/res
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/movie_fixture.cmake)
+
+    add_executable(video_export_tests tests/video_export_test.cpp src/video_export.cpp src/gallery.cpp src/runtime_paths.cpp)
+    target_include_directories(video_export_tests PRIVATE src)
+    target_compile_features(video_export_tests PRIVATE cxx_std_20)
+    set_target_properties(video_export_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    if(WIN32)
+        target_link_libraries(video_export_tests PRIVATE shell32 ole32)
+    endif()
+    add_test(NAME video_export COMMAND video_export_tests
+        ${CMAKE_CURRENT_BINARY_DIR}/video-export-test)
+
+    add_executable(movie_player_tests tests/movie_player_test.cpp src/movie_player.cpp src/video_export.cpp src/gallery.cpp src/runtime_paths.cpp)
+    target_include_directories(movie_player_tests PRIVATE src)
+    target_compile_features(movie_player_tests PRIVATE cxx_std_20)
+    set_target_properties(movie_player_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    target_link_libraries(movie_player_tests PRIVATE raylib)
+    if(WIN32)
+        target_link_libraries(movie_player_tests PRIVATE shell32 ole32)
+    endif()
+    add_test(NAME movie_player COMMAND movie_player_tests
+        ${CMAKE_CURRENT_BINARY_DIR}/movie-player-test)
+
     add_test(NAME ship_interface_application COMMAND ${CMAKE_COMMAND}
         -DAPP=$<TARGET_FILE:nivlr>
         -DRESOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/res
@@ -354,12 +378,16 @@ if(BUILD_TESTING)
         src/goesnet_commands.cpp src/goesnet_protocol.cpp src/goesnet_data.cpp
         src/starmap_exchange.cpp
         src/flight_log.cpp src/bookmarks.cpp src/gallery.cpp src/atomic_file.cpp
+        src/video_export.cpp src/runtime_paths.cpp
         src/galaxy_sector.cpp src/star_properties.cpp src/system_properties.cpp
         src/legacy_numeric.cpp src/brtl.cpp)
     nivlr_require_strict_fp(goesnet_command_tests)
     target_include_directories(goesnet_command_tests PRIVATE src)
     target_compile_features(goesnet_command_tests PRIVATE cxx_std_20)
     set_target_properties(goesnet_command_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    if(WIN32)
+        target_link_libraries(goesnet_command_tests PRIVATE shell32 ole32)
+    endif()
     add_test(NAME goesnet_commands COMMAND goesnet_command_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/data/STARMAP.BIN
         ${CMAKE_CURRENT_SOURCE_DIR}/data/GUIDE.BIN
