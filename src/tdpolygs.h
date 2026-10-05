@@ -238,9 +238,13 @@ void draw_triangle_2d_subpixel(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, uint8_t
                 case 1:
                     adapted[idx] = std::min((adapted[idx] & 0x3Fu) + color, 62u);
                     break;
-                case 2:
-                    adapted[idx] = std::min(0x40u + (max_x - x), 127u);
+                case 2: {
+                    const uint8_t bg = adapted[idx];
+                    const uint8_t tint = color & 0x3Fu;
+                    const uint8_t blended = ((bg & 0x3Fu) + tint) >> 1u;
+                    adapted[idx] = (bg & 0xC0u) | blended;
                     break;
+                }
                 case 4: {
                     const int intensity =
                         std::clamp(static_cast<int>(color & 0x3Fu) + (y - min_y) * static_cast<int8_t>(entity), 0, 0x3F);
@@ -285,9 +289,13 @@ void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color
             case 1:
                 adapted[idx] = std::min((adapted[idx] & 0x3Fu) + color, 62u);
                 break;
-            case 2:
-                adapted[idx] = std::min(0x40u + (bboxmax.x - curr.x), 127u);
+            case 2: {
+                const uint8_t bg = adapted[idx];
+                const uint8_t tint = color & 0x3Fu;
+                const uint8_t blended = ((bg & 0x3Fu) + tint) >> 1u;
+                adapted[idx] = (bg & 0xC0u) | blended;
                 break;
+            }
             case 4: {
                 const int intensity =
                     std::clamp(static_cast<int>(color & 0x3Fu) + (curr.y - bboxmin.y) * static_cast<int8_t>(entity), 0, 0x3F);

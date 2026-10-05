@@ -93,6 +93,35 @@ int main() {
         std::fprintf(stderr, "draw_triangle_2d flares=1 expected 30, got %u\n", blended_pixel);
         return 1;
     }
+    reset_renderer();
+    flares = 2;
+    // Smoked glass (tint=0, e.g. polycupola dome glass): preserves hue bank 0x80 and halves intensity (40 -> 20)
+    framebuffer.fill(0x80 | 40);
+    draw_triangle_2d(glm::ivec2(10, 10), glm::ivec2(30, 10), glm::ivec2(20, 30), 64);
+    const auto glass_pixel = framebuffer[adapted_width * 15 + 20];
+    if (glass_pixel != (0x80 | 20)) {
+        std::fprintf(stderr, "draw_triangle_2d flares=2 (tint=0) expected %u, got %u\n", (0x80 | 20), glass_pixel);
+        return 1;
+    }
+
+    // Smoked glass with tint (tint=10): blends intensity ((40 + 10) / 2 = 25)
+    framebuffer.fill(0x80 | 40);
+    draw_triangle_2d(glm::ivec2(10, 10), glm::ivec2(30, 10), glm::ivec2(20, 30), 0x40 | 10);
+    const auto tinted_glass_pixel = framebuffer[adapted_width * 15 + 20];
+    if (tinted_glass_pixel != (0x80 | 25)) {
+        std::fprintf(stderr, "draw_triangle_2d flares=2 (tint=10) expected %u, got %u\n", (0x80 | 25), tinted_glass_pixel);
+        return 1;
+    }
+
+    // Subpixel rasterizer flares=2
+    framebuffer.fill(0x80 | 40);
+    draw_triangle_2d_subpixel(glm::vec2(10.0f, 10.0f), glm::vec2(30.0f, 10.0f), glm::vec2(20.0f, 30.0f), 64);
+    const auto subpixel_glass_pixel = framebuffer[adapted_width * 15 + 20];
+    if (subpixel_glass_pixel != (0x80 | 20)) {
+        std::fprintf(stderr, "draw_triangle_2d_subpixel flares=2 expected %u, got %u\n", (0x80 | 20), subpixel_glass_pixel);
+        return 1;
+    }
+    flares = 0;
 
     // Sub-pixel fidelity rasterization test
     reset_renderer();
