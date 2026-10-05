@@ -25,7 +25,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M10 | Deterministic Upscaling & Fidelity Increase | DONE |
 | M11 | In-Engine Media Export & Exploration Ergonomics | DONE |
 | M12 | Celestial Cartography & Waypoint Navigation | DONE |
-| M13 | Atmospheric Scattering & Horizon Visual Fidelity | PLANNED |
+| M13 | Atmospheric Scattering & Horizon Visual Fidelity | DONE |
 | M14 | Moviemaker Modernization & Direct Video Export | PLANNED |
 | M15 | Ambient Music & Generative Soundscapes | PLANNED |
 | M16 | Asynchronous Community GOESnet Catalog Exchange | PLANNED |
@@ -296,9 +296,9 @@ containers, not substitutes for that ledger.
 
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
-| M13-W01 | Extended surface terrain draw distance & adaptive horizon LOD | PLANNED | Configurable terrain rendering radius scaling up to 2x/4x baseline on modern hardware while retaining authentic procedural terrain heights and fixtures |
-| M13-W02 | Twilight atmospheric scattering glow | PLANNED | Multi-stop sky scattering gradients during dawn and dusk on worlds with atmospheres, calculated from solar zenith angle and planetary air density |
-| M13-W03 | Spectral color fidelity & dynamic coronal flares | PLANNED | Enhanced stellar coronal flares and accurate spectral radiation colors for exotic stellar types (Wolf-Rayet, pulsars, white dwarfs, blue hypergiants) |
+| M13-W01 | Extended surface terrain draw distance & adaptive horizon LOD | DONE | Configurable terrain rendering radius scaling up to 96Q (1.5x) and 128Q (2x) with adaptive far-quad polygon mesh construction, horizon sky sealing, sub-pixel edge pre-stepping, and full fixture determinism; toggle with `D` in F2 Visual menu or `--draw-distance`; verified in `tests/display_test.cpp` |
+| M13-W02 | Twilight atmospheric scattering glow | DONE | Multi-stop Rayleigh and Mie twilight sky scattering, dynamic twilight arch and Belt of Venus in panoramic sky maps, horizon sky glow, and solar disk limb attenuation during civil/nautical twilight; toggle with `S` in F2 Visual menu (`AUTHENTIC`, `REALISTIC`, `VIBRANT`) or `--atmospheric-scattering`; verified in `tests/atmospheric_scattering_test.cpp` |
+| M13-W03 | Spectral color fidelity & dynamic coronal flares | DONE | Eddington quadratic limb darkening (1 - u*(1-mu) - v*(1-mu)^2) for 3D volumetric incandescence, procedural multi-harmonic coronal streamer flares, pulsar relativistic twin-jets, flare star CME eruptive loops, and Planckian radiation ramps across all 12 stellar classes in space (`white_globe`) and planetary skies (`white_sun`); toggle with `E` in F2 Visual menu or `--coronal-flares`; verified in `tests/stellar_coronal_flares_test.cpp` and 53 passing CTest suites |
 
 **Exit criteria**
 
