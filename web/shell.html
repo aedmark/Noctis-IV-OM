@@ -127,12 +127,20 @@
       color: #ff5252;
       background: rgba(255, 82, 82, 0.15);
     }
+    .top-bar button.btn-starmap:hover, .top-bar button.btn-starmap:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 230, 195, 0.15);
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <input type="file" id="starmap-file-input" accept=".nsm,.json,.bin" style="display:none">
 
   <div class="top-bar" id="game-controls" hidden>
+    <button id="ingame-export" type="button" class="btn-starmap" title="Export your discovered star and planet designations as a shareable packet">EXPORT STARMAP</button>
+    <button id="ingame-import" type="button" class="btn-starmap" title="Import shared starmap discoveries from another explorer">IMPORT STARMAP</button>
     <button id="ingame-reset" type="button" title="Clear IndexedDB saved progress, bookmarks, and catalogs to restart fresh">RESET SAVED DATA</button>
   </div>
 
@@ -147,6 +155,8 @@
         Your progress autosaves in this browser; just close the tab when you are done.</p>
       <div class="actions">
         <button id="start" disabled>LAUNCH</button>
+        <button id="launch-export" type="button" class="btn-secondary" title="Export your discovered star and planet designations">EXPORT STARMAP</button>
+        <button id="launch-import" type="button" class="btn-secondary" title="Import shared starmap discoveries">IMPORT STARMAP</button>
         <button id="reset-storage" type="button" class="btn-secondary" title="Clear IndexedDB saved progress, bookmarks, and catalogs to restart fresh">RESET SAVED DATA</button>
       </div>
     </div>
@@ -196,6 +206,47 @@
       } else {
         window.location.reload();
       }
+    }
+
+    var exportBtn = document.getElementById('ingame-export');
+    var importBtn = document.getElementById('ingame-import');
+    var launchExportBtn = document.getElementById('launch-export');
+    var launchImportBtn = document.getElementById('launch-import');
+    var fileInput = document.getElementById('starmap-file-input');
+
+    function triggerExport() {
+      if (typeof Module !== 'undefined' && typeof Module.exportStarmapFile === 'function') {
+        Module.exportStarmapFile(false);
+      }
+    }
+
+    function triggerImport() {
+      if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+      }
+    }
+
+    if (exportBtn) exportBtn.addEventListener('click', triggerExport);
+    if (launchExportBtn) launchExportBtn.addEventListener('click', triggerExport);
+    if (importBtn) importBtn.addEventListener('click', triggerImport);
+    if (launchImportBtn) launchImportBtn.addEventListener('click', triggerImport);
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (evt) {
+          var buffer = evt.target.result;
+          if (typeof Module !== 'undefined' && typeof Module.importStarmapFile === 'function') {
+            Module.importStarmapFile(file.name, buffer, function (ok, msg) {
+              alert(msg);
+            });
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
     }
 
     if (resetButton) resetButton.addEventListener('click', promptAndResetData);

@@ -51,6 +51,8 @@ struct GoesDataResult {
 
 GoesDataResult load_starmap(const std::filesystem::path &path, StarmapData &data);
 GoesDataResult load_guide(const std::filesystem::path &path, GuideData &data);
+GoesDataResult write_starmap(const std::filesystem::path &path, const StarmapData &data);
+GoesDataResult write_guide(const std::filesystem::path &path, const GuideData &data);
 std::vector<std::size_t> find_starmap_objects(const StarmapData &data, std::string_view key);
 std::optional<std::string> find_starmap_name_by_id(const StarmapData &data, double id);
 std::vector<std::size_t> guide_records_for(const GuideData &data, double subject_id);

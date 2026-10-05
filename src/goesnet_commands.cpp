@@ -5,6 +5,7 @@
 #include "galaxy_sector.h"
 #include "gallery.h"
 #include "goesnet_data.h"
+#include "starmap_exchange.h"
 #include "star_properties.h"
 #include "system_properties.h"
 
@@ -196,13 +197,25 @@ GoesResult help(std::string_view topic) {
             return result(GoesResultStatus::ok, {"BM / BOOKMARKS", std::string(divider),
                 "BM: LIST BOOKMARKS", "BM ADD [NOTE]: MARK", "BM GOTO <ID>: TARGET", "BM DEL <ID>: REMOVE"});
         }
+        if (topic == "INBOX" || topic == "IMPORT") {
+            return result(GoesResultStatus::ok, {"INBOX [FILE/CHECK]", std::string(divider),
+                "IMPORT STARMAP PACKET", "MERGES DISCOVERIES", "WITH INTEGRITY CHECKS", "INBOX CK: DRY RUN"});
+        }
+        if (topic == "OUTBOX" || topic == "EXPORT" || topic == "SHARE") {
+            return result(GoesResultStatus::ok, {"OUTBOX [BIN/JSON]", std::string(divider),
+                "EXPORT STARMAP PACKET", "PACKET OF DISCOVERIES", "SAVED TO DATA/ DIR", "READY FOR SHARING"});
+        }
+        if (topic == "CLEAN") {
+            return result(GoesResultStatus::ok, {"CLEAN", std::string(divider),
+                "COMPACT STARMAP FILE", "REMOVES TOMBSTONES", "RECLAIMS DISK SPACE"});
+        }
         const auto *entry = find_goes_command(topic);
         if (!entry) return result(GoesResultStatus::not_found, {"UNKNOWN HELP TOPIC"});
         return result(GoesResultStatus::ok, {std::string(entry->name), "SEE COMMAND REFERENCE"});
     }
     return result(GoesResultStatus::ok, {" GOES COMMAND HELP ", std::string(divider),
-        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW",
-        "LOG NAME BM", std::string(divider),
+        "PAR WHERE ST DL SL", "CAT CAST REP DELE", "PRI CLR HELP", "GALLERY VIEW LOG",
+        "NAME BM INBOX OUTBOX", "CLEAN", std::string(divider),
         "USE HELP COMMAND"});
 }
 
@@ -496,8 +509,137 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.command == GoesCommand::bookmarks) {
         return handle_bookmarks_command(request.argument, context);
     }
-    if (request.command == GoesCommand::clean || request.command == GoesCommand::inbox || request.command == GoesCommand::outbox)
-        return result(GoesResultStatus::unsupported, {"LEGACY TOOL RETIRED", "NATIVE DATA NEEDS NO", "DOS MAINTENANCE"});
+    if (request.command == GoesCommand::clean) {
+        std::size_t compacted = 0;
+        const auto res = compact_starmap(context.starmap_path, compacted);
+        if (res.status != GoesDataStatus::ok) return data_failure(res);
+        if (compacted > 0) {
+            return result(GoesResultStatus::ok,
+                          {" GOES STARMAP CLEAN  ", std::string(divider),
+                           "STARMAP COMPACTED.",
+                           "TOMBSTONES ERASED: " + std::to_string(compacted),
+                           "SPACE RECLAIMED."},
+                          GoesResultAction::catalog_changed);
+        }
+        return result(GoesResultStatus::ok,
+                      {" GOES STARMAP CLEAN  ", std::string(divider),
+                       "STARMAP IS CLEAN.", "NO TOMBSTONES FOUND.", "MAP COMPACTED OK."});
+    }
+
+    if (request.command == GoesCommand::outbox) {
+        const auto dir = context.starmap_path.parent_path();
+        StarmapPacketFormat fmt = StarmapPacketFormat::auto_detect;
+        if (request.argument == "JSON") fmt = StarmapPacketFormat::json;
+        else if (request.argument == "BIN" || request.argument == "NSM") fmt = StarmapPacketFormat::binary_nsm;
+
+        const auto rep = export_starmap_packet(context.starmap_path, context.guide_path, dir, fmt);
+        if (rep.status == StarmapExchangeStatus::no_records_to_export) {
+            return result(GoesResultStatus::ok,
+                          {" GOES STARMAP OUTBOX ", std::string(divider),
+                           "NO USER RECORDS FOUND", "STARMAP UNMODIFIED.",
+                           "NAME STARS OR BODIES", "BEFORE EXPORTING."});
+        }
+        if (rep.status != StarmapExchangeStatus::ok) {
+            return result(GoesResultStatus::write_failed,
+                          {"EXPORT FAILED", "CHECK DISK ACCESS"});
+        }
+        return result(GoesResultStatus::ok,
+                      {" GOES STARMAP OUTBOX ", std::string(divider),
+                       "EXPORTED: " + std::to_string(rep.records_exported) + " BODIES",
+                       "OUTBOX.NSM SAVED", "OUTBOX.JSON SAVED", "READY FOR SHARING."},
+                      GoesResultAction::export_created);
+    }
+
+    if (request.command == GoesCommand::inbox) {
+        const auto dir = context.starmap_path.parent_path();
+        std::string arg = std::string(trim_spaces(request.argument));
+        bool dry_run = false;
+        std::filesystem::path packet_file;
+
+        if (arg == "CHECK" || arg == "CK") {
+            dry_run = true;
+            arg.clear();
+        } else if (arg.rfind("CHECK ", 0) == 0) {
+            dry_run = true;
+            arg = std::string(trim_spaces(std::string_view(arg).substr(6)));
+        } else if (arg.rfind("CK ", 0) == 0) {
+            dry_run = true;
+            arg = std::string(trim_spaces(std::string_view(arg).substr(3)));
+        }
+
+        if (!arg.empty()) {
+            std::filesystem::path candidate(arg);
+            if (candidate.is_absolute() && std::filesystem::exists(candidate)) {
+                packet_file = candidate;
+            } else if (std::filesystem::exists(dir / candidate)) {
+                packet_file = dir / candidate;
+            } else if (std::filesystem::exists(candidate)) {
+                packet_file = candidate;
+            } else {
+                return result(GoesResultStatus::not_found,
+                              {" GOES STARMAP INBOX  ", std::string(divider),
+                               "PACKET NOT FOUND:", arg.substr(0, 21), "CHECK DATA/ DIR."});
+            }
+        } else {
+            for (const char *cand : {"inbox.nsm", "inbox.json", "inbox.bin", "outbox.nsm", "outbox.json"}) {
+                if (std::filesystem::exists(dir / cand)) {
+                    packet_file = dir / cand;
+                    break;
+                }
+            }
+            if (packet_file.empty()) {
+                return result(GoesResultStatus::not_found,
+                              {" GOES STARMAP INBOX  ", std::string(divider),
+                               "NO PACKET FOUND", "PLACE INBOX.NSM OR",
+                               "INBOX.JSON IN DATA/", "DIR BEFORE RUNNING."});
+            }
+        }
+
+        StarmapImportOptions opts;
+        opts.dry_run = dry_run;
+        opts.skip_conflicts = true;
+
+        const auto rep = import_starmap_packet(context.starmap_path, context.guide_path, packet_file, opts);
+
+        if (rep.status == StarmapExchangeStatus::checksum_mismatch) {
+            return result(GoesResultStatus::corrupt_data,
+                          {" GOES STARMAP INBOX  ", std::string(divider),
+                           "PACKET CORRUPTED", "CHECKSUM MISMATCH", "IMPORT ABORTED."});
+        }
+        if (rep.status == StarmapExchangeStatus::payload_corrupted || rep.status == StarmapExchangeStatus::format_invalid) {
+            return result(GoesResultStatus::corrupt_data,
+                          {" GOES STARMAP INBOX  ", std::string(divider),
+                           "INVALID PACKET FORMAT", "FILE CORRUPTED", "IMPORT ABORTED."});
+        }
+        if (rep.status == StarmapExchangeStatus::capacity_exceeded) {
+            return result(GoesResultStatus::rejected,
+                          {" GOES STARMAP INBOX  ", std::string(divider),
+                           "CAPACITY EXCEEDED", "PACKET TOO LARGE", "IMPORT ABORTED."});
+        }
+        if (rep.status != StarmapExchangeStatus::ok) {
+            return result(GoesResultStatus::rejected,
+                          {" GOES STARMAP INBOX  ", std::string(divider),
+                           "VALIDATION FAILED", "IMPORT ABORTED."});
+        }
+
+        std::vector<std::string> rows = {
+            dry_run ? " INBOX VERIFICATION  " : " GOES STARMAP INBOX  ",
+            std::string(divider),
+            "SCANNED: " + std::to_string(rep.records_scanned),
+            "IMPORTED: " + std::to_string(rep.records_imported),
+            "DUPLICATES: " + std::to_string(rep.duplicates_skipped),
+        };
+        const std::size_t conflicts = rep.id_conflicts + rep.name_collisions + rep.protected_conflicts + rep.invalid_records;
+        if (conflicts > 0) {
+            rows.push_back("CONFLICTS: " + std::to_string(conflicts));
+        }
+        if (rep.guide_notes_imported > 0) {
+            rows.push_back("NOTES ADDED: " + std::to_string(rep.guide_notes_imported));
+        }
+        rows.push_back(dry_run ? "VERIFICATION OK." : "MAP UPDATED OK.");
+        return result(GoesResultStatus::ok, std::move(rows),
+                      dry_run ? GoesResultAction::none : GoesResultAction::catalog_changed);
+    }
 
     StarmapData map;
     auto loaded = load_starmap(context.starmap_path, map);

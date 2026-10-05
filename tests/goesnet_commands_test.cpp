@@ -160,8 +160,11 @@ int main(int argc, char **argv) {
                                  std::filesystem::perm_options::replace);
 
     answer = execute_goes_command("CLEAN_", context);
-    ok &= require(answer.status == GoesResultStatus::unsupported && contains(answer, "LEGACY TOOL RETIRED"),
-                  "obsolete command disposition mismatch");
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "STARMAP IS CLEAN"),
+                  "CLEAN execution mismatch");
+    answer = execute_goes_command("OUTBOX_", context);
+    ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "NO USER RECORDS FOUND"),
+                  "empty OUTBOX mismatch");
     answer = execute_goes_command("WARP MIRACLE_", context);
     ok &= require(answer.status == GoesResultStatus::unsupported && contains(answer, "UNKNOWN MODULE"),
                   "unknown command mismatch");

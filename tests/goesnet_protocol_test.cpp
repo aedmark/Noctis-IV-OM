@@ -21,8 +21,20 @@ int main() {
                       && target->disposition == GoesCommandDisposition::required_native,
                   "ST dispatch metadata mismatch");
     const auto *inbox = find_goes_command("INBOX");
-    ok &= require(inbox != nullptr && inbox->disposition == GoesCommandDisposition::obsolete_legacy_tool,
-                  "legacy exchange disposition mismatch");
+    ok &= require(inbox != nullptr && inbox->disposition == GoesCommandDisposition::required_native,
+                  "INBOX disposition mismatch");
+    const auto *import_cmd = find_goes_command("IMPORT");
+    ok &= require(import_cmd != nullptr && import_cmd->command == GoesCommand::inbox,
+                  "IMPORT alias mismatch");
+    const auto *outbox = find_goes_command("OUTBOX");
+    ok &= require(outbox != nullptr && outbox->disposition == GoesCommandDisposition::required_native,
+                  "OUTBOX disposition mismatch");
+    const auto *export_cmd = find_goes_command("EXPORT");
+    ok &= require(export_cmd != nullptr && export_cmd->command == GoesCommand::outbox,
+                  "EXPORT alias mismatch");
+    const auto *clean_cmd = find_goes_command("CLEAN");
+    ok &= require(clean_cmd != nullptr && clean_cmd->disposition == GoesCommandDisposition::required_native,
+                  "CLEAN disposition mismatch");
     const auto *log_cmd = find_goes_command("LOG");
     ok &= require(log_cmd != nullptr && log_cmd->command == GoesCommand::flight_log,
                   "LOG command dispatch mismatch");

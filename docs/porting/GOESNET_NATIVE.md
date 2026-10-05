@@ -24,8 +24,9 @@ or update one. The output screen pages native memory directly.
   blank names and negative ordinals safely, ignores tombstones, and identifies
   protected versus user-added records.
 - `goesnet_commands` implements `HELP`, `PAR`, `WHERE`, `ST`, `DL`, `CAT`,
-  `CAST`, `REP`, `DELE`, `SL`, `PRI`, and `CLR`. `CLEAN`, `INBOX`, and `OUTBOX`
-  return an explicit retired-tool result and never invoke DOS code.
+  `CAST`, `REP`, `DELE`, `SL`, `PRI`, `CLR`, `LOG`, `NAME`, `BM`, `CLEAN`, `INBOX`,
+  and `OUTBOX`. `starmap_exchange` provides modern packet exchange with strict
+  CRC32 integrity, collision checks, protected canonical seed guarding, and atomic merging.
 
 Object lookup retains exact-name priority followed by unique-prefix matching.
 Procedural coordinates and systems reuse the tested native galaxy, star, and

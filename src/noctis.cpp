@@ -16,6 +16,7 @@
 #include "navigation_hud.h"
 #include "goesnet_commands.h"
 #include "goesnet_data.h"
+#include "starmap_exchange.h"
 #include "indexed_framebuffer.h"
 #include "input.h"
 #include "legacy_numeric.h"
@@ -45,6 +46,45 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+extern "C" {
+EMSCRIPTEN_KEEPALIVE
+int nivlr_export_starmap(const char *out_path, int format) {
+    const auto starmap = noctis::runtime_paths().data_dir / "STARMAP.BIN";
+    const auto guide = noctis::runtime_paths().data_dir / "GUIDE.BIN";
+    std::filesystem::path target;
+    if (out_path && *out_path) {
+        target = std::filesystem::path(out_path);
+    } else {
+        target = noctis::runtime_paths().data_dir / (format == 2 ? "outbox.json" : "outbox.nsm");
+    }
+    auto fmt = static_cast<noctis::StarmapPacketFormat>(format);
+    auto rep = noctis::export_starmap_packet(starmap, guide, target, fmt);
+    return rep.status == noctis::StarmapExchangeStatus::ok ? static_cast<int>(rep.records_exported) : -1;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int nivlr_import_starmap(const char *in_path, int dry_run) {
+    const auto starmap = noctis::runtime_paths().data_dir / "STARMAP.BIN";
+    const auto guide = noctis::runtime_paths().data_dir / "GUIDE.BIN";
+    std::filesystem::path packet;
+    if (in_path && *in_path) {
+        packet = std::filesystem::path(in_path);
+    } else {
+        for (const char *cand : {"inbox.nsm", "inbox.json", "inbox.bin", "outbox.nsm", "outbox.json"}) {
+            if (std::filesystem::exists(noctis::runtime_paths().data_dir / cand)) {
+                packet = noctis::runtime_paths().data_dir / cand;
+                break;
+            }
+        }
+    }
+    if (packet.empty() || !std::filesystem::exists(packet)) return -1;
+    noctis::StarmapImportOptions opts;
+    opts.dry_run = (dry_run != 0);
+    opts.skip_conflicts = true;
+    auto rep = noctis::import_starmap_packet(starmap, guide, packet, opts);
+    return rep.status == noctis::StarmapExchangeStatus::ok ? static_cast<int>(rep.records_imported) : -1;
+}
+}
 #endif
 
 const double deg = M_PI / 180;
@@ -2868,6 +2908,9 @@ int main(int argc, char **argv) {
     bool movie_fixture_mode               = false;
     bool no_audio_mode                    = false;
     bool reset_data_only                  = false;
+    std::optional<std::filesystem::path> export_starmap_path;
+    std::optional<std::filesystem::path> import_starmap_path;
+    std::optional<std::filesystem::path> validate_starmap_path;
     int drive_override                    = 0;
     const char *persistence_fixture_phase = nullptr;
     std::optional<double> fixture_universe_seconds;
@@ -2881,6 +2924,16 @@ int main(int argc, char **argv) {
             prepare_user_data_only = true;
         } else if (std::string_view(argv[arg]) == "--reset-data") {
             reset_data_only = true;
+        } else if (std::string_view(argv[arg]) == "--export-starmap") {
+            if (arg + 1 < argc && argv[arg + 1][0] != '-') {
+                export_starmap_path = std::filesystem::path(argv[++arg]);
+            } else {
+                export_starmap_path = std::filesystem::path("outbox.nsm");
+            }
+        } else if (std::string_view(argv[arg]) == "--import-starmap" && arg + 1 < argc) {
+            import_starmap_path = std::filesystem::path(argv[++arg]);
+        } else if (std::string_view(argv[arg]) == "--validate-starmap" && arg + 1 < argc) {
+            validate_starmap_path = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--graphical-smoke") {
             graphical_smoke_mode = true;
         } else if (std::string_view(argv[arg]) == "--no-audio") {
@@ -2942,8 +2995,10 @@ int main(int argc, char **argv) {
         } else {
             noctis::log_event(
                 "error", "arguments",
-                "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data] [--user-data-dir DIRECTORY] "
-                "[--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] [--omega-drive|--standard-drive]");
+                "Usage: nivlr [--diagnostics|--graphical-smoke|--prepare-user-data|--reset-data] "
+                "[--export-starmap [PATH]] [--import-starmap PATH] [--validate-starmap PATH] "
+                "[--user-data-dir DIRECTORY] [--migrate-from OLD_DIRECTORY] [--portable|--system-user-data] "
+                "[--omega-drive|--standard-drive]");
             return 2;
         }
     }
@@ -3010,6 +3065,49 @@ int main(int argc, char **argv) {
         return 0;
     }
     configure_runtime_file_paths();
+    if (export_starmap_path) {
+        const auto starmap = noctis::runtime_paths().data_dir / "STARMAP.BIN";
+        const auto guide   = noctis::runtime_paths().data_dir / "GUIDE.BIN";
+        const auto rep     = noctis::export_starmap_packet(starmap, guide, *export_starmap_path);
+        if (rep.status == noctis::StarmapExchangeStatus::no_records_to_export) {
+            noctis::log_event("warning", "starmap_exchange", "no custom player records found to export");
+            return 0;
+        }
+        if (rep.status != noctis::StarmapExchangeStatus::ok) {
+            noctis::log_event("error", "starmap_exchange", rep.summary_message);
+            return 1;
+        }
+        noctis::log_event("info", "starmap_exchange", rep.summary_message);
+        return 0;
+    }
+    if (import_starmap_path) {
+        const auto starmap = noctis::runtime_paths().data_dir / "STARMAP.BIN";
+        const auto guide   = noctis::runtime_paths().data_dir / "GUIDE.BIN";
+        noctis::StarmapImportOptions opts;
+        opts.dry_run        = false;
+        opts.skip_conflicts = true;
+        const auto rep      = noctis::import_starmap_packet(starmap, guide, *import_starmap_path, opts);
+        if (rep.status != noctis::StarmapExchangeStatus::ok) {
+            noctis::log_event("error", "starmap_exchange", rep.summary_message);
+            return 1;
+        }
+        noctis::log_event("info", "starmap_exchange", rep.summary_message);
+        return 0;
+    }
+    if (validate_starmap_path) {
+        const auto starmap = noctis::runtime_paths().data_dir / "STARMAP.BIN";
+        const auto guide   = noctis::runtime_paths().data_dir / "GUIDE.BIN";
+        noctis::StarmapImportOptions opts;
+        opts.dry_run        = true;
+        opts.skip_conflicts = true;
+        const auto rep      = noctis::import_starmap_packet(starmap, guide, *validate_starmap_path, opts);
+        if (rep.status != noctis::StarmapExchangeStatus::ok) {
+            noctis::log_event("error", "starmap_exchange", rep.summary_message);
+            return 1;
+        }
+        noctis::log_event("info", "starmap_exchange", rep.summary_message);
+        return 0;
+    }
     noctis::load_display_settings(noctis::runtime_paths().config_dir);
     noctis::load_audio_settings(noctis::runtime_paths().config_dir);
     noctis::load_controls_settings(noctis::runtime_paths().config_dir);

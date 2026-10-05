@@ -5,6 +5,28 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## Unreleased (2.1.0) — Starmap Exchange & Community Cartography
+
+### Features
+* **Starmap Sharing & Exchange Engine (`starmap_exchange`):**
+  * Shareable binary packets (`.nsm`) and JSON packets (`outbox.json` / `starmap.json`) for exporting and importing custom celestial designations and guide notes between explorers.
+  * Native CRC32 payload checksum verification guarding against bitrot and truncated transfers.
+  * Rigorous celestial invalidation checks: non-finite ID (NaN/Inf) rejection, zero coordinate rejection, galactic bounding limits, name character sanitization (uppercase console subset `[A-Z0-9 _]`, length $\le 20$), and body orbital index bounds.
+  * Canonical seed protection: hard blocks any attempt to overwrite or rename protected canonical celestial bodies (such as Fenia or Sol).
+  * Conflict resolution & collision avoidance: detects ID conflicts (renaming already labeled bodies), name collisions (duplicate names on different bodies), intra-packet conflicts, and benign duplicate deduplication.
+  * Atomic starmap updates using `atomic_replace` ensuring zero catalog corruption on power interruption or errors.
+* **Onboard GOESnet Commands (`OUTBOX`, `INBOX`, `CLEAN`):**
+  * `OUTBOX` (aliases `EXPORT`, `SHARE`): exports custom player discoveries to `data/outbox.nsm` and `data/outbox.json`.
+  * `INBOX` (alias `IMPORT`): inspects, validates, and merges packets from `data/inbox.nsm` or `data/inbox.json` with detailed reporting on imported, skipped, and conflicting bodies. Supports dry-run validation via `INBOX CHECK` (or `INBOX CK`).
+  * `CLEAN`: compacts `STARMAP.BIN` by defragmenting tombstones from deleted labels and reclaiming catalog file space.
+* **Command-Line Interface (Desktop):**
+  * Added `--export-starmap [PATH]` to export custom discoveries from the terminal.
+  * Added `--import-starmap <PATH>` to import and merge external starmap packets.
+  * Added `--validate-starmap <PATH>` for dry-run packet inspection without modifying local catalogs.
+* **Web Browser Starmap Exchange:**
+  * Added "EXPORT STARMAP" button on the launch screen and in-game top bar to download `outbox.nsm` as a local file.
+  * Added "IMPORT STARMAP" button with file picker supporting `.nsm`, `.json`, and raw `.bin` packets, automatically merging discoveries into browser IndexedDB storage.
+
 ## 2.0.1 (2026-10-05) — The Storage Reset & Fresh Start Patch
 
 ### Features & Fixes

@@ -56,14 +56,14 @@ may read data or change game state.
 | `DELE` | object[`:`first`..`last`] | Required | Remove unprotected guide notes |
 | `SL` | [range] | Required | List labelled stars, optionally within range |
 | `PRI` | object[`:`first`..`last`] | Native export | Export selected guide text to a native text file |
-| `CLEAN` | none | Obsolete | Native writers do not create tombstones requiring compaction |
-| `INBOX` | none | Obsolete | Historical email/file-packet exchange is not a runtime dependency |
-| `OUTBOX` | none | Obsolete | Historical email/file-packet exchange is not a runtime dependency |
+| `CLEAN` | none | Required | Compact starmap file by erasing tombstones and reclaiming space |
+| `INBOX` | [file / `CHECK`] | Required | Import and merge starmap exchange packet with collision validation |
+| `OUTBOX` | [`BIN` / `JSON`] | Required | Export custom star and planet discoveries as shareable packet |
 
 `REPAIR.EXE`, `txt.exe`, and `wri.exe` are utilities rather than onboard
 commands. Bundled `HELP.com` becomes native `HELP` behavior for ledger item P14;
-the DOS binary is never launched. Obsolete commands remain recognized so the
-console explains their disposition instead of reporting an unknown module.
+the DOS binary is never launched. `CLEAN`, `INBOX`, and `OUTBOX` provide native,
+validated modern sharing with strict integrity and collision checks.
 
 Object keys contain 1–20 characters. Matching is case-insensitive after console
 normalization, ignores tombstoned records, and retains historical prefix search:

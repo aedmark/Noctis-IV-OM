@@ -347,7 +347,7 @@ containers, not substitutes for that ledger.
 | --- | --- | --- | --- |
 | M16-W01 | Community catalog sync protocol | PLANNED | Lightweight REST/WebSocket protocol for exchanging star names, planetary annotations, and exploration logs |
 | M16-W02 | Web and desktop community catalog client | PLANNED | In-engine sync toggle and background updater fetching recent community discoveries |
-| M16-W03 | Conflict resolution & offline-first queue | PLANNED | Non-destructive merging of local and remote discoveries with offline queueing |
+| M16-W03 | Conflict resolution & offline-first queue | DONE | Non-destructive merging of local and remote discoveries, binary `.nsm` / JSON packet format, CRC32 verification, canonical seed protection, ID/name collision resolution, atomic replacement, `OUTBOX`/`INBOX`/`CLEAN` GOESnet commands, CLI import/export/validate, and web browser download/upload bridge; verified in `tests/starmap_exchange_test.cpp` and 51/51 passing test suites |
 
 **Exit criteria**
 

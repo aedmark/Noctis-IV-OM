@@ -72,6 +72,7 @@ set(SOURCE_FILES
     src/movie_capture.cpp
     src/goesnet_protocol.cpp
     src/goesnet_data.cpp
+    src/starmap_exchange.cpp
     src/goesnet_commands.cpp
     src/gallery.cpp
     src/gallery_viewer.cpp
@@ -337,6 +338,7 @@ if(BUILD_TESTING)
 
     add_executable(goesnet_command_tests tests/goesnet_commands_test.cpp
         src/goesnet_commands.cpp src/goesnet_protocol.cpp src/goesnet_data.cpp
+        src/starmap_exchange.cpp
         src/flight_log.cpp src/bookmarks.cpp src/gallery.cpp src/atomic_file.cpp
         src/galaxy_sector.cpp src/star_properties.cpp src/system_properties.cpp
         src/legacy_numeric.cpp src/brtl.cpp)
@@ -349,6 +351,17 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_SOURCE_DIR}/data/GUIDE.BIN
         ${CMAKE_CURRENT_BINARY_DIR}/goesnet-command-guide.bin
         ${CMAKE_CURRENT_BINARY_DIR}/goesnet-guide-export.txt)
+
+    add_executable(starmap_exchange_tests tests/starmap_exchange_test.cpp
+        src/starmap_exchange.cpp src/goesnet_data.cpp src/atomic_file.cpp)
+    target_include_directories(starmap_exchange_tests PRIVATE src)
+    target_compile_features(starmap_exchange_tests PRIVATE cxx_std_20)
+    set_target_properties(starmap_exchange_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME starmap_exchange COMMAND starmap_exchange_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/STARMAP.BIN
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/GUIDE.BIN
+        ${CMAKE_CURRENT_BINARY_DIR}/test-exchange-sm.bin
+        ${CMAKE_CURRENT_BINARY_DIR}/test-exchange-gd.bin)
     add_test(NAME goesnet_application COMMAND ${CMAKE_COMMAND}
         -DAPP=$<TARGET_FILE:nivlr>
         -DPYTHON=${Python3_EXECUTABLE}

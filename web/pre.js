@@ -141,4 +141,71 @@ Module.preRun.push(function () {
       deleteIndexedDb();
     }
   };
+
+  Module.exportStarmapFile = function (preferJson) {
+    if (typeof FS === 'undefined') {
+      alert("Filesystem not ready.");
+      return;
+    }
+    var targetFile = preferJson ? '/persistent/data/outbox.json' : '/persistent/data/outbox.nsm';
+    if (typeof Module._nivlr_export_starmap === 'function') {
+      var res = Module._nivlr_export_starmap(0, preferJson ? 2 : 1);
+      if (res < 0) {
+        alert("No custom star or planet designations found to export.\n\nDiscover and name stars or planets first using the GOES console or HUD.");
+        return;
+      }
+    }
+    try {
+      if (!FS.analyzePath(targetFile).exists) {
+        targetFile = preferJson ? '/persistent/data/outbox.nsm' : '/persistent/data/outbox.json';
+        if (!FS.analyzePath(targetFile).exists) {
+          alert("No exported starmap packet found. Run OUTBOX from the GOES console or name objects first.");
+          return;
+        }
+      }
+      var data = FS.readFile(targetFile);
+      var blob = new Blob([data], { type: preferJson ? 'application/json' : 'application/octet-stream' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = targetFile.split('/').pop();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    } catch (err) {
+      console.error("Export download error:", err);
+      alert("Could not export starmap: " + err.message);
+    }
+  };
+
+  Module.importStarmapFile = function (fileName, fileBytes, onComplete) {
+    if (typeof FS === 'undefined') {
+      if (typeof onComplete === 'function') onComplete(false, "Filesystem not ready.");
+      return;
+    }
+    try {
+      if (!FS.analyzePath('/persistent/data').exists) {
+        FS.mkdir('/persistent/data');
+      }
+      var isJson = fileName && (fileName.endsWith('.json') || fileName.endsWith('.JSON'));
+      var dest = '/persistent/data/' + (isJson ? 'inbox.json' : 'inbox.nsm');
+      FS.writeFile(dest, new Uint8Array(fileBytes));
+
+      var importedCount = -1;
+      if (typeof Module._nivlr_import_starmap === 'function') {
+        importedCount = Module._nivlr_import_starmap(0, 0);
+      }
+      flush();
+      if (typeof onComplete === 'function') {
+        var msg = importedCount >= 0
+          ? "Starmap import completed successfully!\n" + importedCount + " new celestial objects imported into your Starmap."
+          : "Starmap packet saved to data/ directory. Run INBOX in your GOES console to inspect and merge.";
+        onComplete(true, msg);
+      }
+    } catch (err) {
+      console.error("Import file error:", err);
+      if (typeof onComplete === 'function') onComplete(false, err.message);
+    }
+  };
 })();

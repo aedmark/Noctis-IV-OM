@@ -19,9 +19,9 @@ constexpr std::array<GoesCommandDescriptor, 21> registry{{
     {GoesCommand::delete_note, "DELE", GoesArgumentShape::object_with_optional_range, GoesCommandDisposition::required_native, true},
     {GoesCommand::list_stars, "SL", GoesArgumentShape::optional_range, GoesCommandDisposition::required_native, false},
     {GoesCommand::print_guide, "PRI", GoesArgumentShape::object_with_optional_range, GoesCommandDisposition::native_export, false},
-    {GoesCommand::clean, "CLEAN", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, true},
-    {GoesCommand::inbox, "INBOX", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, true},
-    {GoesCommand::outbox, "OUTBOX", GoesArgumentShape::none, GoesCommandDisposition::obsolete_legacy_tool, false},
+    {GoesCommand::clean, "CLEAN", GoesArgumentShape::none, GoesCommandDisposition::required_native, true},
+    {GoesCommand::inbox, "INBOX", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, true},
+    {GoesCommand::outbox, "OUTBOX", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
     {GoesCommand::gallery, "GALLERY", GoesArgumentShape::none, GoesCommandDisposition::required_native, false},
     {GoesCommand::view_image, "VIEW", GoesArgumentShape::optional_image, GoesCommandDisposition::required_native, false},
     {GoesCommand::flight_log, "LOG", GoesArgumentShape::optional_topic, GoesCommandDisposition::required_native, false},
@@ -68,6 +68,8 @@ const GoesCommandDescriptor *find_goes_command(std::string_view name) {
     if (name == "JOURNAL") name = "LOG";
     if (name == "LABEL") name = "NAME";
     if (name == "BOOKMARK" || name == "BOOKMARKS" || name == "WAYPOINT" || name == "WAYPOINTS") name = "BM";
+    if (name == "EXPORT" || name == "SHARE") name = "OUTBOX";
+    if (name == "IMPORT") name = "INBOX";
     const auto found = std::find_if(registry.begin(), registry.end() - 1,
                                     [name](const auto &entry) { return entry.name == name; });
     return found == registry.end() - 1 ? nullptr : &*found;

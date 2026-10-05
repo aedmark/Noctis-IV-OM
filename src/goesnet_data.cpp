@@ -80,6 +80,16 @@ bool has_write_permission(const std::filesystem::path &path) {
     return (permissions & (perms::owner_write | perms::group_write | perms::others_write)) != perms::none;
 }
 
+void set_guide_message(GuideRecord &record, double subject_id, std::string_view message) {
+    record.bytes.fill(0);
+    write_f64(record.bytes.data(), subject_id);
+    std::copy(message.begin(), message.end(), record.bytes.begin() + 8);
+    record.subject_id = subject_id;
+    record.message.assign(message);
+    record.removed = false;
+}
+} // namespace
+
 GoesDataResult write_guide(const std::filesystem::path &path, const GuideData &data) {
     if (!has_write_permission(path)) return failure(GoesDataStatus::io_error, "guide is read-only");
     auto temporary = path;
@@ -153,16 +163,6 @@ GoesDataResult write_starmap(const std::filesystem::path &path, const StarmapDat
     }
     return {};
 }
-
-void set_guide_message(GuideRecord &record, double subject_id, std::string_view message) {
-    record.bytes.fill(0);
-    write_f64(record.bytes.data(), subject_id);
-    std::copy(message.begin(), message.end(), record.bytes.begin() + 8);
-    record.subject_id = subject_id;
-    record.message.assign(message);
-    record.removed = false;
-}
-} // namespace
 
 GoesDataResult load_starmap(const std::filesystem::path &path, StarmapData &data) {
     std::vector<std::uint8_t> bytes;
