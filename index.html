@@ -62,19 +62,13 @@
           <span class="eyebrow eyebrow-amber">3.0.0 MAJOR RELEASE // ATMOSPHERIC, CINEMATIC &amp; AMBIENT SOUNDSCAPE</span>
           <h2 id="download-title">Download Noctis IV OM</h2>
           <p>
-            Play instantly <strong>in your browser</strong> with saves kept on your device, or download standalone,
-            fully self-contained portable releases featuring physically based <strong>Rayleigh &amp; Mie Atmospheric Scattering</strong> with ozone absorption,
-            dynamic day/night terminator transitions, stellar <strong>Coronal Flares</strong> with Eddington limb darkening,
-            <strong>Moviemaker Video Export</strong> and in-cockpit bulkhead movie reel preview, direct lossless <strong>PNG Screenshot Export</strong> (<kbd>F4</kbd> + <kbd>D</kbd>),
-            an <strong>Ambient Exploration Music Player</strong>, a 4-voice procedural <strong>Generative Ambient Soundscape Synthesizer</strong> with 12 celestial modal scales,
-            and realistic suit <strong>Flashlight Distance Attenuation</strong>. Includes the <strong>Starmap Exchange Engine</strong> with shareable
-            binary (<code>.nsm</code>) and JSON discovery packets, automated <strong>Flight Log &amp; Journal</strong> (<code>LOG</code>),
-            seamless <strong>Celestial Naming Persistence</strong>, personal <strong>Waypoint Bookmarks &amp; Navigation</strong> (<code>BM</code>),
-            surface <strong>Explorer's Visor HUD</strong> with <strong>Lander Return Beacon</strong> guidance,
-            native <strong>Gamepad &amp; Joystick flight</strong>,
-            deterministic <strong>Scale2x / EPX Upscaling</strong> (<kbd>F7</kbd>), vintage <strong>GLSL CRT Shader</strong> (<kbd>F6</kbd>),
-            jitter-free <strong>Sub-Pixel Geometry</strong>, and interactive timewarp slider (1x–5000x).
-            No installers and no DOSBox required.
+            Step into the cockpit of the Stardrifter and venture across an untamed galaxy of billions of uncharted worlds.
+            Wander silent alien dunes under dynamic twilight skies, gaze at distant stars from your ship’s hull, and record
+            your discoveries in a quiet, contemplative space exploration experience.
+          </p>
+          <p>
+            Play instantly <strong>in your browser</strong> with local saves, or download standalone portable editions for
+            Windows and Linux. Zero installation, no accounts, and no DOSBox required—just launch and drift.
           </p>
         </div>
 
@@ -164,6 +158,72 @@
           <a class="footnote-link" href="https://github.com/aedmark/Noctis-IV-OM/releases/tag/v3.0.0" target="_blank" rel="noopener">
             View Release on GitHub →
           </a>
+        </div>
+
+        <!-- TECHNICAL FEATURES & ENGINE ARCHITECTURE -->
+        <div class="technical-features" id="technical-features" aria-labelledby="tech-features-title">
+          <div class="tech-header">
+            <span class="eyebrow">UNDER THE HOOD // SIMULATION &amp; ENGINE</span>
+            <h3 id="tech-features-title">Technical Features &amp; Architecture</h3>
+            <p>
+              Underneath its contemplative surface, Noctis IV OM pairs authentic retro software rendering with
+              modern astronomical optics, generative acoustics, and lossless recording pipelines.
+            </p>
+          </div>
+
+          <div class="tech-grid">
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-tag">OPTICS &amp; ATMOSPHERE</span>
+                <h4>Planetary Simulation</h4>
+              </div>
+              <ul class="tech-list">
+                <li><strong>Atmospheric Scattering:</strong> Physically based Rayleigh &amp; Mie dual-exponential scattering with ozone absorption and dynamic day/night terminator transitions.</li>
+                <li><strong>Stellar Coronal Flares:</strong> Procedural limb-darkened coronal streamers governed by Eddington approximations.</li>
+                <li><strong>Flashlight Distance Attenuation:</strong> Realistic inverse-square light falloff with highlight compression for surface EVA exploration.</li>
+                <li><strong>Sub-Pixel Geometry:</strong> Jitter-free sub-pixel polygon rasterizer with an interactive timewarp slider (1x–5000x).</li>
+              </ul>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-tag">AUDIO &amp; CINEMA</span>
+                <h4>Audio &amp; Media Suite</h4>
+              </div>
+              <ul class="tech-list">
+                <li><strong>Generative Ambient Synthesizer:</strong> 4-voice procedural soundscape synthesizer featuring 12 celestial modal scales reacting to stellar classification and terrain biomes.</li>
+                <li><strong>Ambient Music Player:</strong> In-cockpit stereo audio player for curated and custom exploration soundtracks.</li>
+                <li><strong>Moviemaker Video Export:</strong> Native VP8 / WebM journey recording with in-cockpit bulkhead movie reel preview.</li>
+                <li><strong>Lossless Screenshot Export:</strong> Direct lossless PNG screenshot export (<kbd>F4</kbd> + <kbd>D</kbd>) preserved straight to disk.</li>
+              </ul>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-tag">NAVIGATION &amp; DATA</span>
+                <h4>Cartography &amp; Discovery</h4>
+              </div>
+              <ul class="tech-list">
+                <li><strong>Starmap Exchange Engine:</strong> Shareable binary (<code>.nsm</code>) and JSON discovery packets for exchanging astronomical catalogs with other drifters.</li>
+                <li><strong>Flight Log &amp; Journal:</strong> Automated flight telemetry recorder (<code>LOG</code>) logging jump coordinates, planetfalls, and observations.</li>
+                <li><strong>Celestial Naming:</strong> Seamless, persistent naming for uncharted stars, planets, and moons.</li>
+                <li><strong>Waypoints &amp; Visor HUD:</strong> Surface GPS bookmark coordinates (<code>BM</code>) and Explorer's Visor HUD (<kbd>V</kbd>) with Lander Return Beacon guidance.</li>
+              </ul>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-tag">ENGINE &amp; DISPLAY</span>
+                <h4>Platform &amp; Display</h4>
+              </div>
+              <ul class="tech-list">
+                <li><strong>Cross-Platform C++20:</strong> Modern native architecture compiled for 64-bit Windows, Linux (Wayland &amp; X11), and WebAssembly (WebGL2).</li>
+                <li><strong>Deterministic Upscaling:</strong> Scale2x / EPX pixel scaling (<kbd>F7</kbd>) and vintage GLSL curved CRT shader (<kbd>F6</kbd>).</li>
+                <li><strong>Native Controller Input:</strong> Full Gamepad and Joystick flight control alongside classic keyboard and mouse.</li>
+                <li><strong>Zero-Friction Portability:</strong> Self-contained portable releases with local data retention—no installers, no background services, and no DOSBox required.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>

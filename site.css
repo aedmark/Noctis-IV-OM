@@ -476,6 +476,104 @@ nav a:hover {
   white-space: nowrap;
 }
 
+/* TECHNICAL FEATURES */
+.technical-features {
+  margin-top: 4rem;
+  padding-top: 3.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.tech-header {
+  margin-bottom: 2.5rem;
+}
+
+.tech-header h3 {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  margin-bottom: 0.6rem;
+}
+
+.tech-header p {
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: 48rem;
+  margin-bottom: 0;
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.tech-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.tech-card:hover {
+  border-color: rgba(64, 224, 208, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.tech-card-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.tech-tag {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--signal);
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.tech-card h4 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.tech-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.tech-list li {
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.tech-list li::before {
+  content: "▪";
+  position: absolute;
+  left: 0;
+  color: var(--signal);
+  font-size: 0.75rem;
+  top: 0.1rem;
+}
+
+.tech-list strong {
+  color: var(--ink);
+}
+
 /* LORE / INTRO */
 .intro-grid {
   display: grid;
@@ -851,6 +949,9 @@ code {
     min-height: 18rem;
   }
   .controls-grid {
+    grid-template-columns: 1fr;
+  }
+  .tech-grid {
     grid-template-columns: 1fr;
   }
 }
