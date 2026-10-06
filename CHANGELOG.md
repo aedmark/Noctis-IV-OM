@@ -5,6 +5,24 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 3.1.0 (2026-10-06) — The Deterministic Engine & Reliability Release
+
+### Engine Reliability
+* **Explicit Runtime Ownership (M17):**
+  * Added an application-owned `EngineState` for travel, application modes, and the persisted GOES terminal session.
+  * Added a tested application-mode transition graph covering cockpit, descent/ascent, surface, gallery, movie player, and shutdown lifecycles.
+  * Preserved the 401-byte native v1 save and every accepted legacy situation layout through explicit runtime/save adapters.
+* **Deterministic Input Recording & Replay:**
+  * Added a versioned semantic input recording format keyed to fixed simulation ticks, with strict malformed, skipped, and out-of-order frame rejection.
+  * Verified scripted and complete 783-frame orbit-to-surface journeys at different presentation cadences with identical simulation, indexed-frame, and content checkpoints.
+* **Renderer Memory Safety:**
+  * Replaced framebuffer and surface-map compatibility padding with active-page and texture-capacity bounds.
+  * Reduced the surface map to its exact 200×200 allocation and the maximum indexed framebuffer to its exact 1280×800 allocation.
+  * Fixed a FELYSIA crevasse border overflow exposed by exact allocations and sanitizer coverage without changing accepted surface output.
+* **Cross-Platform Verification:**
+  * All 57 tests pass under Linux Clang, Linux GCC, and Clang AddressSanitizer/UndefinedBehaviorSanitizer.
+  * Windows x86-64 and WebAssembly release targets compile and link successfully.
+
 ## 3.0.0 (2026-10-05) — The Atmospheric, Cinematic & Ambient Soundscape Release
 
 ### Features & Polish

@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 3.0.0</a>
+        <a class="nav-cta" href="index.html#download">Get 3.1.0</a>
       </nav>
     </div>
   </header>
@@ -201,6 +201,14 @@
     <p>At the visual horizon, <strong>Physical Atmospheric Scattering</strong> (<code>atmospheric_scattering</code>) computes dual-exponential Rayleigh and Mie scattering across planetary day/night terminators, augmented by real ozone Chappuis absorption and smooth distance-based atmospheric haze that seamlessly blends distant terrain into the horizon sky gradient. In orbit and deep space, stars now feature <strong>Eddington Quadratic Limb Darkening</strong>, multi-harmonic procedural <strong>Coronal Streamers</strong>, pulsar relativistic twin-jets, and Planckian blackbody spectral color grading across all 12 stellar classes (<kbd>F2</kbd> + <kbd>E</kbd> toggles between Authentic, Realistic, and Vibrant modes).</p>
     <p>For cinematic explorers, <strong>Moviemaker Modernization</strong> enables direct video export to modern WebM (VP8/VP9) and MP4 formats, complemented by in-cockpit video deck previews that project recorded reels directly onto the bulkhead display screen. Explorers can also export high-resolution lossless <strong>PNG Screenshots</strong> directly from the Image Archive (<kbd>F4</kbd> + <kbd>D</kbd>) with automatic export on shutter capture.</p>
     <p>Aurally, Noctis IV OM now features a multi-format <strong>Ambient Music Player</strong> alongside a pure 4-voice procedural <strong>Generative Ambient Soundscape Synthesizer</strong>. Moving through 12 celestial modal scales (from Sol's lyrical A-Lydian to deep interstellar void sub-bass meditation), the synthesizer features an analog foundation bass pad, a stereo-chorused chord pad, slow scaling modal arpeggios with organic acoustic bell decay and ping-pong panning, and celestial glass starlight shimmers—entirely free of amplifier hiss or noise. The suit flashlight has also been overhauled with inverse-square perspective distance attenuation, ensuring distant mountains remain mysterious in the night.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 3.1.0: The Deterministic Engine &amp; Reliability Release — Exact Replay, Explicit State, and Bounded Rendering</h2>
+    <p>Version 3.1.0 strengthens the engine beneath the Stardrifter without changing the galaxy or invalidating an explorer's history. Native v1 saves retain their exact 401-byte schema, every supported legacy situation layout still imports, and the accepted universe, surface, renderer, and journey checkpoints remain unchanged.</p>
+    <p>The runtime now has explicit ownership for travel state, cockpit/surface/modal application modes, and the persisted GOESnet terminal session. A legal transition graph protects descent, landing, ascent, gallery, movie-player, and shutdown lifecycles, while explicit save adapters keep runtime architecture independent from the established disk format.</p>
+    <p>A new versioned semantic input recorder captures fixed-tick player intent instead of host key codes. Both a scripted space journey and a complete 783-frame orbit-to-surface session replay at different presentation cadences with identical simulation, indexed-frame, and content checkpoints.</p>
+    <p>The software renderer no longer relies on hidden allocation padding. Texture reads carry explicit capacities, framebuffer access is bounded to the active page, and the surface map and maximum framebuffer use their exact logical allocations. The complete 57-test suite passes under Clang, GCC, and AddressSanitizer/UndefinedBehaviorSanitizer, with Windows and WebAssembly release builds linked from the same simulation code.</p>
   </section>
 </article>
 </body>

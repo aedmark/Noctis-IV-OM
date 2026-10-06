@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 3.0.0 Release
+# Noctis IV OM — Linux 3.1.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 3.0.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 3.1.0 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -92,13 +92,13 @@ building the game from source.
 
 ## Release status
 
-This is the 3.0.0 Major Feature Release (The Atmospheric, Cinematic & Ambient Soundscape Release),
-introducing physically based Rayleigh and Mie dual-exponential atmospheric scattering with ozone absorption
-and day/night terminator transitions, stellar coronal flares with limb darkening and spectral color grading,
-direct Moviemaker video export and in-cockpit bulkhead movie reel preview, direct lossless PNG screenshot export,
-an ambient exploration music player, a 4-voice generative ambient soundscape synthesizer with celestial modal scales,
-and realistic suit flashlight distance attenuation. Includes shareable binary (`.nsm`) and JSON starmap packets,
-automated exploration journal logging (`LOG`), persistent celestial naming, waypoint bookmarks (`BM`), and the surface Explorer's Visor.
+This is the 3.1.0 Engine Reliability Release. It adds deterministic semantic input
+recording and replay, explicit application-mode and persistent terminal-state
+ownership, bounded renderer and surface-map access, and complete Clang/GCC/
+sanitizer verification. Native v1 and legacy saves remain compatible, and
+accepted journey, universe, surface, and indexed-render outputs remain exact.
+It includes every audiovisual, cartography, media, and exploration feature from
+the 3.0.0 Atmospheric, Cinematic & Ambient Soundscape Release.
 Please keep the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

@@ -7,13 +7,13 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-06.
 - Repository: local `Noctis-IV-OM`; branch `master`.
 - Active milestone: M17, Engine Consolidation & Runtime Architecture.
-- Published checkpoint: M17 exit audit in this commit; milestone complete.
-- Working tree: clean after the W07 commit.
+- Published checkpoint: v3.1.0 release commit; M17 complete.
+- Working tree: clean after the v3.1.0 release commit.
 
 ## Read first
 
 1. `ENGINE_CONSOLIDATION.md` for M17 rules, sequencing, and invariants.
-2. `M17_EXIT_AUDIT.md` for final criterion and verification evidence.
+2. `RELEASE_3_1_0.md` for package hashes and release verification.
 3. M17 in `ROADMAP.md` for work-item status and exit criteria.
 4. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
 
@@ -55,10 +55,15 @@ Replace this document at the end of every session; Git holds older versions.
   resaves a distinctive command, cursor, and scroll offset across restart.
 - Canonical renderer, surface generation, live environment/content, scripted
   journey, and orbit/surface hashes and counters remain unchanged.
+- Linux Clang Release: 57/57 tests passed in 6.91 seconds.
+- Extracted Linux package diagnostics and three-frame graphical smoke passed.
+- Extracted Windows package diagnostics passed under Wine.
+- Linux, Windows, and Web archives match their published SHA-256 files.
+- The release website passed desktop and 390×844 responsive visual checks; the
+  hosted WebAssembly payload reached its launch screen with no console errors.
 
 ## Next step
 
-Prepare the post-M17 release: select the next semantic version, update release
-notes and package copy, build and verify Linux/Windows/Web artifacts, refresh
-the hosted browser bundle and website download links, then publish only from a
-clean tagged commit.
+Begin planning the post-M17 milestone. The next safe persistent-state candidate
+is the compact FCS status aggregate, but it should move only with its HUD
+mutation paths and the same native/legacy adapter evidence used by W07.

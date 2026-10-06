@@ -12,12 +12,12 @@ Before initiating a release, verify that all mandatory quality gates pass:
 1. **Working Tree Cleanliness:** Ensure `git status` is clean on `master`.
 2. **Local Multi-Compiler Test Suite:**
    ```sh
-   # Clang Release (40/40 tests)
+   # Clang Release (all tests)
    cmake --preset linux-clang-release
    cmake --build --preset linux-clang-release --parallel
    ctest --preset linux-clang-release --output-on-failure
 
-   # GCC Debug (40/40 tests)
+   # GCC Debug (all tests)
    cmake --preset linux-gcc-debug
    cmake --build --preset linux-gcc-debug --parallel
    ctest --preset linux-gcc-debug --output-on-failure
@@ -101,7 +101,7 @@ rm -rf /tmp/noctis-release-check
 
 1. **Tag the Release:**
    ```sh
-   git tag -a v1.0.0 -m "Release v1.0.0"
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
    ```
 2. **Push to Remote:**
    ```sh
@@ -123,11 +123,11 @@ tagging or publication:
    assets to prevent further downloads.
 2. **Remove the Remote Tag:**
    ```sh
-   git push origin :refs/tags/v1.0.0
+   git push origin :refs/tags/vX.Y.Z
    ```
 3. **Delete the Local Tag:**
    ```sh
-   git tag -d v1.0.0
+   git tag -d vX.Y.Z
    ```
 4. **Revert or Fix the Defect:**
    Commit the fix or revert to `master`, re-run all quality gates, and prepare a
