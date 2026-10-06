@@ -140,7 +140,7 @@ void render_stage(JourneyStage stage) {
                 texture[row * TEXTURE_X_SIZE + column] = static_cast<std::uint8_t>(160 + ((row / 8 + column / 8) & 15));
             }
         }
-        txtr = texture.data();
+        set_texture_source(texture.data(), texture.size());
         polymap(x.data(), y.data(), z.data(), 4, 0);
     } else {
         poly3d(x.data(), y.data(), z.data(), 4, static_cast<std::uint8_t>(72 + stage_number * 8));

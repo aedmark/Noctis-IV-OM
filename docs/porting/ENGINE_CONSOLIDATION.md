@@ -63,6 +63,16 @@ key codes, wall-clock timing, or structure padding. Replay treats skipped or
 out-of-order input as an error and remains independent of presentation cadence.
 The format and validation contract are specified in `INPUT_RECORDING.md`.
 
+## Renderer memory rule
+
+Renderer access carries its real capacity. The active indexed framebuffer is
+bounded by current width × height, and texture sources bind pointer and byte
+capacity together. Legacy 16-bit texture addressing remains intact inside that
+view; out-of-range reads resolve to indexed color zero and out-of-range writes
+are discarded. The 200×200 surface map and maximum 1280×800 framebuffer now
+use exact allocations rather than compatibility padding. See
+`RENDERER_BOUNDS.md`.
+
 ## Migration sequence
 
 1. Establish `EngineState` and migrate transient travel state.
@@ -106,5 +116,11 @@ The format and validation contract are specified in `INPUT_RECORDING.md`.
 - The complete orbit-to-surface fixture records 783 blocking-loop frames and
   replays them from a separately seeded profile at 4× presentation cadence,
   preserving all simulation, indexed-frame, and content checkpoints.
+- Renderer fixtures protect the active framebuffer boundary with a sentinel
+  and exercise explicit one-byte texture capacity; the complete sanitizer lane
+  runs with exact framebuffer and 200×200 surface-map allocations.
+- Representative surface fixtures cover the repaired FELYSIA crevasse border
+  writes while retaining every accepted height, texture, object, and live-frame
+  hash.
 - Existing travel, scripted-journey, orbit/surface, audio, save, and renderer
   fixtures remain the behavioral regression boundary.

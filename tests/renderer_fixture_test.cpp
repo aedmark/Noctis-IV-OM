@@ -7,7 +7,9 @@
 #include <cstdio>
 
 namespace {
-std::array<std::uint8_t, sc_bytes> framebuffer{};
+constexpr std::size_t fixture_framebuffer_bytes = 320 * 200;
+constexpr std::size_t guard_bytes = 64;
+std::array<std::uint8_t, fixture_framebuffer_bytes + guard_bytes> framebuffer{};
 }
 
 std::uint8_t *adapted = framebuffer.data();
@@ -47,6 +49,9 @@ void reset_renderer() {
 
 int main() {
     const std::size_t visible_bytes = adapted_width * adapted_height;
+    if (visible_bytes != fixture_framebuffer_bytes) {
+        return 1;
+    }
 
     reset_renderer();
     const std::array<float, 4> flat_x{-120.0F, 120.0F, 120.0F, -120.0F};
@@ -63,7 +68,7 @@ int main() {
             texture[y * TEXTURE_X_SIZE + x] = static_cast<std::uint8_t>(64 + ((x / 16 + y / 16) & 31));
         }
     }
-    txtr = texture.data();
+    set_texture_source(texture.data(), texture.size());
     std::array<float, 4> textured_x{-120.0F, 120.0F, 120.0F, -120.0F};
     std::array<float, 4> textured_y{-75.0F, -75.0F, 75.0F, 75.0F};
     std::array<float, 4> textured_z{500.0F, 500.0F, 500.0F, 500.0F};
@@ -157,6 +162,31 @@ int main() {
     const auto restored_textured_hash = fnv1a(framebuffer.data(), visible_bytes);
     if (restored_textured_hash != expected_textured_hash) {
         std::fprintf(stderr, "subpixel fidelity: textured legacy restore mismatch\n");
+        return 1;
+    }
+
+    // The legacy scanline code used to rely on allocation padding. Prove that
+    // the bounded accessors reject the first byte beyond the active page and
+    // that clipped line drawing cannot touch the adjacent guard.
+    framebuffer.fill(0);
+    std::fill(framebuffer.begin() + visible_bytes, framebuffer.end(), 0xA5);
+    write_framebuffer(visible_bytes, 0x7F);
+    draw_line_2d(-20, -20, -1, -1);
+    draw_line_2d(adapted_width, adapted_height, adapted_width + 20, adapted_height + 20);
+    if (read_framebuffer(visible_bytes) != 0 ||
+        !std::all_of(framebuffer.begin() + visible_bytes, framebuffer.end(),
+                     [](std::uint8_t value) { return value == 0xA5; })) {
+        std::fprintf(stderr, "renderer bounds: active framebuffer guard changed\n");
+        return 1;
+    }
+
+    std::array<std::uint8_t, 1> one_texel{37};
+    set_texture_source(one_texel.data(), one_texel.size());
+    texture_address_mask = UINT16_MAX;
+    texture_address_bias = 0;
+    if (sample_polygon_texel(4u << 8u, 0, noctis::TextureFilterMode::nearest, 0) != 37 ||
+        sample_polygon_texel(0, 0, noctis::TextureFilterMode::nearest, 0) != 0) {
+        std::fprintf(stderr, "renderer bounds: texture capacity was not enforced\n");
         return 1;
     }
 

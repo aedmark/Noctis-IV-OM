@@ -265,6 +265,7 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
     float rot2, rot3;
     int32_t hm, vm, lseed;
     uint8_t *previoustexture;
+    std::size_t previous_texture_bytes;
     uint16_t previous_texture_bias;
     widthscale1 = scaling * globalwidth;
     widthscale2 = reduction * scaling * globalwidth;
@@ -299,10 +300,11 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = 3;
             V_MATRIXS = 8;
             change_txm_repeating_mode();
-            previoustexture       = txtr;
-            previous_texture_bias = texture_address_bias;
-            x2                    = x + cos(b_angle) * range;
-            z2                    = z + sin(b_angle) * range;
+            previoustexture        = txtr;
+            previous_texture_bytes = texture_source_size();
+            previous_texture_bias  = texture_address_bias;
+            x2                     = x + cos(b_angle) * range;
+            z2                     = z + sin(b_angle) * range;
 
             if (isrootnode) {
                 y2 = y - (fast_flandom() * rootheight + 0.1) * scaling;
@@ -342,7 +344,7 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = hm;
             V_MATRIXS = vm;
             change_txm_repeating_mode();
-            txtr                 = previoustexture;
+            set_texture_source(previoustexture, previous_texture_bytes);
             texture_address_bias = previous_texture_bias;
             build_fractal_tree(x2, y2, z2, scaling * reduction, reduction, globalwidth, layers - 1, divisions,
                                distance_from_perfection, rootcolormask, leafcolormask, branchdetail, 0, occurrence + 1);
@@ -353,10 +355,11 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = 1;
             V_MATRIXS = 3;
             change_txm_repeating_mode();
-            previoustexture = txtr;
-            x2              = x + fast_flandom() * range - fast_flandom() * range;
-            z2              = z + fast_flandom() * range - fast_flandom() * range;
-            fy[0]           = y;
+            previoustexture        = txtr;
+            previous_texture_bytes = texture_source_size();
+            x2                     = x + fast_flandom() * range - fast_flandom() * range;
+            z2                     = z + fast_flandom() * range - fast_flandom() * range;
+            fy[0]                  = y;
             fy[1]           = y;
             fy[2]           = y - fast_flandom() * scaling;
             polycolor       = fast_random(31);
@@ -390,7 +393,7 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
             H_MATRIXS = hm;
             V_MATRIXS = vm;
             change_txm_repeating_mode();
-            txtr = previoustexture;
+            set_texture_source(previoustexture, previous_texture_bytes);
         }
 
         //
@@ -921,7 +924,7 @@ inactive:
     /* Comportamento in vicinanza e tracciamento. */
     // impostazione texture per forme di vita.
     flares = 0;
-    txtr   = p_background;
+    set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
     XSIZE  = TEXTURE_X_SIZE * 256;
     YSIZE  = TEXTURE_Y_SIZE * T_SCALE;
 
@@ -1336,7 +1339,7 @@ void fragment(int32_t x, int32_t z) {
 
         if (poly1 || poly2) {
             // Setting soil texture parameters
-            txtr = p_background;
+            set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
             rch1 = ruinschart[h1];
             rch2 = ruinschart[h2];
             rch3 = ruinschart[h3];
@@ -1395,7 +1398,7 @@ void fragment(int32_t x, int32_t z) {
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr                 = (uint8_t *) n_globes_map;
+            set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
             texture_address_mask = 0x7FFF;
             cam_y += 515;
             polycupola(-1, 1);
@@ -1449,7 +1452,7 @@ void fragment(int32_t x, int32_t z) {
 
         if (poly1 || poly2) {
             // impostazione parametri della texture dei riflessi.
-            txtr = p_background;
+            set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
             rch1 = ruinschart[h1];
             rch2 = ruinschart[h2];
             rch3 = ruinschart[h3];
@@ -1530,7 +1533,7 @@ void fragment(int32_t x, int32_t z) {
 
     // impostazione texture per gli oggetti.
     flares = 0;
-    txtr   = p_background;
+    set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
     cl     = T_SCALE >> 2;
     XSIZE  = TEXTURE_X_SIZE * cl;
     YSIZE  = TEXTURE_Y_SIZE * cl;
@@ -1871,11 +1874,16 @@ void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend, int16_
                 peak = 127;
             }
 
-            map[location]         = peak;
-            map[location + 1]     = peak;
-            map[location - 1]     = peak;
-            map[location + align] = peak;
-            map[location - align] = peak;
+            const auto write_neighbor = [map, mapsize, peak](int32_t neighbor) {
+                if (neighbor >= 0 && neighbor < mapsize) {
+                    map[neighbor] = static_cast<uint8_t>(peak);
+                }
+            };
+            write_neighbor(location);
+            write_neighbor(static_cast<int32_t>(location) + 1);
+            write_neighbor(static_cast<int32_t>(location) - 1);
+            write_neighbor(static_cast<int32_t>(location) + align);
+            write_neighbor(static_cast<int32_t>(location) - align);
         }
 
         length--;
@@ -5089,7 +5097,7 @@ nosecondarysun:
         }
 
         QUADWORDS = pqw;
-        txtr      = (uint8_t *) n_globes_map;
+        set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
         // tracciamento dell'orizzonte.
         // punto di vista: all'incirca quello dell'utente,
         // ma l'angolo beta (orientamento) viene
@@ -5151,11 +5159,11 @@ nosecondarysun:
                     cam_z += sp_z;
                     mirror          = 1;
                     halfscan_needed = 1;
-                    txtr            = p_background;
+                    set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
                     ipfx            = ((int32_t) (cam_x)) >> 14;
                     ipfz            = ((int32_t) (cam_z)) >> 14;
                     iperficie(0);
-                    txtr            = (uint8_t *) n_globes_map;
+                    set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
                     halfscan_needed = 0;
                     cam_x           = backup_cam_x;
                     cam_y           = backup_cam_y;
@@ -5213,7 +5221,7 @@ nosecondarysun:
             polymap(x, y, z, 4, ptr);
         }
 
-        txtr = p_background;
+        set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
         // variazioni alla posizione: moto ondoso.
         upanddown += 0.2;
         pos_x0 = pos_x - 1E6;
@@ -5367,7 +5375,7 @@ nosecondarysun:
             // calcolo della distanza del player dal centro onde.
             dfc = sqrt(pos_x0 * pos_x0 + pos_z0 * pos_z0);
             // inizializzazione texture delle onde in arrivo.
-            txtr = (uint8_t *) n_globes_map;
+            set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
 
             for (ptr = 20480 + 256; ptr < 32768; ptr++) {
                 n_globes_map[ptr] = n_globes_map[ptr - 256] >> 1;
@@ -5455,7 +5463,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr                 = p_background;
+            set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
         }
 
         // qui disegna tutto il landscape.
@@ -5474,7 +5482,7 @@ nosecondarysun:
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr                 = (uint8_t *) n_globes_map;
+            set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
             texture_address_mask = 0x7FFF;
             cam_x                = 0;
             cam_z                = 0;
@@ -5494,7 +5502,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr                 = p_background;
+            set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
         }
 
         // tracciamento onde in partenza (acqua smossa)
@@ -5502,7 +5510,7 @@ nosecondarysun:
             // inizializzazione della texture per gli spruzzi
             // prodotti dal fatto che si sta nuotando, o comunque
             // annaspando da fermi, per rimanere a galla...
-            txtr = (uint8_t *) n_globes_map;
+            set_texture_source(reinterpret_cast<uint8_t *>(n_globes_map), gl_bytes + gl_brest);
             // usa i primi 32K, dove c'? la sfumatura del mare...
             texture_address_mask = 0x7FFF;
             V_MATRIXS            = 8;
@@ -5587,7 +5595,7 @@ nosecondarysun:
             V_MATRIXS      = 16;
             change_txm_repeating_mode();
             texture_address_mask = UINT16_MAX;
-            txtr                 = p_background;
+            set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
         }
 
         // tracciamento dell'alone del "sole", eventualmente.

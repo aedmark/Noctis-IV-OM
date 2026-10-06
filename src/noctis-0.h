@@ -1,6 +1,7 @@
 #include "noctis-d.h"
 #include "legacy_prng.h"
 #include "input.h"
+#include <cstddef>
 #include <filesystem>
 
 extern uint32_t QUADWORDS;
@@ -62,6 +63,8 @@ extern void forward(float delta);
 extern float pnx, pny, pnz;
 extern void pnorm(const float *x, const float *y, const float *z);
 extern uint8_t *txtr;
+extern void set_texture_source(uint8_t *data, std::size_t size);
+extern std::size_t texture_source_size();
 extern uint16_t texture_address_mask;
 extern uint16_t texture_address_bias;
 extern float x_antialias, y_antialias, z_antialias;

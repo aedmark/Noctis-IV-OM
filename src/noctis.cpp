@@ -801,6 +801,7 @@ uint32_t pp[32] = {0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0
 void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t shader) {
     // This is an alphanumeric character.
     uint8_t *prev_txtr = txtr;
+    const std::size_t prev_txtr_bytes = texture_source_size();
     float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     float size_x_left  = size * -1.5f;
     float size_y_left  = size * -2.0f;
@@ -821,7 +822,7 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t 
     }
 
     if (digit > 32 && digit <= 96) {
-        txtr = p_surfacemap;
+        set_texture_source(p_surfacemap, ps_bytes);
         d    = (digit - 32) * 36;
 
         for (n = 0; n < 36; n++) {
@@ -862,7 +863,7 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t 
         polymap(vx, vy, vz, 4, map_base);
         XSIZE = prev_xs;
         YSIZE = prev_ys;
-        txtr  = prev_txtr;
+        set_texture_source(prev_txtr, prev_txtr_bytes);
         resetfx();
     }
 }
@@ -1346,7 +1347,7 @@ void vehicle(float opencapcount) {
     H_MATRIXS = 6;
     V_MATRIXS = 3;
     change_txm_repeating_mode();
-    txtr          = p_surfacemap + 256 * 8 + 16;
+    set_texture_source(p_surfacemap + 256 * 8 + 16, ps_bytes - (256 * 8 + 16));
     osscreen_z[0] = -104 * 15;
     osscreen_z[1] = -104 * 15;
     osscreen_z[2] = -154 * 15;
@@ -1473,7 +1474,7 @@ void vehicle(float opencapcount) {
 
     // Finish screen tracking.
     cam_z -= 2 * 54 * 15;
-    txtr = p_background;
+    set_texture_source(p_background, p_background == s_background ? st_bytes : pl_bytes);
 
     if (force_update) {
         force_update = 0;
@@ -3498,17 +3499,12 @@ int main(int argc, char **argv) {
     n_globes_map  = (int8_t *) malloc((uint16_t) gl_bytes + (uint16_t) gl_brest);
     s_background  = (uint8_t *) malloc(st_bytes);
     p_background  = (uint8_t *) malloc(pl_bytes);
-    /* NOTE: This is set to at least 65k because polymap keeps running over the
-     * end. It happens in the original source too, and somehow isn't a problem
-     * there, but we can't have it running over into random memory. The bug is
-     * present in the original source.
-     */
-    p_surfacemap = (uint8_t *) malloc(ps_bytes | 65536);
+    p_surfacemap = (uint8_t *) malloc(ps_bytes);
     objectschart = (quadrant *) malloc(oc_bytes);
     ruinschart   = (uint8_t *) objectschart; // oc alias
     pvfile       = (uint8_t *) malloc(pv_bytes);
     adapted      = (uint8_t *) malloc(sc_bytes);
-    txtr         = (uint8_t *) p_background;                             // txtr alias
+    set_texture_source(p_background, pl_bytes);                           // txtr alias
     digimap2     = reinterpret_cast<uint8_t *>(&n_globes_map[gl_bytes]); // font alias
 
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background && s_background && p_surfacemap &&

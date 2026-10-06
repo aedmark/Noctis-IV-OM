@@ -33,6 +33,7 @@
 */
 
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 
 #include <algorithm>
@@ -62,6 +63,20 @@ static int32_t projected_i32(double value) {
 
 static uint32_t wrapped_delta(int32_t current, int32_t previous) {
     return static_cast<uint32_t>(current) - static_cast<uint32_t>(previous);
+}
+
+static std::size_t active_framebuffer_bytes() {
+    return static_cast<std::size_t>(adapted_width) * static_cast<std::size_t>(adapted_height);
+}
+
+static uint8_t read_framebuffer(std::uint64_t index) {
+    return adapted != nullptr && index < active_framebuffer_bytes() ? adapted[index] : 0;
+}
+
+static void write_framebuffer(std::uint64_t index, uint8_t value) {
+    if (adapted != nullptr && index < active_framebuffer_bytes()) {
+        adapted[index] = value;
+    }
 }
 
 /*
@@ -153,19 +168,19 @@ void draw_line_2d(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
     }
 
     for (int x = x0; x <= x1; x++) {
-        float t = (x - x0) / (float) (x1 - x0);
+        float t = x0 == x1 ? 0.0F : (x - x0) / (float) (x1 - x0);
         int y   = y0 * (1.0f - t) + y1 * t;
 
         if (steep) {
-            if (y >= adapted_width || x >= adapted_height) {
+            if (y < 0 || x < 0 || y >= adapted_width || x >= adapted_height) {
                 continue;
             }
-            adapted[adapted_width * x + y] = 255;
+            write_framebuffer(static_cast<std::uint64_t>(adapted_width) * x + y, 255);
         } else {
-            if (x >= adapted_width || y >= adapted_height) {
+            if (x < 0 || y < 0 || x >= adapted_width || y >= adapted_height) {
                 continue;
             }
-            adapted[adapted_width * y + x] = 255;
+            write_framebuffer(static_cast<std::uint64_t>(adapted_width) * y + x, 255);
         }
     }
 }
@@ -666,6 +681,14 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_
 
 uint8_t *txtr; /* Area della texture (FLS a livelli di intensit�,
                  64 livelli per pixel, senza header).*/
+static std::size_t txtr_bytes = 0;
+
+void set_texture_source(uint8_t *data, std::size_t size) {
+    txtr       = data;
+    txtr_bytes = size;
+}
+
+std::size_t texture_source_size() { return txtr_bytes; }
 
 float pnx, pny, pnz; // valori di ritorno della funzione successiva. */
 
@@ -737,9 +760,13 @@ static inline uint32_t detail_hash(uint32_t x, uint32_t y) {
 static inline uint8_t sample_polygon_texel(uint16_t tax, uint16_t tdx,
                                            noctis::TextureFilterMode mode,
                                            int32_t micro_weight) {
+    const auto sample = [](uint16_t address) {
+        const std::size_t offset = texture_offset(address);
+        return txtr != nullptr && offset < txtr_bytes ? txtr[offset] : uint8_t{0};
+    };
     if (mode == noctis::TextureFilterMode::nearest) {
         uint16_t tbx = (tdx & 0xFF00u) | ((tax >> 8u) & 0xFFu);
-        return txtr[texture_offset(static_cast<uint16_t>(tbx - 4u))];
+        return sample(static_cast<uint16_t>(tbx - 4u));
     }
 
     uint8_t u0 = static_cast<uint8_t>(tax >> 8u);
@@ -752,10 +779,10 @@ static inline uint8_t sample_polygon_texel(uint16_t tax, uint16_t tdx,
     uint16_t idx01 = (static_cast<uint16_t>(v1) << 8u) | u0;
     uint16_t idx11 = (static_cast<uint16_t>(v1) << 8u) | u1;
 
-    uint32_t s00 = txtr[texture_offset(static_cast<uint16_t>(idx00 - 4u))];
-    uint32_t s10 = txtr[texture_offset(static_cast<uint16_t>(idx10 - 4u))];
-    uint32_t s01 = txtr[texture_offset(static_cast<uint16_t>(idx01 - 4u))];
-    uint32_t s11 = txtr[texture_offset(static_cast<uint16_t>(idx11 - 4u))];
+    uint32_t s00 = sample(static_cast<uint16_t>(idx00 - 4u));
+    uint32_t s10 = sample(static_cast<uint16_t>(idx10 - 4u));
+    uint32_t s01 = sample(static_cast<uint16_t>(idx01 - 4u));
+    uint32_t s11 = sample(static_cast<uint16_t>(idx11 - 4u));
 
     uint32_t fu = tax & 0xFFu;
     uint32_t fv = tdx & 0xFFu;
@@ -1283,7 +1310,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi++;
         tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tdx += fakesi;
         tcl--;
         if (tcl != 0)
@@ -1292,9 +1319,10 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
 
     transp:
         fakedi++;
-        tch = adapted[fakedi + 3] + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
+        tch = read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) +
+              sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tdx += fakesi;
         tcl--;
         if (tcl != 0)
@@ -1302,24 +1330,29 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto common;
 
     bright: // NOTE: This is for the text rendering.
-        tch = (adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
+        tch = (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 4) & 0x3Fu) +
+              sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         fakedi++;
         tax += tbp;
         tdx += fakesi;
         if (tch > 0x3E)
             tch = 0x3E;
-        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) & 0xC0u) | tch);
         tcl--;
         if (tcl != 0)
             goto bright;
         goto common;
 
     merger:
-        tch = (((adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >> 1u);
+        tch = (((read_framebuffer(static_cast<std::uint64_t>(fakedi) + 4) & 0x3Fu) +
+                sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >>
+               1u);
         fakedi++;
         tax += tbp;
         tdx += fakesi;
-        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) & 0xC0u) | tch);
         tcl--;
         if (tcl != 0)
             goto merger;
@@ -1329,7 +1362,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi++;
         tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tempfakedi          = fakedi;
         tempch              = tch;
         tch &= 0x07u;
@@ -1340,7 +1373,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto bmpm320;
         tch = tempch - tinta + escrescenze + sample_polygon_texel(tax - tbp, tdx - fakesi, texture_filter_mode, micro_weight);
-        adapted[fakedi + (adapted_width * 2) + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + static_cast<std::uint64_t>(adapted_width) * 2 + 3,
+                          tch);
         fakedi                                    = tempfakedi;
         tdx += fakesi;
         tcl--;
@@ -1422,8 +1456,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi += 2;
         tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 2] = tch;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 2, tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tdx += fakesi;
         tcl--;
         if (tcl != 0)
@@ -1432,10 +1466,11 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
 
     c_transp:
         fakedi += 2;
-        tch = adapted[fakedi + 3] + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
+        tch = read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) +
+              sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 2] = tch;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 2, tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tdx += fakesi;
         tcl--;
         if (tcl != 0)
@@ -1443,26 +1478,33 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         goto c_common;
 
     c_bright:
-        tch = (adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
+        tch = (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 4) & 0x3Fu) +
+              sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         fakedi += 2;
         tax += tbp;
         tdx += fakesi;
         if (tch > 0x3E)
             tch = 0x3E;
-        adapted[fakedi + 2] = (adapted[fakedi + 2] & 0xC0u) | tch;
-        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 2,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 2) & 0xC0u) | tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) & 0xC0u) | tch);
         tcl--;
         if (tcl != 0)
             goto c_bright;
         goto c_common;
 
     c_merger:
-        tch = (((adapted[fakedi + 4] & 0x3Fu) + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >> 1u);
+        tch = (((read_framebuffer(static_cast<std::uint64_t>(fakedi) + 4) & 0x3Fu) +
+                sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight) + tinta) >>
+               1u);
         fakedi += 2;
         tax += tbp;
         tdx += fakesi;
-        adapted[fakedi + 2] = (adapted[fakedi + 2] & 0xC0u) | tch;
-        adapted[fakedi + 3] = (adapted[fakedi + 3] & 0xC0u) | tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 2,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 2) & 0xC0u) | tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3,
+                          (read_framebuffer(static_cast<std::uint64_t>(fakedi) + 3) & 0xC0u) | tch);
         tcl--;
         if (tcl != 0)
             goto c_merger;
@@ -1472,8 +1514,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi += 2;
         tch = tinta + sample_polygon_texel(tax, tdx, texture_filter_mode, micro_weight);
         tax += tbp;
-        adapted[fakedi + 2] = tch;
-        adapted[fakedi + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 2, tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 3, tch);
         tempfakedi          = fakedi;
         tempch              = tch;
         tch &= 0x07u;
@@ -1484,8 +1526,10 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto c_bmpm320;
         tch = tempch - tinta + escrescenze + sample_polygon_texel(tax - tbp, tdx - fakesi, texture_filter_mode, micro_weight);
-        adapted[fakedi + (adapted_width * 2) + 2] = tch;
-        adapted[fakedi + (adapted_width * 2) + 3] = tch;
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + static_cast<std::uint64_t>(adapted_width) * 2 + 2,
+                          tch);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + static_cast<std::uint64_t>(adapted_width) * 2 + 3,
+                          tch);
         fakedi                    = tempfakedi;
         tdx += fakesi;
         tcl--;
@@ -1512,9 +1556,9 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         fakedi += tdx;
 
     duplicate:
-        tdl                   = adapted[fakedi - (adapted_width - 4)];
-        adapted[fakedi + 4]   = tdl;
-        adapted[fakedi + (adapted_width + 4)] = tdl;
+        tdl = read_framebuffer(static_cast<std::uint64_t>(fakedi - (adapted_width - 4)));
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + 4, tdl);
+        write_framebuffer(static_cast<std::uint64_t>(fakedi) + adapted_width + 4, tdl);
         fakedi++;
         tax--;
         if (tax != 0)

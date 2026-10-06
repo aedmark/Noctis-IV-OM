@@ -40,13 +40,17 @@ operation even on battery-powered portable devices.
 
 ### Internal Fixed Buffer Allocations
 
-The core simulation retains fixed buffer pools totaling under 1 MB:
-- `adapted` (active/hidden video page): 307.2 KB (`sc_bytes = 640 * 480`).
-- `p_surfacemap` (surface elevation/topology cache): 131.0 KB (`ps_bytes | 65536`).
-- `objectschart` (quadrant object table): 64.0 KB (`oc_bytes`).
-- `pvfile` (vehicle 3D mesh model): 64.0 KB (`pv_bytes`).
-- `n_offsets_map` & `n_globes_map`: 128.0 KB (`om_bytes` + `gl_bytes`).
-- `p_background` & `s_background`: 128.0 KB (`pl_bytes` + `st_bytes`).
+The core simulation retains fixed buffer pools totaling about 1.24 MiB:
+- `adapted` (maximum 4× active/hidden video page): 1000.0 KiB (`1280 * 800`).
+- `p_surfacemap` (surface elevation/topology cache): 39.1 KiB (`200 * 200`).
+- `objectschart` (quadrant object table): 39.1 KiB (`oc_bytes`).
+- `pvfile` (vehicle 3D mesh model): 20.0 KiB (`pv_bytes`).
+- `n_offsets_map` & `n_globes_map`: 39.2 KiB (`om_bytes` + `gl_bytes` + `gl_brest`).
+- `p_background` & `s_background`: 127.3 KiB (`pl_bytes` + `st_bytes`).
+
+M17-W06 removed the former 64 KiB framebuffer tail and OR-based surface-map
+padding. Renderer access is now bounded to the active page
+and declared texture capacity; see `RENDERER_BOUNDS.md`.
 
 ---
 

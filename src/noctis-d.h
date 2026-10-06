@@ -42,13 +42,8 @@
 //           screen update buffer.
 #define oc_bytes 40000 //   objectschart    map objects on the surface;
 //           atmospheric overlay.
-#define sc_bytes (1280 * 800 + 65536) //   adapted         the hidden video page�
-//          2 bytes (support for polymap)
-//           would give 64002. But I extended
-//          it to 64Kb + 4 bytes to avoid it
-//          breaking "poly3d", as there is one
-//          faulty function I have neither the
-//          time nor the care to change currently.
+#define sc_bytes (1280 * 800) //   adapted         maximum 4x internal video page;
+//          renderer access is clipped to the active page.
 #define pv_bytes 20480 //   pvfile      dynamic data bank of files
 //           of polygonal graphics.
 // -------------------------//
