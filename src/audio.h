@@ -104,4 +104,7 @@ void apply_audio_settings(const AudioSettings &settings);
 bool save_audio_settings(const std::filesystem::path &config_dir);
 bool load_audio_settings(const std::filesystem::path &config_dir);
 
+// Testing / offline audio rendering
+void render_audio_stream_for_testing(float *buffer, unsigned int frames);
+
 } // namespace noctis

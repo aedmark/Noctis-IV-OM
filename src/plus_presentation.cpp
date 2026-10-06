@@ -31,11 +31,17 @@ void apply_suit_torch(std::uint8_t *framebuffer, std::int32_t width, std::int32_
     const float scale_x = static_cast<float>(width) / 320.0f;
     const float scale_y = static_cast<float>(height) / 200.0f;
     const int cx = width / 2;
-    const int cy = height / 2 + static_cast<int>(std::round(8.0f * scale_y));
-    const float rx = 85.0f * scale_x;
-    const float ry = 65.0f * scale_y;
+    const int cy = height / 2 + static_cast<int>(std::round(35.0f * scale_y));
+    const float rx = 76.0f * scale_x;
+    const float ry = 52.0f * scale_y;
     const float inv_rx2 = 1.0f / (rx * rx);
     const float inv_ry2 = 1.0f / (ry * ry);
+    // Horizon and distance fade thresholds:
+    // Distant terrain and mountains near or above horizon (y <= 112) receive 0 illumination.
+    // Ground in front of astronaut (y >= 135) receives full beam light.
+    const float fade_start_y = 112.0f * scale_y;
+    const float fade_end_y = 135.0f * scale_y;
+    const float inv_fade_range = 1.0f / (fade_end_y - fade_start_y);
 
     const int min_y = std::max(0, cy - static_cast<int>(ry));
     const int max_y = std::min(height - 1, cy + static_cast<int>(ry));
@@ -43,9 +49,18 @@ void apply_suit_torch(std::uint8_t *framebuffer, std::int32_t width, std::int32_
     const int max_x = std::min(width - 1, cx + static_cast<int>(rx));
 
     for (int y = min_y; y <= max_y; ++y) {
-        const float dy = static_cast<float>(y - cy);
+        const float fy = static_cast<float>(y);
+        if (fy <= fade_start_y) continue;
+
+        const float dy = fy - static_cast<float>(cy);
         const float dy2_term = dy * dy * inv_ry2;
         if (dy2_term >= 1.0f) continue;
+
+        float dist_atten = 1.0f;
+        if (fy < fade_end_y) {
+            const float t = (fy - fade_start_y) * inv_fade_range;
+            dist_atten = t * t * (3.0f - 2.0f * t);
+        }
 
         auto *row = framebuffer + y * width;
         for (int x = min_x; x <= max_x; ++x) {
@@ -54,18 +69,18 @@ void apply_suit_torch(std::uint8_t *framebuffer, std::int32_t width, std::int32_
             if (d2 >= 1.0f) continue;
 
             const float edge_fade = 1.0f - d2;
-            float intensity = edge_fade * edge_fade;
-            if (d2 < 0.20f) {
-                intensity += (1.0f - d2 / 0.20f) * 0.35f;
-            }
+            const float intensity = edge_fade * edge_fade * dist_atten;
 
-            constexpr float max_boost = 32.0f;
+            constexpr float max_boost = 22.0f;
             const int boost = static_cast<int>(intensity * max_boost);
             if (boost <= 0) continue;
 
             std::uint8_t &val = row[x];
-            if (val < 44) {
+            if (val < 26) {
                 val = static_cast<std::uint8_t>(std::min(43, val + boost));
+            } else if (val >= 26 && val < 44) {
+                int faded_boost = boost >> 2;
+                if (faded_boost > 0) val = static_cast<std::uint8_t>(std::min(43, val + faded_boost));
             } else if (val < 64) {
                 val = static_cast<std::uint8_t>(std::min(63, val + (boost >> 1)));
             } else if (val >= 128 && val < 138) {
@@ -83,24 +98,42 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
 
     const float scale_x = static_cast<float>(width) / 320.0f;
     const float scale_y = static_cast<float>(height) / 200.0f;
+
+    // Flashlight beam pool centered on the forward ground in front of the astronaut
     const int cx = width / 2;
-    const int cy = height / 2 + static_cast<int>(std::round(10.0f * scale_y));
-    const float rx = 96.0f * scale_x;
-    const float ry = 70.0f * scale_y;
+    const int cy = height / 2 + static_cast<int>(std::round(35.0f * scale_y));
+    const float rx = 76.0f * scale_x;
+    const float ry = 52.0f * scale_y;
     const float inv_rx2 = 1.0f / (rx * rx);
     const float inv_ry2 = 1.0f / (ry * ry);
 
-    const int margin_y = static_cast<int>(std::round(10.0f * scale_y));
-    const int margin_x = static_cast<int>(std::round(10.0f * scale_x));
+    // Horizon and distance fade thresholds:
+    // Distant terrain and mountains near or above horizon (y <= 112) receive 0 illumination.
+    // Ground in front of astronaut (y >= 135) receives full beam light.
+    const float fade_start_y = 112.0f * scale_y;
+    const float fade_end_y = 135.0f * scale_y;
+    const float inv_fade_range = 1.0f / (fade_end_y - fade_start_y);
+
+    const int margin_y = static_cast<int>(std::round(6.0f * scale_y));
+    const int margin_x = static_cast<int>(std::round(6.0f * scale_x));
     const int min_y = std::max(margin_y, cy - static_cast<int>(ry));
     const int max_y = std::min(height - 1 - margin_y, cy + static_cast<int>(ry));
     const int min_x = std::max(margin_x, cx - static_cast<int>(rx));
     const int max_x = std::min(width - 1 - margin_x, cx + static_cast<int>(rx));
 
     for (int y = min_y; y <= max_y; ++y) {
-        const float dy = static_cast<float>(y - cy);
+        const float fy = static_cast<float>(y);
+        if (fy <= fade_start_y) continue;
+
+        const float dy = fy - static_cast<float>(cy);
         const float dy2_term = dy * dy * inv_ry2;
         if (dy2_term >= 1.0f) continue;
+
+        float dist_atten = 1.0f;
+        if (fy < fade_end_y) {
+            const float t = (fy - fade_start_y) * inv_fade_range;
+            dist_atten = t * t * (3.0f - 2.0f * t);
+        }
 
         const std::size_t row_pixel_offset = static_cast<std::size_t>(y) * width;
         for (int x = min_x; x <= max_x; ++x) {
@@ -114,11 +147,22 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
             // Preserve distant horizon sky haze (138..191)
             if (idx >= 138 && idx < 192) continue;
 
-            const float edge_fade = 1.0f - d2;
-            float intensity = edge_fade * edge_fade;
-            if (d2 < 0.25f) {
-                intensity += (1.0f - d2 / 0.25f) * 0.40f;
+            // In Noctis, distant terrain/mountains are shaded with atmospheric fog:
+            // c1 += (depth * 32) / max_depth (indices 24..43).
+            // Any distant terrain blended into atmospheric haze fades to 0 illumination.
+            float haze_fade = 1.0f;
+            if (idx >= 24 && idx < 44) {
+                haze_fade = std::clamp(1.0f - (static_cast<float>(idx) - 24.0f) / 7.0f, 0.0f, 1.0f);
+                if (haze_fade <= 0.001f) continue;
+            } else if (idx >= 44 && idx < 64) {
+                haze_fade = 0.25f;
             }
+
+            const float edge_fade = 1.0f - d2;
+            const float radial_intensity = edge_fade * edge_fade;
+
+            const float effective_illumination = radial_intensity * dist_atten * haze_fade;
+            if (effective_illumination <= 0.001f) continue;
 
             float surface_mod = 1.0f;
             if (idx < 44) {
@@ -132,46 +176,38 @@ void apply_suit_torch_rgba(std::uint8_t *rgba, const std::uint8_t *adapted,
             }
 
             const std::size_t rgba_idx = (row_pixel_offset + x) * 4;
-            const int cur_r = rgba[rgba_idx + 0];
-            const int cur_g = rgba[rgba_idx + 1];
-            const int cur_b = rgba[rgba_idx + 2];
+            const float cur_r = static_cast<float>(rgba[rgba_idx + 0]);
+            const float cur_g = static_cast<float>(rgba[rgba_idx + 1]);
+            const float cur_b = static_cast<float>(rgba[rgba_idx + 2]);
 
-            // True albedo luminance scaling: illuminates the surface's existing
-            // colors and texture by increasing luminance, preserving hue and saturation
-            // without washing out into a flat white circular overlay.
             const float lum = cur_r * 0.299f + cur_g * 0.587f + cur_b * 0.114f;
-            const float ambient_scale = 1.0f - std::clamp((lum - 15.0f) / 165.0f, 0.0f, 0.85f);
-            const float delta_lum = intensity * surface_mod * 145.0f * ambient_scale;
 
-            float out_r_f, out_g_f, out_b_f;
-            if (lum > 0.5f) {
-                const float scale = 1.0f + delta_lum / lum;
-                const float target_r = cur_r * scale;
-                const float target_g = cur_g * scale;
-                const float target_b = cur_b * scale;
+            // Natural warm halogen/LED tint (4200K)
+            constexpr float tint_r = 1.00f;
+            constexpr float tint_g = 0.96f;
+            constexpr float tint_b = 0.88f;
 
-                if (lum < 12.0f) {
-                    const float w_color = lum / 12.0f;
-                    const float r_diff = cur_r + delta_lum;
-                    const float g_diff = cur_g + delta_lum * 0.96f;
-                    const float b_diff = cur_b + delta_lum * 0.90f;
-                    out_r_f = (1.0f - w_color) * r_diff + w_color * target_r;
-                    out_g_f = (1.0f - w_color) * g_diff + w_color * target_g;
-                    out_b_f = (1.0f - w_color) * b_diff + w_color * target_b;
-                } else {
-                    out_r_f = target_r;
-                    out_g_f = target_g;
-                    out_b_f = target_b;
-                }
-            } else {
-                out_r_f = cur_r + delta_lum;
-                out_g_f = cur_g + delta_lum * 0.96f;
-                out_b_f = cur_b + delta_lum * 0.90f;
-            }
+            // Calibrated boost preventing washed-out bleaching
+            constexpr float max_boost = 62.0f;
+            const float delta_lum = effective_illumination * surface_mod * max_boost;
 
-            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::clamp(static_cast<int>(out_r_f + 0.5f), 0, 255));
-            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(static_cast<int>(std::clamp(static_cast<int>(out_g_f + 0.5f), 0, 255)));
-            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(static_cast<int>(std::clamp(static_cast<int>(out_b_f + 0.5f), 0, 255)));
+            // Color-preserving multiplicative gain scaling existing albedo
+            const float gain = 1.0f + delta_lum / (std::max(10.0f, lum) + 16.0f);
+            const float fill = delta_lum * 0.28f;
+
+            float out_r = cur_r * gain * tint_r + fill * tint_r;
+            float out_g = cur_g * gain * tint_g + fill * tint_g;
+            float out_b = cur_b * gain * tint_b + fill * tint_b;
+
+            // Filmic soft highlight compression preventing harsh white clipping
+            auto compress = [](float c) -> float {
+                if (c <= 165.0f) return c;
+                return 165.0f + 80.0f * std::tanh((c - 165.0f) / 80.0f);
+            };
+
+            rgba[rgba_idx + 0] = static_cast<std::uint8_t>(std::clamp(static_cast<int>(compress(out_r) + 0.5f), 0, 255));
+            rgba[rgba_idx + 1] = static_cast<std::uint8_t>(std::clamp(static_cast<int>(compress(out_g) + 0.5f), 0, 255));
+            rgba[rgba_idx + 2] = static_cast<std::uint8_t>(std::clamp(static_cast<int>(compress(out_b) + 0.5f), 0, 255));
         }
     }
 }

@@ -106,48 +106,53 @@ int main() {
 
     // Suit torch presentation test
     std::vector<std::uint8_t> test_frame(320 * 200, 0);
-    test_frame[108 * 320 + 160] = 0;   // Dark terrain at center of beam
+    test_frame[145 * 320 + 160] = 0;   // Dark terrain at center of beam
     test_frame[10 * 320 + 10] = 5;     // Outside the beam
-    test_frame[108 * 320 + 161] = 70;  // Sky/stars pixel in beam area
-    test_frame[108 * 320 + 162] = 192; // Object/vegetation in beam area
+    test_frame[145 * 320 + 161] = 70;  // Sky/stars pixel in beam area
+    test_frame[145 * 320 + 162] = 192; // Object/vegetation in beam area
+    test_frame[100 * 320 + 160] = 30;  // Distant mountain near horizon
 
     // Torch inactive: no changes
     noctis::apply_suit_torch(test_frame.data(), 320, 200, false);
-    ok &= require(test_frame[108 * 320 + 160] == 0, "torch inactive should not modify pixels");
+    ok &= require(test_frame[145 * 320 + 160] == 0, "torch inactive should not modify pixels");
 
-    // Torch active: illuminates dark ground and objects, preserves sky and outside pixels
+    // Torch active: illuminates dark ground and objects, preserves sky, distant mountains, and outside pixels
     noctis::apply_suit_torch(test_frame.data(), 320, 200, true);
-    ok &= require(test_frame[108 * 320 + 160] >= 25, "torch active should illuminate center ground");
+    ok &= require(test_frame[145 * 320 + 160] >= 10, "torch active should illuminate center ground");
+    ok &= require(test_frame[100 * 320 + 160] == 30, "torch active should not illuminate distant mountain");
     ok &= require(test_frame[10 * 320 + 10] == 5, "torch active should not modify outside pixels");
-    ok &= require(test_frame[108 * 320 + 161] == 70, "torch active should preserve sky/stars");
-    ok &= require(test_frame[108 * 320 + 162] > 192, "torch active should illuminate objects");
+    ok &= require(test_frame[145 * 320 + 161] == 70, "torch active should preserve sky/stars");
+    ok &= require(test_frame[145 * 320 + 162] > 192, "torch active should illuminate objects");
 
     // Suit torch RGBA spotlight presentation test
     std::vector<std::uint8_t> test_rgba(320 * 200 * 4, 16);
     std::vector<std::uint8_t> test_indices(320 * 200, 0);
-    test_indices[110 * 320 + 160] = 0;   // Ground at hotspot
-    test_indices[110 * 320 + 161] = 70;  // Sky in beam area
-    test_indices[110 * 320 + 162] = 195; // Object in beam area
+    test_indices[145 * 320 + 160] = 0;   // Ground at hotspot
+    test_indices[145 * 320 + 161] = 70;  // Sky in beam area
+    test_indices[145 * 320 + 162] = 195; // Object in beam area
+    test_indices[100 * 320 + 160] = 32;  // Distant mountain 1 km away
     test_indices[5 * 320 + 160] = 0;     // Visor top margin
     test_indices[10 * 320 + 10] = 0;     // Outside beam
 
     noctis::apply_suit_torch_rgba(test_rgba.data(), test_indices.data(), 320, 200);
 
-    const std::size_t hotspot_offset = (110 * 320 + 160) * 4;
-    const std::size_t sky_offset = (110 * 320 + 161) * 4;
-    const std::size_t obj_offset = (110 * 320 + 162) * 4;
+    const std::size_t hotspot_offset = (145 * 320 + 160) * 4;
+    const std::size_t sky_offset = (145 * 320 + 161) * 4;
+    const std::size_t obj_offset = (145 * 320 + 162) * 4;
+    const std::size_t mountain_offset = (100 * 320 + 160) * 4;
     const std::size_t visor_offset = (5 * 320 + 160) * 4;
     const std::size_t outside_offset = (10 * 320 + 10) * 4;
 
-    ok &= require(test_rgba[hotspot_offset + 0] > 150, "RGBA torch should brightly illuminate ground hotspot");
+    ok &= require(test_rgba[hotspot_offset + 0] > 40, "RGBA torch should illuminate ground hotspot without washed-out blowout");
+    ok &= require(test_rgba[mountain_offset + 0] == 16, "RGBA torch should not light up mountain 1 km away");
     ok &= require(test_rgba[sky_offset + 0] == 16, "RGBA torch should preserve sky pixels");
-    ok &= require(test_rgba[obj_offset + 0] > 150, "RGBA torch should brightly illuminate objects in beam");
+    ok &= require(test_rgba[obj_offset + 0] > 40, "RGBA torch should illuminate objects in beam");
     ok &= require(test_rgba[visor_offset + 0] == 16, "RGBA torch should preserve visor margin");
     ok &= require(test_rgba[outside_offset + 0] == 16, "RGBA torch should not modify pixels outside beam");
 
     // Lit surface washout prevention test: verify torch adds soft fill without clipping to 255
     std::vector<std::uint8_t> lit_rgba(320 * 200 * 4, 180);
-    std::vector<std::uint8_t> lit_indices(320 * 200, 30);
+    std::vector<std::uint8_t> lit_indices(320 * 200, 10);
     noctis::apply_suit_torch_rgba(lit_rgba.data(), lit_indices.data(), 320, 200);
     ok &= require(lit_rgba[hotspot_offset + 0] < 240, "torch on lit surface should not blow out to 255");
     ok &= require(lit_rgba[hotspot_offset + 0] > 180, "torch on lit surface should still add subtle fill light");

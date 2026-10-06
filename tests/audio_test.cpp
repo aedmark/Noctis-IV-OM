@@ -1,9 +1,11 @@
 #include "audio.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace {
 bool require(bool condition, const char *message) {
@@ -205,6 +207,54 @@ int main() {
     ok &= require(reloaded.music_mode == noctis::MusicPlaybackMode::hybrid, "reloaded music mode");
 
     std::filesystem::remove_all(test_config_dir);
+
+    // 6. Verify procedural generative melodic synthesizer rendering and stability
+    noctis::AudioSettings synth_settings{};
+    synth_settings.muted              = false;
+    synth_settings.master_volume     = 1.0f;
+    synth_settings.music_volume      = 1.0f;
+    synth_settings.cabin_volume      = 0.0f;
+    synth_settings.propulsion_volume = 0.0f;
+    synth_settings.weather_volume    = 0.0f;
+    synth_settings.foley_volume      = 0.0f;
+    synth_settings.music_mode        = noctis::MusicPlaybackMode::generative;
+    noctis::apply_audio_settings(synth_settings);
+
+    constexpr unsigned int FRAMES_PER_BLOCK = 512;
+    std::vector<float> audio_buffer(FRAMES_PER_BLOCK * 2, 0.0f);
+
+    // Test Sol-like (Class 0), Pulsar (Class 11), and Deep Interstellar Void
+    const int test_classes[] = { 0, 11, -1 };
+    for (int star_cls : test_classes) {
+        noctis::AudioTelemetry render_telem{};
+        render_telem.scene = noctis::AudioScene::cabin;
+        if (star_cls >= 0) {
+            render_telem.in_star_system = true;
+            render_telem.star_class = star_cls;
+        } else {
+            render_telem.in_star_system = false;
+        }
+        noctis::update_audio_telemetry(render_telem);
+
+        // Warm up and synthesize multiple audio blocks
+        for (int blk = 0; blk < 30; ++blk) {
+            noctis::render_audio_stream_for_testing(audio_buffer.data(), FRAMES_PER_BLOCK);
+        }
+
+        bool samples_finite = true;
+        float peak_val = 0.0f;
+        for (float s : audio_buffer) {
+            if (std::isnan(s) || std::isinf(s)) {
+                samples_finite = false;
+                break;
+            }
+            peak_val = std::max(peak_val, std::fabs(s));
+        }
+
+        ok &= require(samples_finite, "rendered samples must be finite non-NaN numbers");
+        ok &= require(peak_val > 0.01f, "generative music synthesizer should produce audible ambient tone");
+        ok &= require(peak_val <= 1.0f, "generative music synthesizer output must be bounded within limiter [-1, 1]");
+    }
 
     std::printf("audio_test: all unit checks passed successfully\n");
     return ok ? 0 : 1;

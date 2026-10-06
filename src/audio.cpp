@@ -155,11 +155,9 @@ struct SynthesizerState {
     StateVariableFilter filter_suit_vent_l{};
     StateVariableFilter filter_suit_vent_r{};
 
-    // Procedural Generative Ambient Drone Synthesizer (M15-W02)
+    // Procedural Generative Ambient Melody & Chord Synthesizer
     StateVariableFilter filter_drone_l{};
     StateVariableFilter filter_drone_r{};
-    StateVariableFilter filter_drone_shimmer_l{};
-    StateVariableFilter filter_drone_shimmer_r{};
 
     // Oscillators phase accumulators
     float phase_cabin_sub = 0.0f;
@@ -177,12 +175,26 @@ struct SynthesizerState {
 
     float phase_suit_hum = 0.0f;
 
-    // Generative Drone Oscillators
-    float phase_drone_sub     = 0.0f;
-    float phase_drone_root    = 0.0f;
-    float phase_drone_fifth   = 0.0f;
-    float phase_drone_octave  = 0.0f;
-    float phase_drone_shimmer = 0.0f;
+    // Generative Melodic & Chord Oscillators & Sequencer
+    float arp_timer           = 0.0f;
+    float chord_timer         = 0.0f;
+    int current_chord_step    = 0;
+    int current_arp_step      = 0;
+
+    float phase_music_bass    = 0.0f;
+    float cur_bass_freq       = 55.0f;
+    float phase_music_pad_1   = 0.0f;
+    float phase_music_pad_2   = 0.0f;
+    float phase_music_pad_3   = 0.0f;
+    float cur_pad_freq        = 110.0f;
+    float cur_pad2_freq       = 165.0f;
+    float phase_music_arp     = 0.0f;
+    float cur_arp_freq        = 220.0f;
+    float cur_arp_amp         = 0.0f;
+    float cur_arp_pan         = 0.5f;
+    float phase_music_glass   = 0.0f;
+    float cur_glass_freq      = 440.0f;
+    float cur_glass_amp       = 0.0f;
     float phase_pulsar        = 0.0f;
 
     // LFOs
@@ -192,11 +204,9 @@ struct SynthesizerState {
     float lfo_roof_pan = 0.0f;
     float lfo_buffet   = 0.0f;
 
-    // Generative Drone LFOs
-    float lfo_drone_a       = 0.0f;
-    float lfo_drone_b       = 0.0f;
-    float lfo_drone_c       = 0.0f;
-    float lfo_drone_shimmer = 0.0f;
+    // Generative Synth LFOs
+    float lfo_drone_a  = 0.0f;
+    float lfo_drone_b  = 0.0f;
 
     // Arrival / deceleration spool-down
     bool was_travel_active = false;
@@ -220,14 +230,171 @@ struct SynthesizerState {
     float cur_weather_vol_gain = 1.0f;
     float cur_music_vol_gain   = 0.75f;
 
-    float cur_drone_root_freq    = 55.0f;
-    float cur_drone_gain         = 0.0f;
-    float cur_drone_cutoff       = 450.0f;
-    float cur_drone_res          = 1.0f;
-    float cur_drone_shimmer_gain = 0.0f;
+    float cur_drone_gain       = 0.0f;
+    float cur_drone_cutoff     = 550.0f;
+    float cur_drone_res        = 0.85f;
 };
 
 SynthesizerState g_synth{};
+
+struct CelestialChord {
+    float bass_ratio;
+    float pad1_ratio;
+    float pad2_ratio;
+    float glass_ratio;
+};
+
+struct CelestialScale {
+    float root_hz;
+    std::array<CelestialChord, 4> chords;
+    std::array<float, 8> arp_ratios;
+};
+
+constexpr std::array<CelestialScale, 13> CELESTIAL_SCALES = {{
+    // Class 0: Sol-like Yellow Star (Warm, lyrical Lydian / Major)
+    {
+        55.00f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.500f },
+            { 1.333f, 2.667f, 3.375f, 5.333f },
+            { 1.688f, 2.531f, 3.375f, 4.500f },
+            { 1.500f, 3.000f, 3.750f, 6.000f }
+        }},
+        {{ 2.000f, 2.500f, 3.000f, 3.375f, 4.000f, 4.500f, 3.750f, 3.000f }}
+    },
+    // Class 1: Blue Giant (Colossal, soaring Mixolydian)
+    {
+        73.42f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.500f },
+            { 0.891f, 1.782f, 2.673f, 3.564f },
+            { 1.333f, 2.667f, 3.333f, 5.333f },
+            { 1.000f, 2.000f, 3.000f, 4.000f }
+        }},
+        {{ 2.000f, 2.250f, 2.667f, 3.000f, 3.564f, 4.000f, 4.500f, 3.000f }}
+    },
+    // Class 2: White Dwarf (Crystalline, ethereal Minor Pentatonic)
+    {
+        82.41f,
+        {{
+            { 1.000f, 2.000f, 2.400f, 4.500f },
+            { 0.800f, 1.600f, 2.400f, 3.200f },
+            { 1.200f, 2.400f, 3.000f, 4.800f },
+            { 0.891f, 1.782f, 2.673f, 4.000f }
+        }},
+        {{ 2.000f, 2.400f, 2.667f, 3.000f, 3.600f, 4.000f, 4.500f, 3.000f }}
+    },
+    // Class 3: Ancient Red Giant (Vast, deep, contemplative Dorian)
+    {
+        36.71f,
+        {{
+            { 1.000f, 2.000f, 2.400f, 3.600f },
+            { 0.841f, 1.682f, 2.523f, 3.364f },
+            { 1.335f, 2.670f, 3.337f, 4.005f },
+            { 1.500f, 3.000f, 3.600f, 4.500f }
+        }},
+        {{ 2.000f, 2.400f, 2.667f, 3.000f, 3.600f, 4.000f, 3.000f, 2.400f }}
+    },
+    // Class 4: Orange Giant (Warm amber twilight, Phrygian/Minor)
+    {
+        43.65f,
+        {{
+            { 1.000f, 2.000f, 2.400f, 4.500f },
+            { 0.841f, 1.682f, 2.523f, 3.364f },
+            { 1.333f, 2.667f, 3.200f, 4.000f },
+            { 1.500f, 3.000f, 4.000f, 5.333f }
+        }},
+        {{ 2.000f, 2.250f, 2.400f, 3.000f, 3.200f, 4.000f, 3.200f, 2.400f }}
+    },
+    // Class 5: Brown Dwarf (Dim smoldering, mysterious Aeolian)
+    {
+        41.20f,
+        {{
+            { 1.000f, 2.000f, 2.400f, 3.000f },
+            { 1.333f, 2.667f, 3.200f, 4.000f },
+            { 1.500f, 2.250f, 3.000f, 3.600f },
+            { 1.000f, 2.000f, 3.000f, 4.500f }
+        }},
+        {{ 2.000f, 2.400f, 2.667f, 3.000f, 3.200f, 3.600f, 3.000f, 2.400f }}
+    },
+    // Class 6: Dead Gray Star (Austere, cosmic emptiness, Locrian)
+    {
+        32.70f,
+        {{
+            { 1.000f, 2.000f, 2.828f, 3.360f },
+            { 0.794f, 1.587f, 2.381f, 3.175f },
+            { 1.189f, 2.378f, 3.568f, 4.757f },
+            { 1.000f, 2.000f, 3.000f, 4.000f }
+        }},
+        {{ 2.000f, 2.378f, 2.828f, 3.000f, 3.568f, 4.000f, 2.828f, 2.378f }}
+    },
+    // Class 7: Blue Dwarf (Crystal bright sparkling Lydian)
+    {
+        65.41f,
+        {{
+            { 1.000f, 2.000f, 2.500f, 4.243f },
+            { 1.500f, 3.000f, 3.750f, 4.500f },
+            { 1.682f, 2.523f, 3.364f, 5.045f },
+            { 1.335f, 2.670f, 3.337f, 5.340f }
+        }},
+        {{ 2.000f, 2.500f, 3.000f, 3.750f, 4.243f, 5.000f, 3.750f, 2.500f }}
+    },
+    // Class 8: Multiple System (Intricate, weaving Major Pentatonic)
+    {
+        48.99f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.500f },
+            { 0.841f, 1.682f, 2.523f, 3.364f },
+            { 1.335f, 2.670f, 3.337f, 4.500f },
+            { 1.500f, 3.000f, 4.500f, 6.000f }
+        }},
+        {{ 2.000f, 2.250f, 2.500f, 3.000f, 3.375f, 4.000f, 4.500f, 3.000f }}
+    },
+    // Class 9: Young Nebular (Wondrous, suspended 2nd/4th open harmonies)
+    {
+        58.27f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.500f },
+            { 0.794f, 1.587f, 2.381f, 3.564f },
+            { 1.335f, 2.670f, 3.204f, 4.806f },
+            { 1.189f, 2.378f, 3.568f, 4.500f }
+        }},
+        {{ 2.000f, 2.250f, 2.670f, 3.000f, 3.568f, 4.000f, 4.500f, 3.000f }}
+    },
+    // Class 10: Runaway Star (Solitary, drifting modal minor)
+    {
+        38.89f,
+        {{
+            { 1.000f, 2.000f, 2.400f, 4.500f },
+            { 0.794f, 1.587f, 2.381f, 3.564f },
+            { 1.335f, 2.670f, 3.204f, 4.005f },
+            { 1.500f, 3.000f, 4.000f, 4.500f }
+        }},
+        {{ 2.000f, 2.250f, 2.400f, 3.000f, 3.204f, 4.000f, 3.000f, 2.400f }}
+    },
+    // Class 11: Pulsar (Electromagnetic pulsing, minor rhythmic accents)
+    {
+        46.25f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.000f },
+            { 0.794f, 1.587f, 2.381f, 3.175f },
+            { 0.891f, 1.782f, 2.673f, 3.564f },
+            { 1.335f, 2.670f, 3.204f, 4.005f }
+        }},
+        {{ 2.000f, 2.378f, 2.673f, 3.000f, 3.564f, 4.000f, 3.000f, 2.378f }}
+    },
+    // Class 12: Void / Interstellar Space (Deep sub-bass meditation, open fifths)
+    {
+        32.70f,
+        {{
+            { 1.000f, 2.000f, 3.000f, 4.500f },
+            { 1.500f, 3.000f, 4.500f, 6.000f },
+            { 1.333f, 2.667f, 4.000f, 5.333f },
+            { 1.000f, 2.000f, 3.000f, 4.000f }
+        }},
+        {{ 2.000f, 2.250f, 2.500f, 3.000f, 3.375f, 4.000f, 3.000f, 2.250f }}
+    }
+}};
 
 // Audio stream callback (runs on miniaudio playback thread)
 void audio_stream_callback(void *bufferData, unsigned int frames) {
@@ -612,142 +779,159 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         }
 
         // -----------------------------------------------------------------
-        // 7. Procedural Generative Ambient Drone Synthesizer (M15-W02)
+        // 7. Procedural Generative Ambient Melody & Chord Synthesizer
         // -----------------------------------------------------------------
         float drone_l = 0.0f;
         float drone_r = 0.0f;
 
-        // Advance drone LFOs
-        g_synth.lfo_drone_a += TWO_PI * (1.0f / 23.4f) * dt;
-        if (g_synth.lfo_drone_a >= TWO_PI) g_synth.lfo_drone_a -= TWO_PI;
-        g_synth.lfo_drone_b += TWO_PI * (1.0f / 37.1f) * dt;
-        if (g_synth.lfo_drone_b >= TWO_PI) g_synth.lfo_drone_b -= TWO_PI;
-        g_synth.lfo_drone_c += TWO_PI * (1.0f / 53.8f) * dt;
-        if (g_synth.lfo_drone_c >= TWO_PI) g_synth.lfo_drone_c -= TWO_PI;
-        g_synth.lfo_drone_shimmer += TWO_PI * (1.0f / 16.2f) * dt;
-        if (g_synth.lfo_drone_shimmer >= TWO_PI) g_synth.lfo_drone_shimmer -= TWO_PI;
+        // Select scale by stellar spectral class (0..11) or interstellar void (12)
+        const int sc = snap.in_star_system ? std::clamp(snap.star_class, 0, 11) : 12;
+        const CelestialScale &scale = CELESTIAL_SCALES[sc];
 
-        constexpr std::array<float, 12> STAR_ROOT_FREQS = {
-            55.00f,  // Class 0: Yellow Sol-like (A1)
-            73.42f,  // Class 1: Blue Giant (D2)
-            82.41f,  // Class 2: White Dwarf (E2)
-            36.71f,  // Class 3: Ancient Red Giant (D1)
-            43.65f,  // Class 4: Orange Giant (F1)
-            41.20f,  // Class 5: Brown Dwarf (E1)
-            32.70f,  // Class 6: Dead Gray Star (C1)
-            65.41f,  // Class 7: Blue Dwarf (C2)
-            48.99f,  // Class 8: Multiple System (G1)
-            58.27f,  // Class 9: Young Nebular (A#1)
-            38.89f,  // Class 10: Runaway Star (D#1)
-            46.25f   // Class 11: Pulsar (F#1)
-        };
-        int sc = std::clamp(snap.star_class, 0, 11);
-        float target_root = snap.in_star_system ? STAR_ROOT_FREQS[sc] : 32.70f;
-
-        float target_cutoff  = 450.0f;
-        float target_res     = 1.0f;
-        float target_shimmer = 0.08f;
+        // Atmosphere / surface biome filter adaptation
+        float target_cutoff = 550.0f;
+        float target_res    = 0.85f;
         if (snap.atmosphere_density > 0.05f) {
             if (snap.planet_type == 2) { // Venusian dense
-                target_cutoff  = 170.0f;
-                target_res     = 1.15f;
-                target_shimmer = 0.03f;
+                target_cutoff = 220.0f;
+                target_res    = 1.10f;
             } else if (snap.planet_type == 7 || snap.surface_biome == 1) { // Cryogenic / ice
-                target_cutoff  = 780.0f;
-                target_res     = 1.45f;
-                target_shimmer = 0.15f;
+                target_cutoff = 880.0f;
+                target_res    = 1.25f;
             } else if (snap.planet_type == 3) { // Habitable
-                target_cutoff  = 520.0f;
-                target_res     = 0.95f;
-                target_shimmer = 0.09f;
+                target_cutoff = 620.0f;
+                target_res    = 0.80f;
             } else { // Thin / Mars-like
-                target_cutoff  = 400.0f;
-                target_res     = 1.20f;
-                target_shimmer = 0.07f;
+                target_cutoff = 480.0f;
+                target_res    = 0.95f;
             }
         } else if (snap.on_surface) { // Airless rocky
-            target_cutoff  = 620.0f;
-            target_res     = 1.35f;
-            target_shimmer = 0.12f;
+            target_cutoff = 720.0f;
+            target_res    = 1.15f;
         }
 
         float target_drone = 0.0f;
         const auto mmode = get_music_mode();
         if (mmode == MusicPlaybackMode::generative) {
-            target_drone = snap.travel_active ? 0.18f : 0.35f;
+            target_drone = snap.travel_active ? 0.22f : 0.38f;
         } else if (mmode == MusicPlaybackMode::hybrid) {
             if (is_music_stream_active()) {
-                target_drone = 0.09f;
+                target_drone = 0.10f;
             } else {
-                target_drone = snap.travel_active ? 0.18f : 0.32f;
+                target_drone = snap.travel_active ? 0.22f : 0.35f;
             }
         }
 
-        constexpr float drone_smooth_k = 0.0008f;
-        g_synth.cur_drone_root_freq += drone_smooth_k * (target_root - g_synth.cur_drone_root_freq);
-        g_synth.cur_drone_gain += smooth_k * (target_drone - g_synth.cur_drone_gain);
+        g_synth.cur_drone_gain   += smooth_k * (target_drone - g_synth.cur_drone_gain);
         g_synth.cur_drone_cutoff += smooth_k * (target_cutoff - g_synth.cur_drone_cutoff);
-        g_synth.cur_drone_res += smooth_k * (target_res - g_synth.cur_drone_res);
-        g_synth.cur_drone_shimmer_gain += smooth_k * (target_shimmer - g_synth.cur_drone_shimmer_gain);
+        g_synth.cur_drone_res    += smooth_k * (target_res - g_synth.cur_drone_res);
+
+        // Advance LFOs
+        g_synth.lfo_drone_a += TWO_PI * (1.0f / 28.0f) * dt;
+        if (g_synth.lfo_drone_a >= TWO_PI) g_synth.lfo_drone_a -= TWO_PI;
+        g_synth.lfo_drone_b += TWO_PI * (1.0f / 42.0f) * dt;
+        if (g_synth.lfo_drone_b >= TWO_PI) g_synth.lfo_drone_b -= TWO_PI;
+
+        // Chord progression sequencer (advances every 14.0s)
+        constexpr float chord_period = 14.0f;
+        g_synth.chord_timer += dt;
+        if (g_synth.chord_timer >= chord_period) {
+            g_synth.chord_timer -= chord_period;
+            g_synth.current_chord_step = (g_synth.current_chord_step + 1) % 4;
+            // Bloom celestial glass shimmer on chord change
+            g_synth.cur_glass_amp = 0.42f;
+        }
+
+        // Slow scaling arpeggio sequencer (advances every 2.4s)
+        constexpr float arp_period = 2.4f;
+        g_synth.arp_timer += dt;
+        if (g_synth.arp_timer >= arp_period) {
+            g_synth.arp_timer -= arp_period;
+            g_synth.current_arp_step = (g_synth.current_arp_step + 1) % 8;
+            // Strike arpeggio chime note
+            g_synth.cur_arp_amp = 0.48f;
+            // Ping-pong stereo pan
+            g_synth.cur_arp_pan = (g_synth.current_arp_step % 2 == 0) ? 0.35f : 0.65f;
+        }
+
+        const CelestialChord &current_chord = scale.chords[g_synth.current_chord_step];
+        const float target_bass_hz  = scale.root_hz * current_chord.bass_ratio;
+        const float target_pad_hz   = scale.root_hz * current_chord.pad1_ratio;
+        const float target_pad2_hz  = scale.root_hz * current_chord.pad2_ratio;
+        const float target_glass_hz = scale.root_hz * current_chord.glass_ratio;
+        const float target_arp_hz   = scale.root_hz * scale.arp_ratios[g_synth.current_arp_step];
+
+        // Slew pitches smoothly to avoid clicks on chord changes
+        constexpr float pitch_smooth_k = 0.0004f;
+        g_synth.cur_bass_freq  += pitch_smooth_k * (target_bass_hz - g_synth.cur_bass_freq);
+        g_synth.cur_pad_freq   += pitch_smooth_k * (target_pad_hz - g_synth.cur_pad_freq);
+        g_synth.cur_pad2_freq  += pitch_smooth_k * (target_pad2_hz - g_synth.cur_pad2_freq);
+        g_synth.cur_glass_freq += pitch_smooth_k * (target_glass_hz - g_synth.cur_glass_freq);
+        g_synth.cur_arp_freq   += 0.004f * (target_arp_hz - g_synth.cur_arp_freq);
+
+        // Exponential decay envelopes
+        g_synth.cur_arp_amp   *= (1.0f - dt * 0.55f);
+        g_synth.cur_glass_amp *= (1.0f - dt * 0.28f);
 
         if (g_synth.cur_drone_gain > 0.001f) {
-            float root_f = g_synth.cur_drone_root_freq;
-            float detune = 0.30f * std::sin(g_synth.lfo_drone_c);
+            // Voice 1: Foundation Bass Pad (root / pedal point)
+            g_synth.phase_music_bass += TWO_PI * g_synth.cur_bass_freq * dt;
+            if (g_synth.phase_music_bass >= TWO_PI) g_synth.phase_music_bass -= TWO_PI;
+            const float v_bass = (std::sin(g_synth.phase_music_bass) * 0.75f +
+                                  std::sin(g_synth.phase_music_bass * 2.0f) * 0.25f);
 
-            g_synth.phase_drone_sub += TWO_PI * (root_f * 0.5f) * dt;
-            if (g_synth.phase_drone_sub >= TWO_PI) g_synth.phase_drone_sub -= TWO_PI;
+            // Voice 2: Ethereal Chord Pad (Stereo Chorus)
+            const float chorus_l = -0.18f + 0.10f * std::sin(g_synth.lfo_drone_a);
+            const float chorus_r =  0.18f - 0.10f * std::cos(g_synth.lfo_drone_b);
+            g_synth.phase_music_pad_1 += TWO_PI * (g_synth.cur_pad_freq + chorus_l) * dt;
+            if (g_synth.phase_music_pad_1 >= TWO_PI) g_synth.phase_music_pad_1 -= TWO_PI;
+            g_synth.phase_music_pad_2 += TWO_PI * (g_synth.cur_pad_freq + chorus_r) * dt;
+            if (g_synth.phase_music_pad_2 >= TWO_PI) g_synth.phase_music_pad_2 -= TWO_PI;
+            g_synth.phase_music_pad_3 += TWO_PI * g_synth.cur_pad2_freq * dt;
+            if (g_synth.phase_music_pad_3 >= TWO_PI) g_synth.phase_music_pad_3 -= TWO_PI;
 
-            g_synth.phase_drone_root += TWO_PI * root_f * dt;
-            if (g_synth.phase_drone_root >= TWO_PI) g_synth.phase_drone_root -= TWO_PI;
+            const float v_pad1_l = std::sin(g_synth.phase_music_pad_1);
+            const float v_pad1_r = std::sin(g_synth.phase_music_pad_2);
+            const float v_pad2   = std::sin(g_synth.phase_music_pad_3) * 0.65f;
 
-            g_synth.phase_drone_fifth += TWO_PI * (root_f * 1.5f + detune) * dt;
-            if (g_synth.phase_drone_fifth >= TWO_PI) g_synth.phase_drone_fifth -= TWO_PI;
+            const float raw_pad_l = v_pad1_l * 0.55f + v_pad2 * 0.45f;
+            const float raw_pad_r = v_pad1_r * 0.55f + v_pad2 * 0.45f;
 
-            g_synth.phase_drone_octave += TWO_PI * (root_f * 2.0f - detune * 0.5f) * dt;
-            if (g_synth.phase_drone_octave >= TWO_PI) g_synth.phase_drone_octave -= TWO_PI;
+            float pl_low = 0.0f, pl_band = 0.0f, pl_high = 0.0f;
+            float pr_low = 0.0f, pr_band = 0.0f, pr_high = 0.0f;
+            g_synth.filter_drone_l.process(raw_pad_l, g_synth.cur_drone_cutoff, g_synth.cur_drone_res,
+                                          AUDIO_SAMPLE_RATE, pl_low, pl_band, pl_high);
+            g_synth.filter_drone_r.process(raw_pad_r, g_synth.cur_drone_cutoff * 1.02f, g_synth.cur_drone_res,
+                                          AUDIO_SAMPLE_RATE, pr_low, pr_band, pr_high);
+            const float pad_l = pl_low * 0.80f + pl_band * 0.20f;
+            const float pad_r = pr_low * 0.80f + pr_band * 0.20f;
 
-            float partial_ratio = (sc % 2 == 0) ? 2.5f : 2.667f;
-            g_synth.phase_drone_shimmer += TWO_PI * (root_f * partial_ratio + detune) * dt;
-            if (g_synth.phase_drone_shimmer >= TWO_PI) g_synth.phase_drone_shimmer -= TWO_PI;
+            // Voice 3: Generative Melodic Chime / Slow Scaling Arpeggio
+            g_synth.phase_music_arp += TWO_PI * g_synth.cur_arp_freq * dt;
+            if (g_synth.phase_music_arp >= TWO_PI) g_synth.phase_music_arp -= TWO_PI;
+            const float v_arp = (std::sin(g_synth.phase_music_arp) * 0.70f +
+                                 std::sin(g_synth.phase_music_arp * 2.756f) * 0.20f +
+                                 std::sin(g_synth.phase_music_arp * 5.404f) * 0.10f) * g_synth.cur_arp_amp;
+            const float arp_l = v_arp * (1.0f - g_synth.cur_arp_pan);
+            const float arp_r = v_arp * g_synth.cur_arp_pan;
 
-            float lfo_a_mod = 0.65f + 0.35f * std::sin(g_synth.lfo_drone_a);
-            float lfo_b_mod = 0.60f + 0.40f * std::cos(g_synth.lfo_drone_b);
-            float pan_mod   = 0.20f * std::sin(g_synth.lfo_drone_a);
+            // Voice 4: Celestial Glass Shimmer (Starlight Accent)
+            g_synth.phase_music_glass += TWO_PI * g_synth.cur_glass_freq * dt;
+            if (g_synth.phase_music_glass >= TWO_PI) g_synth.phase_music_glass -= TWO_PI;
+            const float v_glass = (std::sin(g_synth.phase_music_glass) * 0.65f +
+                                   std::sin(g_synth.phase_music_glass * 2.0f) * 0.35f) * g_synth.cur_glass_amp;
+            const float glass_l = v_glass * 0.45f;
+            const float glass_r = v_glass * 0.55f;
 
-            float v_sub    = std::sin(g_synth.phase_drone_sub) * 0.65f;
-            float v_root   = (std::sin(g_synth.phase_drone_root) + 0.20f * std::sin(g_synth.phase_drone_root * 2.0f)) * 0.55f;
-            float v_fifth  = std::sin(g_synth.phase_drone_fifth) * (0.40f * lfo_a_mod);
-            float v_octave = std::sin(g_synth.phase_drone_octave) * (0.30f * lfo_b_mod);
-            float v_part   = std::sin(g_synth.phase_drone_shimmer) * 0.20f;
+            // Combined 4-voice ambient mix
+            drone_l = v_bass * 0.40f + pad_l * 0.45f + arp_l * 0.35f + glass_l * 0.20f;
+            drone_r = v_bass * 0.40f + pad_r * 0.45f + arp_r * 0.35f + glass_r * 0.20f;
 
-            float raw_drone_l = (v_sub + v_root) * 0.50f + v_fifth * (0.50f - pan_mod) + v_octave * (0.50f + pan_mod) + v_part * 0.40f;
-            float raw_drone_r = (v_sub + v_root) * 0.50f + v_fifth * (0.50f + pan_mod) + v_octave * (0.50f - pan_mod) + v_part * 0.60f;
-
-            float dl_low = 0.0f, dl_band = 0.0f, dl_high = 0.0f;
-            float dr_low = 0.0f, dr_band = 0.0f, dr_high = 0.0f;
-            g_synth.filter_drone_l.process(raw_drone_l, g_synth.cur_drone_cutoff, g_synth.cur_drone_res, AUDIO_SAMPLE_RATE, dl_low, dl_band, dl_high);
-            g_synth.filter_drone_r.process(raw_drone_r, g_synth.cur_drone_cutoff * 1.03f, g_synth.cur_drone_res, AUDIO_SAMPLE_RATE, dr_low, dr_band, dr_high);
-
-            drone_l = (dl_low * 0.75f + dl_band * 0.25f);
-            drone_r = (dr_low * 0.75f + dr_band * 0.25f);
-
-            if (g_synth.cur_drone_shimmer_gain > 0.001f) {
-                float s_noise_l = g_synth.noise_l.next_pink();
-                float s_noise_r = g_synth.noise_r.next_pink();
-                float sl_low = 0.0f, sl_band = 0.0f, sl_high = 0.0f;
-                float sr_low = 0.0f, sr_band = 0.0f, sr_high = 0.0f;
-                float shim_freq = std::clamp(root_f * 4.0f, 200.0f, 3200.0f);
-                g_synth.filter_drone_shimmer_l.process(s_noise_l, shim_freq, 2.5f, AUDIO_SAMPLE_RATE, sl_low, sl_band, sl_high);
-                g_synth.filter_drone_shimmer_r.process(s_noise_r, shim_freq * 1.05f, 2.5f, AUDIO_SAMPLE_RATE, sr_low, sr_band, sr_high);
-                float breath = 0.50f + 0.50f * std::sin(g_synth.lfo_drone_shimmer);
-                drone_l += sl_band * g_synth.cur_drone_shimmer_gain * breath;
-                drone_r += sr_band * g_synth.cur_drone_shimmer_gain * breath;
-            }
-
+            // Class 11 Pulsar electromagnetic tremolo
             if (sc == 11) {
                 g_synth.phase_pulsar += TWO_PI * 6.0f * dt;
                 if (g_synth.phase_pulsar >= TWO_PI) g_synth.phase_pulsar -= TWO_PI;
-                float tremolo = 0.35f + 0.65f * (0.5f + 0.5f * std::sin(g_synth.phase_pulsar));
+                const float tremolo = 0.35f + 0.65f * (0.5f + 0.5f * std::sin(g_synth.phase_pulsar));
                 drone_l *= tremolo;
                 drone_r *= tremolo;
             }
@@ -1473,6 +1657,10 @@ bool load_audio_settings(const std::filesystem::path &config_dir) {
 
     apply_audio_settings(settings);
     return true;
+}
+
+void render_audio_stream_for_testing(float *buffer, unsigned int frames) {
+    audio_stream_callback(buffer, frames);
 }
 
 } // namespace noctis
