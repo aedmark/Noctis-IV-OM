@@ -23,6 +23,7 @@
 #include "starmap_exchange.h"
 #include "indexed_framebuffer.h"
 #include "input.h"
+#include "input_recording.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
 #include "movie_capture.h"
@@ -2892,11 +2893,17 @@ LandingFixturePhase landing_fixture_phase     = LandingFixturePhase::descending;
 std::uint32_t landing_fixture_frames          = 0;
 std::uint32_t landing_fixture_touchdown_frame = 0;
 std::uint32_t landing_fixture_return_frame    = 0;
+noctis::InputRecording landing_fixture_recording;
+std::optional<noctis::InputReplay> landing_fixture_replay;
+bool landing_fixture_recording_enabled = false;
+bool landing_fixture_recording_failed  = false;
 std::uint64_t journey_orbit_hash              = 0;
 std::uint64_t journey_touchdown_hash          = 0;
 std::uint64_t journey_outbound_hash           = 0;
 std::uint64_t journey_return_hash             = 0;
 std::uint32_t journey_rendered_frames         = 0;
+std::uint32_t journey_swap_calls              = 0;
+std::uint32_t fixture_presentation_interval   = 1;
 std::uint64_t environment_fixture_hash        = 0;
 std::uint32_t environment_fixture_frames      = 0;
 int16_t environment_fixture_longitude         = 1;
@@ -2913,9 +2920,8 @@ std::uint64_t indexed_frame_hash() {
     return hash;
 }
 
-noctis::InputFrame scripted_landing_input() {
+noctis::InputFrame generated_landing_input() {
     noctis::InputFrame frame;
-    ++landing_fixture_frames;
     if (landing_fixture_frames > 10000) {
         frame.escape_down = true;
         return frame;
@@ -2948,6 +2954,42 @@ noctis::InputFrame scripted_landing_input() {
     return frame;
 }
 
+void observe_replayed_landing_input(const noctis::InputFrame &frame) {
+    if (!landed) {
+        return;
+    }
+    const float capsule_x = static_cast<float>((atl_x << 14) + atl_x2);
+    const float capsule_z = static_cast<float>((atl_z << 14) + atl_z2);
+    const float distance  = std::hypot(pos_x - capsule_x, pos_z - capsule_z);
+    if (landing_fixture_phase == LandingFixturePhase::descending) {
+        landing_fixture_phase           = LandingFixturePhase::walking_out;
+        landing_fixture_touchdown_frame = landing_fixture_frames;
+    }
+    if (landing_fixture_phase == LandingFixturePhase::walking_out && frame.move_backward) {
+        landing_fixture_phase = LandingFixturePhase::walking_back;
+    }
+    if (landing_fixture_phase == LandingFixturePhase::walking_back && !frame.move_backward && distance <= 800.0F &&
+        landing_fixture_return_frame == 0) {
+        landing_fixture_return_frame = landing_fixture_frames;
+    }
+}
+
+noctis::InputFrame scripted_landing_input() {
+    ++landing_fixture_frames;
+    noctis::InputFrame frame;
+    if (landing_fixture_replay) {
+        frame = landing_fixture_replay->frame_for_tick(landing_fixture_frames - 1);
+        observe_replayed_landing_input(frame);
+    } else {
+        frame = generated_landing_input();
+    }
+    if (landing_fixture_recording_enabled &&
+        !noctis::append_input_frame(landing_fixture_recording, landing_fixture_frames - 1, frame)) {
+        landing_fixture_recording_failed = true;
+    }
+    return frame;
+}
+
 noctis::InputFrame scripted_surface_frame_input() {
     noctis::InputFrame frame;
     frame.escape_down = environment_fixture_mode || environment_fixture_frames >= 2;
@@ -2976,6 +3018,8 @@ int main(int argc, char **argv) {
     std::optional<double> fixture_universe_seconds;
     std::optional<std::filesystem::path> user_data_override;
     std::optional<std::filesystem::path> migration_source;
+    std::optional<std::filesystem::path> input_record_path;
+    std::optional<std::filesystem::path> input_replay_path;
     std::optional<bool> portable_mode_override;
     std::optional<noctis::InternalResolutionMode> resolution_override;
     std::optional<noctis::DrawDistanceMode> draw_distance_override;
@@ -3100,6 +3144,18 @@ int main(int argc, char **argv) {
             user_data_override = std::filesystem::path(argv[++arg]);
         } else if (std::string_view(argv[arg]) == "--migrate-from" && arg + 1 < argc) {
             migration_source = std::filesystem::path(argv[++arg]);
+        } else if (std::string_view(argv[arg]) == "--record-input" && arg + 1 < argc) {
+            input_record_path = std::filesystem::path(argv[++arg]);
+        } else if (std::string_view(argv[arg]) == "--replay-input" && arg + 1 < argc) {
+            input_replay_path = std::filesystem::path(argv[++arg]);
+        } else if (std::string_view(argv[arg]) == "--fixture-presentation-interval" && arg + 1 < argc) {
+            char *end = nullptr;
+            const auto value = std::strtol(argv[++arg], &end, 10);
+            if (end == argv[arg] || *end != '\0' || value < 1 || value > 1000) {
+                noctis::log_event("error", "arguments", "Invalid fixture presentation interval");
+                return 2;
+            }
+            fixture_presentation_interval = static_cast<std::uint32_t>(value);
         } else if (std::string_view(argv[arg]) == "--surface-fixture") {
             surface_fixture_mode = true;
             if (arg + 1 < argc && argv[arg + 1][0] != '-') {
@@ -3160,6 +3216,16 @@ int main(int argc, char **argv) {
                               persistence_fixture_mode || movie_fixture_mode || surface_fixture_mode ||
                               landing_fixture_mode || orbit_surface_fixture_mode || environment_fixture_mode ||
                               content_fixture_mode || oakenshield_fixture_mode;
+    if (input_record_path && input_replay_path) {
+        noctis::log_event("error", "arguments", "--record-input and --replay-input are mutually exclusive");
+        return 2;
+    }
+    if ((input_record_path || input_replay_path || fixture_presentation_interval != 1) &&
+        !orbit_surface_fixture_mode) {
+        noctis::log_event("error", "arguments",
+                          "input recording/replay and presentation cadence currently require --orbit-surface-fixture");
+        return 2;
+    }
     if (fixture_universe_seconds) {
         if (!fixture_mode) {
             noctis::log_event("error", "arguments", "--fixture-universe-seconds requires a fixture mode");
@@ -4250,11 +4316,41 @@ int main(int argc, char **argv) {
         const double ship_z = dzat_z;
 
         noctis::reset_input_state();
+        landing_fixture_recording = {};
+        landing_fixture_recording_enabled = input_record_path.has_value();
+        landing_fixture_recording_failed  = false;
+        landing_fixture_replay.reset();
+        if (input_replay_path) {
+            noctis::InputRecording recording;
+            const auto loaded = noctis::load_input_recording(*input_replay_path, recording);
+            if (!loaded) {
+                noctis::log_event("error", "input_replay", loaded.message);
+                return 1;
+            }
+            landing_fixture_replay.emplace(std::move(recording));
+        }
         noctis::set_input_provider(scripted_landing_input);
         entryflag = 0;
         noctis::engine_state().application.reset();
         planetary_main();
         noctis::reset_input_provider();
+
+        if (landing_fixture_recording_failed) {
+            noctis::log_event("error", "input_recording", "could not append the orbit-to-surface input frame");
+            return 1;
+        }
+        if (landing_fixture_replay &&
+            (!landing_fixture_replay->complete() || landing_fixture_replay->missed_input())) {
+            noctis::log_event("error", "input_replay", "orbit-to-surface input replay did not complete exactly");
+            return 1;
+        }
+        if (input_record_path) {
+            const auto saved = noctis::save_input_recording(*input_record_path, landing_fixture_recording);
+            if (!saved) {
+                noctis::log_event("error", "input_recording", saved.message);
+                return 1;
+            }
+        }
 
         const bool returned_normally = exitflag == 0 && !landed && landing_fixture_return_frame > 0 &&
                                        landing_fixture_frames < 10000 && dzat_x == ship_x && dzat_y == ship_y &&
@@ -4465,7 +4561,9 @@ int main(int argc, char **argv) {
 void swapBuffers() {
     if (orbit_surface_fixture_mode) {
         const auto hash = indexed_frame_hash();
-        ++journey_rendered_frames;
+        if (journey_swap_calls++ % fixture_presentation_interval == 0) {
+            ++journey_rendered_frames;
+        }
         if (landing_fixture_touchdown_frame != 0 && journey_touchdown_hash == 0) {
             journey_touchdown_hash = hash;
         }

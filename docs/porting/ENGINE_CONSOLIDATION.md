@@ -54,6 +54,15 @@ blocking surface loop is wrapped in an RAII session boundary, so fixture exits,
 load failures, surface aborts, and ordinary capsule return all restore a valid
 mode. This characterizes current ownership without yet replacing loop control.
 
+## Deterministic input rule
+
+The recording boundary is the semantic `InputFrame`, after platform polling
+and mapping but before the legacy compatibility adapter. Records use explicit
+simulation ticks and a versioned little-endian format; they never encode host
+key codes, wall-clock timing, or structure padding. Replay treats skipped or
+out-of-order input as an error and remains independent of presentation cadence.
+The format and validation contract are specified in `INPUT_RECORDING.md`.
+
 ## Migration sequence
 
 1. Establish `EngineState` and migrate transient travel state.
@@ -90,5 +99,12 @@ mode. This characterizes current ownership without yet replacing loop control.
   → ascent → cockpit sequence and exact transition count.
 - Movie-player tests verify that failed opens retain cockpit ownership and that
   successful open/close restores it.
+- Input codec tests cover every semantic field, malformed recordings, atomic
+  publication, sparse playback, and missed-tick detection.
+- The scripted space journey replays one decoded recording at 1× and 4×
+  presentation cadence with identical exact checkpoints.
+- The complete orbit-to-surface fixture records 783 blocking-loop frames and
+  replays them from a separately seeded profile at 4× presentation cadence,
+  preserving all simulation, indexed-frame, and content checkpoints.
 - Existing travel, scripted-journey, orbit/surface, audio, save, and renderer
   fixtures remain the behavioral regression boundary.

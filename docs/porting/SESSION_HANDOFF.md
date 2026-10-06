@@ -7,50 +7,48 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-06.
 - Repository: local `Noctis-IV-OM`; branch `master`.
 - Active milestone: M17, Engine Consolidation & Runtime Architecture.
-- Published checkpoint: `77ca434` (`refactor(engine): begin M17 runtime consolidation`).
-- Working tree: M17-W04 application-mode changes are present and uncommitted.
+- Published checkpoint: M17-W05 in this commit.
+- Working tree: clean after the W05 commit.
 
 ## Read first
 
 1. `ENGINE_CONSOLIDATION.md` for M17 rules, sequencing, and invariants.
-2. M17 in `ROADMAP.md` for work-item status and exit criteria.
-3. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
+2. `INPUT_RECORDING.md` for the semantic recording format and replay contract.
+3. M17 in `ROADMAP.md` for work-item status and exit criteria.
+4. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
 
-## Published foundation
+## M17 completed through W05
 
 - `EngineState` owns transient travel phase and normalized speed.
-- GOESnet image-export destinations are injected and tests remain inside their
-  fixture workspace.
-- M16 online work is deferred until M17; offline catalog exchange remains
-  supported.
-- Foundation verification before commit: 56/56 Linux Clang Debug tests passed.
-
-## M17-W04 completed locally
-
-- Added `ApplicationMode` values for cockpit, descent/ascent transfer, surface,
-  gallery, movie player, and shutdown.
-- Added a legal-transition graph with rejected-transition immutability, a
-  transition counter, reset semantics, and terminal shutdown.
-- Wrapped `planetary_main()` in an application-mode scope. Early returns cannot
-  strand the runtime outside the cockpit.
-- Routed restored surfaces, fixture surfaces, touchdown, and capsule ascent
-  through explicit modes.
-- Extended the landing-return fixture to require the four-transition round trip
-  back to cockpit.
-- Routed gallery and movie-player open/close ownership through `EngineState`.
-- Routed normal application teardown into `shutting_down`.
+- GOESnet image exports receive an explicit destination instead of discovering
+  host state inside the command layer.
+- `ApplicationRuntimeState` enforces legal cockpit, transfer, surface, modal,
+  and shutdown transitions; the blocking surface session is RAII-scoped.
+- Semantic input recordings use explicit little-endian version 1 storage,
+  stable flag assignments, finite float bits, bounded counts, strictly
+  increasing simulation ticks, and atomic publication.
+- `InputReplay` returns neutral frames at unrecorded ticks and latches skipped
+  or out-of-order event delivery as a fixture failure.
+- The scripted space journey serializes and decodes its input before replay at
+  1x and 4x presentation cadence without changing exact checkpoints.
+- The live orbit-to-surface fixture records 783 frames, then replays them in a
+  separately seeded process at 4x presentation cadence. All simulation,
+  indexed-frame, content, and restored-position evidence agrees.
 
 ## Verification
 
-- Linux Clang Debug build: passed without warnings.
-- Focused application-mode, movie-player, landing, surface, and orbit journey
-  suite: 8/8 passed.
-- Full Linux Clang Debug lane: 56/56 passed in 22.16 seconds.
-- Exact renderer and orbit/surface hashes remain unchanged.
+- Linux Clang Debug build completed without warnings.
+- Full Linux Clang Debug lane: 57/57 tests passed in 28.47 seconds.
+- Linux GCC Debug focused codec, scripted journey, and orbit/surface replay:
+  3/3 passed.
+- Canonical scripted-journey and orbit/surface state and indexed-frame hashes
+  remain unchanged.
+- Normal cadence presents 817 orbit/surface frames; the 4x replay cadence
+  presents 205 while retaining identical checkpoints.
 
 ## Next step
 
-Begin M17-W05 by defining a versioned, platform-neutral input-record format
-around semantic `InputFrame` values and simulation tick numbers. First replay
-the existing scripted interstellar/local journey at multiple presentation
-cadences; only then extend recording across the blocking surface session.
+Begin M17-W06 by inventorying every compatibility pad and unbounded renderer or
+surface-map write. Add focused boundary tests before changing storage, then
+remove padding only where sanitizer and exact fixture evidence prove the new
+bounded operation preserves behavior.

@@ -371,7 +371,7 @@ or player-visible behavior.
 | M17-W02 | Establish application-owned engine state | DONE | `EngineState` owns transient travel phase/speed; live travel and audio telemetry migrated; focused state test |
 | M17-W03 | Inject filesystem/export platform boundaries | DONE | GOESnet image exports receive an explicit destination; fixture writes remain inside the test workspace |
 | M17-W04 | Introduce explicit application mode transitions | DONE | Tested legal-transition graph for cockpit, descent/ascent, surface, gallery, movie player, and shutdown; production surface-session RAII prevents stranded modes on early return; landing fixture asserts the four-transition round trip; modal viewers own open/close transitions |
-| M17-W05 | Add deterministic input recording and replay | PLANNED | Full orbit-to-surface replay independent of presentation cadence |
+| M17-W05 | Add deterministic input recording and replay | DONE | Versioned, bounded semantic `InputFrame` format; byte-stable codec and strict replay cursor; scripted space journey exact at 1×/4× presentation; recorded 783-frame orbit-to-surface session replays from a clean profile at 4× presentation with identical simulation, indexed-frame, and content checkpoints; see `INPUT_RECORDING.md` |
 | M17-W06 | Bound renderer and surface-map memory access | PLANNED | Remove compatibility padding only after exact fixture and sanitizer evidence |
 | M17-W07 | Migrate coherent save-backed state aggregates | PLANNED | Explicit adapters preserve native v1 and legacy import schemas |
 

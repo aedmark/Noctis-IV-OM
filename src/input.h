@@ -51,6 +51,8 @@ struct InputFrame {
     bool toggle_aspect_pressed     = false;
     bool toggle_upscale_pressed    = false;
     bool toggle_crt_pressed        = false;
+
+    bool operator==(const InputFrame &) const = default;
 };
 
 using InputProvider        = InputFrame (*)();

@@ -36,6 +36,7 @@ conversion of the Borland C++ code in `source/`.
 | [SESSION_HANDOFF.md](SESSION_HANDOFF.md) | Exact state needed to resume work in the next session | At the end of every working session |
 | [DECISIONS.md](DECISIONS.md) | Numbered architectural and project decisions | When a consequential choice is made or superseded |
 | [ENGINE_CONSOLIDATION.md](ENGINE_CONSOLIDATION.md) | M17 state ownership, platform seams, migration order, and invariants | During engine consolidation work |
+| [INPUT_RECORDING.md](INPUT_RECORDING.md) | M17-W05 semantic input format, validation, replay rules, and journey evidence | When input recording or replay behavior changes |
 
 The original DOS sources and executable remain the behavioral reference. They
 are not expected to become the production build.

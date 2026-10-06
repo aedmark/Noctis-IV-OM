@@ -1,4 +1,5 @@
 #include "input.h"
+#include "input_recording.h"
 #include "system_properties.h"
 #include "travel.h"
 
@@ -14,9 +15,10 @@
 namespace {
 
 std::array<std::uint8_t, sc_bytes> framebuffer{};
-noctis::InputFrame next_input;
+noctis::InputReplay *active_replay = nullptr;
+std::uint64_t active_tick          = 0;
 
-noctis::InputFrame scripted_input() { return next_input; }
+noctis::InputFrame replayed_input() { return active_replay->frame_for_tick(active_tick); }
 
 } // namespace
 
@@ -70,6 +72,8 @@ struct Checkpoint {
 struct JourneyResult {
     JourneyState final_state;
     std::array<Checkpoint, 4> checkpoints{};
+    bool replay_complete     = false;
+    bool replay_missed_input = false;
 };
 
 void hash_bytes(std::uint64_t &hash, const void *data, std::size_t size) {
@@ -165,11 +169,18 @@ void consume_power(JourneyState &state, std::int16_t cost) {
     }
 }
 
-void send_scripted_key(char key) {
-    next_input      = {};
-    next_input.text = {key};
-    handle_input();
-    next_input = {};
+noctis::InputRecording make_journey_recording() {
+    noctis::InputRecording recording;
+    const auto append_key = [&recording](std::uint64_t tick, char key) {
+        noctis::InputFrame frame;
+        frame.text = {key};
+        return noctis::append_input_frame(recording, tick, frame);
+    };
+    if (!append_key(0, 'r') || !append_key(1, '6') || !append_key(2, '7') || !append_key(399, '8') ||
+        !append_key(400, '8')) {
+        return {};
+    }
+    return recording;
 }
 
 void process_scripted_command(JourneyState &state) {
@@ -199,28 +210,18 @@ void process_scripted_command(JourneyState &state) {
     }
 }
 
-JourneyResult run_journey(int presentation_interval) {
+JourneyResult run_journey(const noctis::InputRecording &recording, int presentation_interval) {
     JourneyResult result;
     auto &state                  = result.final_state;
     std::size_t checkpoint_index = 0;
+    noctis::InputReplay replay(recording);
+    active_replay = &replay;
     noctis::reset_input_state();
-    noctis::set_input_provider(scripted_input);
+    noctis::set_input_provider(replayed_input);
 
     while (state.stage != JourneyStage::local_arrived && state.simulation_tick < 2000) {
-        if (state.simulation_tick == 0) {
-            send_scripted_key('r');
-        } else if (state.simulation_tick == 1) {
-            send_scripted_key('6');
-        } else if (state.simulation_tick == 2) {
-            send_scripted_key('7');
-        } else if (state.stage == JourneyStage::remote_arrived) {
-            send_scripted_key('8');
-        } else if (state.stage == JourneyStage::local_selected) {
-            send_scripted_key('8');
-        } else {
-            next_input = {};
-            handle_input();
-        }
+        active_tick = static_cast<std::uint64_t>(state.simulation_tick);
+        handle_input();
         process_scripted_command(state);
 
         if ((state.stage == JourneyStage::remote_selected || state.stage == JourneyStage::local_selected) &&
@@ -256,8 +257,11 @@ JourneyResult run_journey(int presentation_interval) {
         ++state.simulation_tick;
     }
 
+    result.replay_complete     = replay.complete();
+    result.replay_missed_input = replay.missed_input();
     noctis::reset_input_provider();
     noctis::reset_input_state();
+    active_replay = nullptr;
     return result;
 }
 
@@ -284,8 +288,15 @@ void print_result(const JourneyResult &result) {
 } // namespace
 
 int main() {
-    const auto every_frame        = run_journey(1);
-    const auto every_fourth_frame = run_journey(4);
+    const auto source_recording = make_journey_recording();
+    const auto encoded          = noctis::encode_input_recording(source_recording);
+    noctis::InputRecording recording;
+    const auto decoded = noctis::decode_input_recording(encoded, recording);
+    if (!decoded || noctis::encode_input_recording(recording) != encoded) {
+        return 1;
+    }
+    const auto every_frame        = run_journey(recording, 1);
+    const auto every_fourth_frame = run_journey(recording, 4);
     constexpr std::array<Checkpoint, 4> expected_checkpoints{{
         {JourneyStage::remote_selected, 1, UINT64_C(0x13c978f4805771f8), UINT64_C(0x1737cdd80c6f921d), 576},
         {JourneyStage::remote_arrived, 398, UINT64_C(0xcdf5411db5d9f60d), UINT64_C(0x5b8269d030b8f9b3), 2253},
@@ -293,6 +304,8 @@ int main() {
         {JourneyStage::local_arrived, 792, UINT64_C(0x0502685c30c189ac), UINT64_C(0x30629965a585364d), 6844},
     }};
     bool ok = same_result(every_frame, every_fourth_frame);
+    ok &= every_frame.replay_complete && !every_frame.replay_missed_input;
+    ok &= every_fourth_frame.replay_complete && !every_fourth_frame.replay_missed_input;
     ok &= every_frame.checkpoints == expected_checkpoints;
     ok &= every_frame.final_state.stage == JourneyStage::local_arrived;
     ok &= every_frame.final_state.remote_steps == 397;

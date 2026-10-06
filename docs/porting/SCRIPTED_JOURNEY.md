@@ -25,9 +25,12 @@ steps, 393 local steps, 19,788 kilodyams, and 117 remaining charges. The count
 includes each leg's final arrival-check tick, whereas M3-W05 reports the
 zero-based loop index as 396 and 392.
 
-The script is replayed while presentation work runs every simulation tick and
-again while it runs every fourth tick. State and checkpoint frames must remain
-identical. Clang, GCC, and Clang ASan/UBSan agree on all exact values.
+Since M17-W05, the five tick-indexed events are encoded to the versioned
+semantic input-recording format and decoded before the journey starts. The
+decoded recording is replayed while presentation work runs every simulation
+tick and again while it runs every fourth tick. Replay must consume every event
+without a missed tick, and state and checkpoint frames must remain identical.
+Clang, GCC, and Clang ASan/UBSan agree on all exact values.
 
 ## Visual comparison level
 

@@ -57,6 +57,7 @@ set(SOURCE_FILES
     src/simulation_clock.cpp
     src/engine_state.cpp
     src/input.cpp
+    src/input_recording.cpp
     src/indexed_framebuffer.cpp
     src/travel.cpp
     src/native_save.cpp
@@ -450,13 +451,21 @@ if(BUILD_TESTING)
     add_test(NAME travel_fixture COMMAND travel_fixture_tests)
 
     add_executable(scripted_journey_tests tests/scripted_journey_test.cpp
-        src/input.cpp src/controls_config.cpp src/gamepad.cpp src/travel.cpp src/system_properties.cpp src/legacy_numeric.cpp src/brtl.cpp)
+        src/input.cpp src/input_recording.cpp src/atomic_file.cpp src/controls_config.cpp src/gamepad.cpp
+        src/travel.cpp src/system_properties.cpp src/legacy_numeric.cpp src/brtl.cpp)
     nivlr_require_strict_fp(scripted_journey_tests)
     target_include_directories(scripted_journey_tests PRIVATE src)
     target_compile_features(scripted_journey_tests PRIVATE cxx_std_20)
     set_target_properties(scripted_journey_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
     target_link_libraries(scripted_journey_tests PRIVATE raylib glm::glm)
     add_test(NAME scripted_journey COMMAND scripted_journey_tests)
+
+    add_executable(input_recording_tests tests/input_recording_test.cpp src/input_recording.cpp src/atomic_file.cpp)
+    target_include_directories(input_recording_tests PRIVATE src)
+    target_compile_features(input_recording_tests PRIVATE cxx_std_20)
+    set_target_properties(input_recording_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME input_recording COMMAND input_recording_tests
+        ${CMAKE_CURRENT_BINARY_DIR}/input-recording-test.nirp)
 
     set(NIVLR_SURFACE_FIXTURES ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/native_surfaces.tsv)
     set(NIVLR_ENVIRONMENT_FIXTURES ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/native_environments.tsv)
