@@ -330,7 +330,7 @@ containers, not substitutes for that ledger.
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
 | M15-W01 | Authentic ambient exploration music integration | DONE | Multi-format playlist scanner and audio stream player (`src/music.h`, `src/music.cpp`) supporting `.ogg`, `.mp3`, `.wav`, `.flac`, `.xm`, `.mod`, auto-progression, next/prev skip (`N`/`P`), and graceful headless fallback; verified in `tests/audio_test.cpp` |
-| M15-W02 | Procedural generative ambient drone synthesizer | DONE | 5-voice procedural ambient harmonic drone synthesizer integrated directly in `audio_stream_callback` (`src/audio.cpp`) with 12 stellar spectral class root pitches (Sol A1 55Hz to Pulsar F#1 46.25Hz with 6Hz tremolo, void C1 32.7Hz), cryogenic/volcanic SVF filter response, and incommensurate LFO drift |
+| M15-W02 | Procedural generative ambient melody & chord synthesizer | DONE | 4-voice procedural generative synthesizer in `audio_stream_callback` (`src/audio.cpp`): foundation bass pad, stereo chorused chord pad (14s progression), generative melodic chime with slow scaling modal arpeggios (2.4s steps, bell envelope decay, ping-pong pan), celestial glass shimmer, 12 stellar modal scales, pulsar tremolo, and noise-free clean audio bus |
 | M15-W03 | Music volume controls & playlist preferences overlay | DONE | Dedicated 6th audio channel `MUSIC` in F2 menu and high-DPI overlay (`src/display.cpp`), playback mode toggle (`G` key / interactive button: `GENERATIVE`, `RECORDED`, `HYBRID`, `OFF`), and persistent storage in `config.ini` / `audio_settings.ini`; verified in `tests/audio_test.cpp` and `tests/plus_presentation_test.cpp` |
 
 **Exit criteria**

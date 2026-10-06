@@ -5,6 +5,38 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 3.0.0 (2026-10-05) — The Atmospheric, Cinematic & Ambient Soundscape Release
+
+### Features & Polish
+* **Atmospheric Scattering & Horizon Visual Fidelity (M13):**
+  * Physically based Rayleigh & Mie dual-exponential atmospheric scattering with ozone Chappuis absorption layer and day/night planetary terminator shading.
+  * Distance-based exponential atmospheric haze seamlessly blending distant terrain into horizon sky gradients.
+  * Eddington quadratic limb darkening ($1 - u(1-\mu) - v(1-\mu)^2$) for 3D volumetric spherical stellar incandescence.
+  * Procedural multi-harmonic coronal streamer synthesis, relativistic twin-jets for pulsars, and coronal mass ejection (CME) flare arcs.
+  * Planckian blackbody spectral color grading across all 12 stellar classes.
+  * Coronal flare modes: AUTHENTIC, REALISTIC, VIBRANT with <kbd>F2</kbd> + <kbd>E</kbd> toggle and persistence in `display_settings.ini`.
+* **Moviemaker Modernization & Direct Media Export (M14):**
+  * Direct Moviemaker video export to WebM (VP8/VP9) / MP4 format.
+  * In-cockpit video projector deck preview rendering recorded reels onto the bulkhead display screen.
+  * Browser in-memory canvas WebM recording with one-click download.
+  * Lossless PNG screenshot export from Image Archive viewer (<kbd>F4</kbd> + <kbd>D</kbd>) with format toggle (TARGA/PNG) and auto-export on shutter capture.
+* **Ambient Music & Generative Soundscapes (M15):**
+  * Multi-format ambient music streaming engine supporting OGG, MP3, WAV, FLAC, XM, and MOD files with shuffle, loop, and track skip (<kbd>N</kbd> / <kbd>P</kbd>).
+  * 4-Voice Procedural Generative Ambient Synthesizer:
+    * Voice 1: Foundation Bass Pad (pedal tone with warm analog 2nd harmonic).
+    * Voice 2: Ethereal Chord Pad (stereo chorus detuning, 4-chord progressions evolving every 14s, responsive SVF filtering).
+    * Voice 3: Generative Melodic Chime (8-step modal arpeggios advancing every 2.4s, acoustic bell envelope decay, alternating stereo pan).
+    * Voice 4: Celestial Glass Shimmer (high starlight crystal accents blooming on chord transitions).
+  * 12 Celestial Modal Scales mapped to all stellar spectral classes plus deep interstellar void sub-bass meditation ($32.7\,\text{Hz}$ $C_1$).
+  * Elimination of pink noise / amp noise hiss from the music bus; master output protected by soft limiter (`tanh`).
+  * Dedicated 6-channel audio mixer (Master, Music, Cabin, Propulsion, Weather, Foley) in <kbd>F2</kbd> menu with step controls and INI persistence.
+  * Procedural audio mute toggle (<kbd>F9</kbd> / <kbd>Ctrl+M</kbd>).
+* **Suit Torch Overhaul:**
+  * Perspective inverse-square distance attenuation: foreground ground is illuminated brightly while distant mountains and horizon terrain $\ge 1\,\text{km}$ away receive strictly 0.0 light.
+  * Multiplicative albedo scaling with warm $4200\,\text{K}$ halogen tint and filmic soft-knee highlight compression (`tanh`), eliminating washed-out bleaching.
+* **100% Determinism & Test Suite Coverage:**
+  * All 55 test suites pass across Linux and Windows with 100% determinism.
+
 ## 2.1.0 (2026-10-05) — Starmap Exchange & Community Cartography
 
 ### Features

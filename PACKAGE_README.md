@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 2.1.0 Release
+# Noctis IV OM — Linux 3.0.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 2.1.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 3.0.0 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -73,31 +73,32 @@ building the game from source.
 - **Upscaling:** Press `F7` to cycle upscaling mode (Crisp Pixel 1x, Scale2x Edge-Directed, Smooth Bilinear).
 - **CRT Shader:** Press `F6` to toggle vintage monitor CRT simulation (scanlines, aperture grille, barrel curve, bloom).
 - **Sub-Pixel Fidelity:** Press `F2` then `G` to toggle sub-pixel geometry rasterization and antialiased stars, eliminating 3D mesh wobble and jitter.
-- **Settings Persistence:** Display aspect ratios, upscale filters, CRT shader, sub-pixel fidelity, fullscreen, and timewarp settings persist across launches in `display_settings.ini`.
+- **Coronal Flares & Limb Darkening:** Press `F2` then `E` to cycle stellar coronal flares (AUTHENTIC, REALISTIC, VIBRANT). Realistic limb darkening and Planckian color grading across all 12 stellar classes.
+- **Settings Persistence:** Display aspect ratios, upscale filters, CRT shader, sub-pixel fidelity, coronal flares, fullscreen, and timewarp settings persist across launches in `display_settings.ini`.
 - **Timewarp & Timelapse:** Press `T` or `Shift+S` (in space or on planetary surfaces) to toggle timewarp. Press `[` / `]` or drag the on-screen HUD slider to adjust the simulation rate (1x to 5000x).
-- **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp.
+- **Suit Torch:** Press `L` while exploring planetary surfaces to toggle headlamp. Features distance attenuation fading out before distant horizon mountains and soft highlight compression.
 - **Suit Visor:** Press `Page Up` / `Page Down` to raise/lower helmet visor.
 - **Waypoint Bookmarks & Starmap:** Press `J` in cockpit to jump directly to GOESnet bookmarks (`BM`). Press `J` while exploring a planetary surface to drop an instant GPS surface waypoint.
 - **Explorer's Visor HUD:** Press `V` on planetary surfaces to cycle Visor telemetry (Standard, Explorer Telemetry with 360° cardinal compass tape, digital heading, planetary coordinates/elevation, and Lander Return Beacon range/direction, or Minimal).
 - **Controls & Gamepad Menu:** Press `F2` then `Tab` or `C` to open Controls Options. View gamepad connection status, toggle mouse pitch inversion (`I`), toggle haptic rumble (`R`), or adjust sensitivity and deadzones. Settings persist in `controls.ini`.
 - **Gamepad Flight & Traversal:** Dual-stick analog movement and camera look with deadzone filtering. Left/Right triggers (`LT`/`RT`) accelerate/decelerate; bumpers (`LB`/`RB`) roll ship or boost jetpack; `B` button safely cancels/deselects without quitting. Dual-motor rumble for thrusters, atmospheric buffeting, and landing.
-- **Image Archive Export:** Press `F4` to open the Image Archive Viewer, then press `D` to export the current snapshot or panorama directly to your Downloads folder.
-- **Audio Volume & Categories:** Press `F2` then `Tab` or `A` to open Audio Options. Use `1`–`5` to switch category (Master, Flight/RCS, Cockpit Foley, Visor/Suit, Surface/Environment), `+` / `-` to step volume, or click/drag the on-screen slider. Volumes persist across launches in `config.ini`.
+- **Image Archive & PNG Export:** Press `F4` to open the Image Archive Viewer. Press `F4` to cycle export format (TARGA/PNG) and press `D` to export the snapshot or panorama directly to your Downloads folder.
+- **Moviemaker Video Export:** Record in-flight movie decks and export directly to WebM/MP4 video files. Preview recorded movie reels on the cockpit bulkhead screen.
+- **Ambient Music & Generative Soundscapes:** Press `F2` then `Tab` or `A` to open Audio Options. Press `G` to cycle music mode (GENERATIVE, RECORDED, HYBRID, OFF); press `N` / `P` to skip tracks. Features a 4-voice procedural generative melody and chord synthesizer tailored to all 12 stellar classes.
+- **Audio Volume & Categories:** 6-channel mixer (Master, Music, Cabin, Propulsion, Weather, Foley). Use `1`–`6` to select category, `+` / `-` to step volume, or click/drag sliders. Volumes persist in `config.ini`.
 - **Audio Mute:** Press `F9` or `Ctrl+M` (or `M` in Audio Options) to toggle procedural audio mute.
 - **Cursor Unlock & Screenshots:** Press `F10` to unlock/lock mouse cursor. Unlocking immediately freezes camera and player movement with zero drift or inertia, ideal for external screenshot utilities.
 - **Jetpack:** Press `Space` to burst thrusters while airborne on low-gravity worlds.
 
 ## Release status
 
-This is the 2.1.0 Feature Release (The Starmap Exchange & Community Cartography Update),
-introducing shareable binary (`.nsm`) and JSON starmap packets, native CRC32 payload checksums,
-rigorous astronomical validation and canonical seed protection, collision resolution,
-onboard GOESnet commands (`OUTBOX`, `INBOX`, `CLEAN`), CLI starmap management flags,
-and web browser starmap download/upload, alongside browser IndexedDB storage reset functionality,
-automated exploration journal logging (`LOG`) with Markdown/JSON export, seamless celestial
-naming persistence across sessions in `STARMAP.BIN` and `GUIDE.BIN`, starmap personal bookmark
-and waypoint navigation (`BM`), and the surface Explorer's Visor with real-time compass telemetry,
-coordinates, and Lander Return Beacon guidance.
+This is the 3.0.0 Major Feature Release (The Atmospheric, Cinematic & Ambient Soundscape Release),
+introducing physically based Rayleigh and Mie dual-exponential atmospheric scattering with ozone absorption
+and day/night terminator transitions, stellar coronal flares with limb darkening and spectral color grading,
+direct Moviemaker video export and in-cockpit bulkhead movie reel preview, direct lossless PNG screenshot export,
+an ambient exploration music player, a 4-voice generative ambient soundscape synthesizer with celestial modal scales,
+and realistic suit flashlight distance attenuation. Includes shareable binary (`.nsm`) and JSON starmap packets,
+automated exploration journal logging (`LOG`), persistent celestial naming, waypoint bookmarks (`BM`), and the surface Explorer's Visor.
 Please keep the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

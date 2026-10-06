@@ -6,8 +6,8 @@ Replace this document at the end of every session; Git holds older versions.
 
 - Date: 2026-10-05.
 - Repository: local `Noctis-IV-OM`, remote project `aedmark/Noctis-IV-OM`.
-- Branch: `master`; Milestone M16-W03 (Starmap Sharing & Invalidation Engine) complete.
-- Status: Release 2.1.0 (The Starmap Exchange & Community Cartography Update) packaged, tagged, and published.
+- Branch: `master`; Milestones M13, M14, and M15 complete.
+- Status: Release 3.0.0 (The Atmospheric, Cinematic & Ambient Soundscape Release) packaged, verified, and ready for distribution.
 - Public-facing progress recorded in `devlog.html`.
 
 ## Read first
