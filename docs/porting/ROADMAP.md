@@ -361,6 +361,8 @@ platform-service boundaries. The offline exchange layer remains supported.
 
 ## M17 — Engine Consolidation & Runtime Architecture
 
+**Status: COMPLETE (exit audit passed 2026-10-06; see `M17_EXIT_AUDIT.md`)**
+
 **Goal:** Give the completed engine an explicit state root, testable platform
 boundaries, and staged application lifecycle without changing universe identity
 or player-visible behavior.

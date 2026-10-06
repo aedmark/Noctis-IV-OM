@@ -39,6 +39,7 @@ conversion of the Borland C++ code in `source/`.
 | [INPUT_RECORDING.md](INPUT_RECORDING.md) | M17-W05 semantic input format, validation, replay rules, and journey evidence | When input recording or replay behavior changes |
 | [RENDERER_BOUNDS.md](RENDERER_BOUNDS.md) | M17-W06 framebuffer/texture bounds, removed padding, surface repair, and sanitizer evidence | When renderer or surface-map memory access changes |
 | [SAVE_STATE_AGGREGATES.md](SAVE_STATE_AGGREGATES.md) | M17-W07 engine-owned persistent aggregates, flat-schema adapters, and byte-compatibility evidence | When save-backed runtime ownership changes |
+| [M17_EXIT_AUDIT.md](M17_EXIT_AUDIT.md) | Final M17 criterion audit, verification matrix, and milestone disposition | When reviewing or extending the consolidated engine architecture |
 
 The original DOS sources and executable remain the behavioral reference. They
 are not expected to become the production build.

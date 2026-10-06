@@ -7,18 +7,17 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-06.
 - Repository: local `Noctis-IV-OM`; branch `master`.
 - Active milestone: M17, Engine Consolidation & Runtime Architecture.
-- Published checkpoint: M17-W07 in this commit; M17 work items complete and
-  the milestone exit audit is next.
+- Published checkpoint: M17 exit audit in this commit; milestone complete.
 - Working tree: clean after the W07 commit.
 
 ## Read first
 
 1. `ENGINE_CONSOLIDATION.md` for M17 rules, sequencing, and invariants.
-2. `SAVE_STATE_AGGREGATES.md` for the W07 ownership and persistence boundary.
+2. `M17_EXIT_AUDIT.md` for final criterion and verification evidence.
 3. M17 in `ROADMAP.md` for work-item status and exit criteria.
 4. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
 
-## M17 completed through W07
+## M17 complete
 
 - `EngineState` owns transient travel phase and normalized speed.
 - GOESnet image exports receive an explicit destination instead of discovering
@@ -40,6 +39,8 @@ Replace this document at the end of every session; Git holds older versions.
   GOESnet command buffer, command cursor, and output scroll offset.
 - Explicit capture/restore adapters preserve the existing flat native v1
   fields and all legacy normalization paths without a schema-version change.
+- The exit audit passes all six roadmap criteria with direct code and fixture
+  evidence; no deferred M17 blocker remains.
 
 ## Verification
 
@@ -57,7 +58,7 @@ Replace this document at the end of every session; Git holds older versions.
 
 ## Next step
 
-Run the M17 exit audit against its six exit criteria, then record the next
-milestone before beginning further engine extraction. The next safe persistent
-candidate is the compact FCS status aggregate, but it should move only with its
-HUD mutation paths and the same native/legacy adapter evidence used by W07.
+Prepare the post-M17 release: select the next semantic version, update release
+notes and package copy, build and verify Linux/Windows/Web artifacts, refresh
+the hosted browser bundle and website download links, then publish only from a
+clean tagged commit.

@@ -1,6 +1,6 @@
 # M17 engine consolidation
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 ## Purpose
 
@@ -107,6 +107,9 @@ use exact allocations rather than compatibility padding. See
 - No work item is complete without focused tests and the full native lane.
 - Refactoring does not silently alter a legacy quirk; intentional changes need
   a decision record and new acceptance evidence.
+
+M17 closed on 2026-10-06 after all work items and exit criteria passed. The
+criterion-by-criterion evidence is recorded in `M17_EXIT_AUDIT.md`.
 
 ## First-slice evidence
 
