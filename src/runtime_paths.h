@@ -28,6 +28,7 @@ struct RuntimePaths {
     std::filesystem::path data_dir;
     std::filesystem::path gallery_dir;
     std::filesystem::path movies_dir;
+    std::filesystem::path music_dir;
     std::filesystem::path config_dir;
     std::filesystem::path migration_source;
 };

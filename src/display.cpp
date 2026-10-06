@@ -1,5 +1,6 @@
 #include "display.h"
 #include "audio.h"
+#include "music.h"
 #include "runtime_paths.h"
 #include "simulation_clock.h"
 #include "noctis-d.h"
@@ -442,7 +443,7 @@ void render_volume_slider_overlay(int render_width, int render_height, const Dis
     const float scale       = static_cast<float>(font_size) / 16.0f;
     const int tab_font_size = std::max(10, static_cast<int>(font_size * 0.82f));
 
-    const float widget_w  = std::clamp(490.0f * scale, 340.0f, viewport.width * 0.94f);
+    const float widget_w  = std::clamp(540.0f * scale, 360.0f, viewport.width * 0.94f);
     const float row1_h    = 22.0f * scale;
     const float row2_h    = 30.0f * scale;
     const float padding_y = 6.0f * scale;
@@ -481,10 +482,10 @@ void render_volume_slider_overlay(int render_width, int render_height, const Dis
     const float tab_gap    = 4.0f * scale;
     const float pad_x      = 10.0f * scale;
     const float tabs_w     = widget_w - pad_x * 2.0f - mute_btn_w - 8.0f * scale;
-    const float tab_w      = (tabs_w - tab_gap * 4.0f) / 5.0f;
+    const float tab_w      = (tabs_w - tab_gap * 5.0f) / 6.0f;
     const float tab_h      = row1_h;
 
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 6; ++i) {
         const AudioCategory cat = static_cast<AudioCategory>(i);
         const bool selected     = (cat == cur_cat);
         const float tab_x       = widget_x + pad_x + i * (tab_w + tab_gap);
@@ -539,7 +540,7 @@ void render_volume_slider_overlay(int render_width, int render_height, const Dis
     }
 
     // -------------------------------------------------------------
-    // Row 2: Selected Category Volume Slider
+    // Row 2: Selected Category Volume Slider & Controls
     // -------------------------------------------------------------
     const float row2_y = row1_y + row1_h + 4.0f * scale;
 
@@ -570,9 +571,10 @@ void render_volume_slider_overlay(int render_width, int render_height, const Dis
              Color{220, 240, 255, 230});
 
     // Step button [+] & Percentage text placement
-    const float text_val_w = 54.0f * scale;
+    const float text_val_w = 48.0f * scale;
+    const float mode_reserve_w = (cur_cat == AudioCategory::music) ? (100.0f * scale) : 0.0f;
     const float track_x    = btn_dec_x + btn_w + 8.0f * scale;
-    const float track_w    = std::max(60.0f, widget_x + widget_w - pad_x - text_val_w - btn_w - 12.0f * scale - track_x);
+    const float track_w    = std::max(60.0f, widget_x + widget_w - pad_x - text_val_w - btn_w - 12.0f * scale - mode_reserve_w - track_x);
     const float track_h    = 6.0f * scale;
     const float track_y    = row2_y + (row2_h - track_h) * 0.5f;
 
@@ -606,6 +608,26 @@ void render_volume_slider_overlay(int render_width, int render_height, const Dis
     DrawCircle(static_cast<int>(knob_cx), static_cast<int>(knob_cy), knob_r,
                muted ? Color{160, 160, 160, 200} : Color{0, 230, 240, 255});
     DrawCircle(static_cast<int>(knob_cx), static_cast<int>(knob_cy), knob_r * 0.45f, Color{255, 255, 255, 255});
+
+    // Music Mode Button (when MUSIC category is selected)
+    if (cur_cat == AudioCategory::music) {
+        const float mode_btn_w = 92.0f * scale;
+        const float mode_btn_x = val_text_x + text_val_w + 6.0f * scale;
+        const Rectangle mode_rec{mode_btn_x, btn_y, mode_btn_w, btn_h};
+        DrawRectangleRounded(mode_rec, 0.3f, 4, Color{20, 42, 60, 200});
+        DrawRectangleRoundedLines(mode_rec, 0.3f, 4, Color{0, 210, 240, 170});
+        const char *mname = music_mode_name(get_music_mode());
+        const int mtext_w = MeasureText(mname, tab_font_size);
+        DrawText(mname, static_cast<int>(mode_btn_x + (mode_btn_w - mtext_w) * 0.5f),
+                 static_cast<int>(btn_y + (btn_h - tab_font_size) * 0.5f), tab_font_size, Color{0, 240, 255, 245});
+
+        if (mouse_pressed && CheckCollisionPointRec(mouse, mode_rec)) {
+            cycle_music_mode();
+            touch_volume_slider();
+            play_cockpit_button();
+            save_audio_settings(runtime_paths().config_dir);
+        }
+    }
 
     // Row 2 interaction
     const Rectangle track_hitbox{track_x - 8.0f, row2_y, track_w + 16.0f, row2_h};

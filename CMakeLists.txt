@@ -67,6 +67,7 @@ set(SOURCE_FILES
     src/gamepad.cpp
     src/plus_presentation.cpp
     src/audio.cpp
+    src/music.cpp
     src/display.cpp
     src/atmospheric_scattering.cpp
     src/stellar_coronal_flares.cpp
@@ -270,7 +271,7 @@ if(BUILD_TESTING)
     target_compile_features(plus_presentation_tests PRIVATE cxx_std_20)
     set_target_properties(plus_presentation_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
     add_test(NAME plus_presentation COMMAND plus_presentation_tests)
-    add_executable(audio_tests tests/audio_test.cpp src/audio.cpp src/gamepad.cpp src/controls_config.cpp)
+    add_executable(audio_tests tests/audio_test.cpp src/audio.cpp src/music.cpp src/gamepad.cpp src/controls_config.cpp)
     target_include_directories(audio_tests PRIVATE src)
     target_compile_features(audio_tests PRIVATE cxx_std_20)
     set_target_properties(audio_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
@@ -279,7 +280,7 @@ if(BUILD_TESTING)
         target_link_libraries(audio_tests PRIVATE shell32 ole32)
     endif()
     add_test(NAME audio_determinism COMMAND audio_tests)
-    add_executable(display_tests tests/display_test.cpp src/display.cpp src/atmospheric_scattering.cpp src/stellar_coronal_flares.cpp src/simulation_clock.cpp src/upscale.cpp src/audio.cpp src/gamepad.cpp src/controls_config.cpp src/runtime_paths.cpp)
+    add_executable(display_tests tests/display_test.cpp src/display.cpp src/atmospheric_scattering.cpp src/stellar_coronal_flares.cpp src/simulation_clock.cpp src/upscale.cpp src/audio.cpp src/music.cpp src/gamepad.cpp src/controls_config.cpp src/runtime_paths.cpp)
     target_include_directories(display_tests PRIVATE src)
     target_compile_features(display_tests PRIVATE cxx_std_20)
     set_target_properties(display_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)

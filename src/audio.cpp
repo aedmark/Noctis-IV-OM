@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "gamepad.h"
+#include "music.h"
 
 #include <raylib.h>
 
@@ -93,6 +94,7 @@ Wave make_procedural_wave(int sample_count, const std::function<float(int, float
 bool g_audio_ready = false;
 std::atomic<bool> g_muted{false};
 std::atomic<float> g_master_volume{0.80f};
+std::atomic<float> g_music_volume{0.75f};
 std::atomic<float> g_cabin_volume{1.00f};
 std::atomic<float> g_propulsion_volume{1.00f};
 std::atomic<float> g_weather_volume{1.00f};
@@ -153,6 +155,12 @@ struct SynthesizerState {
     StateVariableFilter filter_suit_vent_l{};
     StateVariableFilter filter_suit_vent_r{};
 
+    // Procedural Generative Ambient Drone Synthesizer (M15-W02)
+    StateVariableFilter filter_drone_l{};
+    StateVariableFilter filter_drone_r{};
+    StateVariableFilter filter_drone_shimmer_l{};
+    StateVariableFilter filter_drone_shimmer_r{};
+
     // Oscillators phase accumulators
     float phase_cabin_sub = 0.0f;
     float phase_cabin_f1  = 0.0f;
@@ -169,12 +177,26 @@ struct SynthesizerState {
 
     float phase_suit_hum = 0.0f;
 
+    // Generative Drone Oscillators
+    float phase_drone_sub     = 0.0f;
+    float phase_drone_root    = 0.0f;
+    float phase_drone_fifth   = 0.0f;
+    float phase_drone_octave  = 0.0f;
+    float phase_drone_shimmer = 0.0f;
+    float phase_pulsar        = 0.0f;
+
     // LFOs
     float lfo_cabin    = 0.0f;
     float lfo_gust_1   = 0.0f;
     float lfo_gust_2   = 0.0f;
     float lfo_roof_pan = 0.0f;
     float lfo_buffet   = 0.0f;
+
+    // Generative Drone LFOs
+    float lfo_drone_a       = 0.0f;
+    float lfo_drone_b       = 0.0f;
+    float lfo_drone_c       = 0.0f;
+    float lfo_drone_shimmer = 0.0f;
 
     // Arrival / deceleration spool-down
     bool was_travel_active = false;
@@ -196,6 +218,13 @@ struct SynthesizerState {
     float cur_cabin_vol_gain   = 1.0f;
     float cur_prop_vol_gain    = 1.0f;
     float cur_weather_vol_gain = 1.0f;
+    float cur_music_vol_gain   = 0.75f;
+
+    float cur_drone_root_freq    = 55.0f;
+    float cur_drone_gain         = 0.0f;
+    float cur_drone_cutoff       = 450.0f;
+    float cur_drone_res          = 1.0f;
+    float cur_drone_shimmer_gain = 0.0f;
 };
 
 SynthesizerState g_synth{};
@@ -217,6 +246,7 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
     const float target_cabin_vol   = g_cabin_volume.load(std::memory_order_relaxed);
     const float target_prop_vol    = g_propulsion_volume.load(std::memory_order_relaxed);
     const float target_weather_vol = g_weather_volume.load(std::memory_order_relaxed);
+    const float target_music_vol   = g_music_volume.load(std::memory_order_relaxed);
 
     constexpr float dt                  = 1.0f / static_cast<float>(AUDIO_SAMPLE_RATE);
     constexpr float smooth_k            = 0.003f; // Parameter smoothing speed per sample
@@ -293,6 +323,7 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         g_synth.cur_cabin_vol_gain += smooth_k * (target_cabin_vol - g_synth.cur_cabin_vol_gain);
         g_synth.cur_prop_vol_gain += smooth_k * (target_prop_vol - g_synth.cur_prop_vol_gain);
         g_synth.cur_weather_vol_gain += smooth_k * (target_weather_vol - g_synth.cur_weather_vol_gain);
+        g_synth.cur_music_vol_gain += smooth_k * (target_music_vol - g_synth.cur_music_vol_gain);
 
         // Advance LFOs
         g_synth.lfo_cabin += TWO_PI * 0.04f * dt; // Slow 25s life-support cycle
@@ -581,7 +612,149 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         }
 
         // -----------------------------------------------------------------
-        // 7. Category Volume Gains, Final Stereo Mix & Soft Limiter
+        // 7. Procedural Generative Ambient Drone Synthesizer (M15-W02)
+        // -----------------------------------------------------------------
+        float drone_l = 0.0f;
+        float drone_r = 0.0f;
+
+        // Advance drone LFOs
+        g_synth.lfo_drone_a += TWO_PI * (1.0f / 23.4f) * dt;
+        if (g_synth.lfo_drone_a >= TWO_PI) g_synth.lfo_drone_a -= TWO_PI;
+        g_synth.lfo_drone_b += TWO_PI * (1.0f / 37.1f) * dt;
+        if (g_synth.lfo_drone_b >= TWO_PI) g_synth.lfo_drone_b -= TWO_PI;
+        g_synth.lfo_drone_c += TWO_PI * (1.0f / 53.8f) * dt;
+        if (g_synth.lfo_drone_c >= TWO_PI) g_synth.lfo_drone_c -= TWO_PI;
+        g_synth.lfo_drone_shimmer += TWO_PI * (1.0f / 16.2f) * dt;
+        if (g_synth.lfo_drone_shimmer >= TWO_PI) g_synth.lfo_drone_shimmer -= TWO_PI;
+
+        constexpr std::array<float, 12> STAR_ROOT_FREQS = {
+            55.00f,  // Class 0: Yellow Sol-like (A1)
+            73.42f,  // Class 1: Blue Giant (D2)
+            82.41f,  // Class 2: White Dwarf (E2)
+            36.71f,  // Class 3: Ancient Red Giant (D1)
+            43.65f,  // Class 4: Orange Giant (F1)
+            41.20f,  // Class 5: Brown Dwarf (E1)
+            32.70f,  // Class 6: Dead Gray Star (C1)
+            65.41f,  // Class 7: Blue Dwarf (C2)
+            48.99f,  // Class 8: Multiple System (G1)
+            58.27f,  // Class 9: Young Nebular (A#1)
+            38.89f,  // Class 10: Runaway Star (D#1)
+            46.25f   // Class 11: Pulsar (F#1)
+        };
+        int sc = std::clamp(snap.star_class, 0, 11);
+        float target_root = snap.in_star_system ? STAR_ROOT_FREQS[sc] : 32.70f;
+
+        float target_cutoff  = 450.0f;
+        float target_res     = 1.0f;
+        float target_shimmer = 0.08f;
+        if (snap.atmosphere_density > 0.05f) {
+            if (snap.planet_type == 2) { // Venusian dense
+                target_cutoff  = 170.0f;
+                target_res     = 1.15f;
+                target_shimmer = 0.03f;
+            } else if (snap.planet_type == 7 || snap.surface_biome == 1) { // Cryogenic / ice
+                target_cutoff  = 780.0f;
+                target_res     = 1.45f;
+                target_shimmer = 0.15f;
+            } else if (snap.planet_type == 3) { // Habitable
+                target_cutoff  = 520.0f;
+                target_res     = 0.95f;
+                target_shimmer = 0.09f;
+            } else { // Thin / Mars-like
+                target_cutoff  = 400.0f;
+                target_res     = 1.20f;
+                target_shimmer = 0.07f;
+            }
+        } else if (snap.on_surface) { // Airless rocky
+            target_cutoff  = 620.0f;
+            target_res     = 1.35f;
+            target_shimmer = 0.12f;
+        }
+
+        float target_drone = 0.0f;
+        const auto mmode = get_music_mode();
+        if (mmode == MusicPlaybackMode::generative) {
+            target_drone = snap.travel_active ? 0.18f : 0.35f;
+        } else if (mmode == MusicPlaybackMode::hybrid) {
+            if (is_music_stream_active()) {
+                target_drone = 0.09f;
+            } else {
+                target_drone = snap.travel_active ? 0.18f : 0.32f;
+            }
+        }
+
+        constexpr float drone_smooth_k = 0.0008f;
+        g_synth.cur_drone_root_freq += drone_smooth_k * (target_root - g_synth.cur_drone_root_freq);
+        g_synth.cur_drone_gain += smooth_k * (target_drone - g_synth.cur_drone_gain);
+        g_synth.cur_drone_cutoff += smooth_k * (target_cutoff - g_synth.cur_drone_cutoff);
+        g_synth.cur_drone_res += smooth_k * (target_res - g_synth.cur_drone_res);
+        g_synth.cur_drone_shimmer_gain += smooth_k * (target_shimmer - g_synth.cur_drone_shimmer_gain);
+
+        if (g_synth.cur_drone_gain > 0.001f) {
+            float root_f = g_synth.cur_drone_root_freq;
+            float detune = 0.30f * std::sin(g_synth.lfo_drone_c);
+
+            g_synth.phase_drone_sub += TWO_PI * (root_f * 0.5f) * dt;
+            if (g_synth.phase_drone_sub >= TWO_PI) g_synth.phase_drone_sub -= TWO_PI;
+
+            g_synth.phase_drone_root += TWO_PI * root_f * dt;
+            if (g_synth.phase_drone_root >= TWO_PI) g_synth.phase_drone_root -= TWO_PI;
+
+            g_synth.phase_drone_fifth += TWO_PI * (root_f * 1.5f + detune) * dt;
+            if (g_synth.phase_drone_fifth >= TWO_PI) g_synth.phase_drone_fifth -= TWO_PI;
+
+            g_synth.phase_drone_octave += TWO_PI * (root_f * 2.0f - detune * 0.5f) * dt;
+            if (g_synth.phase_drone_octave >= TWO_PI) g_synth.phase_drone_octave -= TWO_PI;
+
+            float partial_ratio = (sc % 2 == 0) ? 2.5f : 2.667f;
+            g_synth.phase_drone_shimmer += TWO_PI * (root_f * partial_ratio + detune) * dt;
+            if (g_synth.phase_drone_shimmer >= TWO_PI) g_synth.phase_drone_shimmer -= TWO_PI;
+
+            float lfo_a_mod = 0.65f + 0.35f * std::sin(g_synth.lfo_drone_a);
+            float lfo_b_mod = 0.60f + 0.40f * std::cos(g_synth.lfo_drone_b);
+            float pan_mod   = 0.20f * std::sin(g_synth.lfo_drone_a);
+
+            float v_sub    = std::sin(g_synth.phase_drone_sub) * 0.65f;
+            float v_root   = (std::sin(g_synth.phase_drone_root) + 0.20f * std::sin(g_synth.phase_drone_root * 2.0f)) * 0.55f;
+            float v_fifth  = std::sin(g_synth.phase_drone_fifth) * (0.40f * lfo_a_mod);
+            float v_octave = std::sin(g_synth.phase_drone_octave) * (0.30f * lfo_b_mod);
+            float v_part   = std::sin(g_synth.phase_drone_shimmer) * 0.20f;
+
+            float raw_drone_l = (v_sub + v_root) * 0.50f + v_fifth * (0.50f - pan_mod) + v_octave * (0.50f + pan_mod) + v_part * 0.40f;
+            float raw_drone_r = (v_sub + v_root) * 0.50f + v_fifth * (0.50f + pan_mod) + v_octave * (0.50f - pan_mod) + v_part * 0.60f;
+
+            float dl_low = 0.0f, dl_band = 0.0f, dl_high = 0.0f;
+            float dr_low = 0.0f, dr_band = 0.0f, dr_high = 0.0f;
+            g_synth.filter_drone_l.process(raw_drone_l, g_synth.cur_drone_cutoff, g_synth.cur_drone_res, AUDIO_SAMPLE_RATE, dl_low, dl_band, dl_high);
+            g_synth.filter_drone_r.process(raw_drone_r, g_synth.cur_drone_cutoff * 1.03f, g_synth.cur_drone_res, AUDIO_SAMPLE_RATE, dr_low, dr_band, dr_high);
+
+            drone_l = (dl_low * 0.75f + dl_band * 0.25f);
+            drone_r = (dr_low * 0.75f + dr_band * 0.25f);
+
+            if (g_synth.cur_drone_shimmer_gain > 0.001f) {
+                float s_noise_l = g_synth.noise_l.next_pink();
+                float s_noise_r = g_synth.noise_r.next_pink();
+                float sl_low = 0.0f, sl_band = 0.0f, sl_high = 0.0f;
+                float sr_low = 0.0f, sr_band = 0.0f, sr_high = 0.0f;
+                float shim_freq = std::clamp(root_f * 4.0f, 200.0f, 3200.0f);
+                g_synth.filter_drone_shimmer_l.process(s_noise_l, shim_freq, 2.5f, AUDIO_SAMPLE_RATE, sl_low, sl_band, sl_high);
+                g_synth.filter_drone_shimmer_r.process(s_noise_r, shim_freq * 1.05f, 2.5f, AUDIO_SAMPLE_RATE, sr_low, sr_band, sr_high);
+                float breath = 0.50f + 0.50f * std::sin(g_synth.lfo_drone_shimmer);
+                drone_l += sl_band * g_synth.cur_drone_shimmer_gain * breath;
+                drone_r += sr_band * g_synth.cur_drone_shimmer_gain * breath;
+            }
+
+            if (sc == 11) {
+                g_synth.phase_pulsar += TWO_PI * 6.0f * dt;
+                if (g_synth.phase_pulsar >= TWO_PI) g_synth.phase_pulsar -= TWO_PI;
+                float tremolo = 0.35f + 0.65f * (0.5f + 0.5f * std::sin(g_synth.phase_pulsar));
+                drone_l *= tremolo;
+                drone_r *= tremolo;
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 8. Category Volume Gains, Final Stereo Mix & Soft Limiter
         // -----------------------------------------------------------------
         float cabin_comp_l = (cabin_l * g_synth.cur_cabin_gain + roof_l * g_synth.cur_roof_gain) * g_synth.cur_cabin_vol_gain;
         float cabin_comp_r = (cabin_r * g_synth.cur_cabin_gain + roof_r * g_synth.cur_roof_gain) * g_synth.cur_cabin_vol_gain;
@@ -592,8 +765,11 @@ void audio_stream_callback(void *bufferData, unsigned int frames) {
         float weather_comp_l = surface_l * g_synth.cur_surface_gain * g_synth.cur_weather_vol_gain;
         float weather_comp_r = surface_r * g_synth.cur_surface_gain * g_synth.cur_weather_vol_gain;
 
-        float mix_l = (cabin_comp_l + prop_comp_l + weather_comp_l) * g_synth.cur_master_gain;
-        float mix_r = (cabin_comp_r + prop_comp_r + weather_comp_r) * g_synth.cur_master_gain;
+        float music_comp_l = drone_l * g_synth.cur_drone_gain * g_synth.cur_music_vol_gain;
+        float music_comp_r = drone_r * g_synth.cur_drone_gain * g_synth.cur_music_vol_gain;
+
+        float mix_l = (cabin_comp_l + prop_comp_l + weather_comp_l + music_comp_l) * g_synth.cur_master_gain;
+        float mix_r = (cabin_comp_r + prop_comp_r + weather_comp_r + music_comp_r) * g_synth.cur_master_gain;
 
         // Limiter
         out[i * 2 + 0] = std::tanh(mix_l);
@@ -1083,16 +1259,12 @@ float get_master_volume_level() {
 
 const char *audio_category_name(AudioCategory category) {
     switch (category) {
-    case AudioCategory::master:
-        return "MASTER";
-    case AudioCategory::cabin:
-        return "CABIN";
-    case AudioCategory::propulsion:
-        return "PROPULSION";
-    case AudioCategory::weather:
-        return "WEATHER";
-    case AudioCategory::foley:
-        return "FOLEY";
+    case AudioCategory::master:     return "MASTER";
+    case AudioCategory::music:      return "MUSIC";
+    case AudioCategory::cabin:      return "CABIN";
+    case AudioCategory::propulsion: return "PROPULSION";
+    case AudioCategory::weather:    return "WEATHER";
+    case AudioCategory::foley:      return "FOLEY";
     }
     return "UNKNOWN";
 }
@@ -1105,6 +1277,10 @@ void set_audio_category_volume(AudioCategory category, float volume) {
         if (g_audio_ready && IsAudioDeviceReady()) {
             SetMasterVolume(clamped);
         }
+        break;
+    case AudioCategory::music:
+        g_music_volume.store(clamped);
+        set_music_stream_volume(clamped);
         break;
     case AudioCategory::cabin:
         g_cabin_volume.store(clamped);
@@ -1125,16 +1301,12 @@ void set_audio_category_volume(AudioCategory category, float volume) {
 
 float get_audio_category_volume(AudioCategory category) {
     switch (category) {
-    case AudioCategory::master:
-        return g_master_volume.load();
-    case AudioCategory::cabin:
-        return g_cabin_volume.load();
-    case AudioCategory::propulsion:
-        return g_propulsion_volume.load();
-    case AudioCategory::weather:
-        return g_weather_volume.load();
-    case AudioCategory::foley:
-        return g_foley_volume.load();
+    case AudioCategory::master:     return g_master_volume.load();
+    case AudioCategory::music:      return g_music_volume.load();
+    case AudioCategory::cabin:      return g_cabin_volume.load();
+    case AudioCategory::propulsion: return g_propulsion_volume.load();
+    case AudioCategory::weather:    return g_weather_volume.load();
+    case AudioCategory::foley:      return g_foley_volume.load();
     }
     return 1.0f;
 }
@@ -1151,22 +1323,22 @@ void set_selected_audio_category(AudioCategory category) {
 }
 
 AudioCategory get_selected_audio_category() {
-    int idx = std::clamp(g_selected_category.load(), 0, 4);
+    int idx = std::clamp(g_selected_category.load(), 0, 5);
     return static_cast<AudioCategory>(idx);
 }
 
 int get_selected_audio_category_index() {
-    return std::clamp(g_selected_category.load(), 0, 4);
+    return std::clamp(g_selected_category.load(), 0, 5);
 }
 
 void select_next_audio_category() {
     int cur = g_selected_category.load();
-    g_selected_category.store((cur + 1) % 5);
+    g_selected_category.store((cur + 1) % 6);
 }
 
 void select_previous_audio_category() {
     int cur = g_selected_category.load();
-    g_selected_category.store((cur + 4) % 5);
+    g_selected_category.store((cur + 5) % 6);
 }
 
 float step_selected_audio_category_volume(float delta) {
@@ -1177,20 +1349,24 @@ AudioSettings capture_audio_settings() {
     AudioSettings s{};
     s.muted              = is_audio_muted();
     s.master_volume     = get_audio_category_volume(AudioCategory::master);
+    s.music_volume      = get_audio_category_volume(AudioCategory::music);
     s.cabin_volume      = get_audio_category_volume(AudioCategory::cabin);
     s.propulsion_volume = get_audio_category_volume(AudioCategory::propulsion);
     s.weather_volume    = get_audio_category_volume(AudioCategory::weather);
     s.foley_volume      = get_audio_category_volume(AudioCategory::foley);
+    s.music_mode        = get_music_mode();
     return s;
 }
 
 void apply_audio_settings(const AudioSettings &settings) {
     set_audio_muted(settings.muted);
     set_audio_category_volume(AudioCategory::master, settings.master_volume);
+    set_audio_category_volume(AudioCategory::music, settings.music_volume);
     set_audio_category_volume(AudioCategory::cabin, settings.cabin_volume);
     set_audio_category_volume(AudioCategory::propulsion, settings.propulsion_volume);
     set_audio_category_volume(AudioCategory::weather, settings.weather_volume);
     set_audio_category_volume(AudioCategory::foley, settings.foley_volume);
+    set_music_mode(settings.music_mode);
 }
 
 namespace {
@@ -1221,10 +1397,12 @@ bool save_audio_settings(const std::filesystem::path &config_dir) {
     out << "[Audio]\n";
     out << "muted = " << (settings.muted ? 1 : 0) << "\n";
     out << "master = " << settings.master_volume << "\n";
+    out << "music = " << settings.music_volume << "\n";
     out << "cabin = " << settings.cabin_volume << "\n";
     out << "propulsion = " << settings.propulsion_volume << "\n";
     out << "weather = " << settings.weather_volume << "\n";
     out << "foley = " << settings.foley_volume << "\n";
+    out << "music_mode = " << music_mode_name(settings.music_mode) << "\n";
 
     out.close();
     if (!out) return false;
@@ -1269,6 +1447,8 @@ bool load_audio_settings(const std::filesystem::path &config_dir) {
                 settings.muted = (val == "1" || val == "true" || val == "on" || val == "yes");
             } else if (key == "master" || key == "master_volume") {
                 settings.master_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "music" || key == "music_volume") {
+                settings.music_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
             } else if (key == "cabin" || key == "cabin_volume") {
                 settings.cabin_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
             } else if (key == "propulsion" || key == "propulsion_volume") {
@@ -1277,6 +1457,16 @@ bool load_audio_settings(const std::filesystem::path &config_dir) {
                 settings.weather_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
             } else if (key == "foley" || key == "foley_volume") {
                 settings.foley_volume = std::clamp(std::stof(val), 0.0f, 1.0f);
+            } else if (key == "music_mode" || key == "mode") {
+                if (val == "recorded" || val == "playlist" || val == "files") {
+                    settings.music_mode = MusicPlaybackMode::recorded;
+                } else if (val == "hybrid" || val == "mixed") {
+                    settings.music_mode = MusicPlaybackMode::hybrid;
+                } else if (val == "off" || val == "disabled" || val == "none") {
+                    settings.music_mode = MusicPlaybackMode::off;
+                } else {
+                    settings.music_mode = MusicPlaybackMode::generative;
+                }
             }
         } catch (...) {}
     }

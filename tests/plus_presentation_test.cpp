@@ -71,17 +71,21 @@ int main() {
                   "F1 surface help should include torch");
 
     // F2 Page 2: Audio Volume Controls presentation test
-    const auto audio_menu = noctis::plus_audio_menu_lines(0, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f, false);
-    ok &= require(audio_menu.size() == 8, "audio menu line count");
+    const auto audio_menu = noctis::plus_audio_menu_lines(0, 0.8f, 0.7f, 1.0f, 1.0f, 1.0f, 1.0f, false, "HYBRID", "Stellaria");
+    ok &= require(audio_menu.size() == 10, "audio menu line count");
     ok &= require(audio_menu[0] == "NOCTIS IV OM AUDIO VOLUME SETTINGS", "audio menu title");
     ok &= require(audio_menu[1].find("> 1. MASTER:") != std::string::npos, "audio menu line 1 selected pointer");
     ok &= require(audio_menu[1].find("80%") != std::string::npos, "audio menu line 1 percentage");
-    ok &= require(audio_menu[2].find("2. CABIN:") != std::string::npos, "audio menu line 2");
-    ok &= require(audio_menu[6].find("ACTIVE") != std::string::npos, "audio menu active status");
-    ok &= require(audio_menu[7].find("TAB: CONTROLS") != std::string::npos, "audio menu footer");
+    ok &= require(audio_menu[2].find("2. MUSIC:") != std::string::npos, "audio menu line 2 music");
+    ok &= require(audio_menu[3].find("3. CABIN:") != std::string::npos, "audio menu line 3 cabin");
+    ok &= require(audio_menu[7].find("MODE: HYBRID") != std::string::npos, "audio menu mode line");
+    ok &= require(audio_menu[7].find("Stellaria") != std::string::npos, "audio menu current track name");
+    ok &= require(audio_menu[8].find("ACTIVE") != std::string::npos, "audio menu active status");
+    ok &= require(audio_menu[9].find("TAB: CONTROLS") != std::string::npos, "audio menu footer");
 
     const auto audio_muted = noctis::plus_audio_menu_lines(1, 0.8f, 1.0f, 1.0f, 1.0f, 1.0f, true);
-    ok &= require(audio_muted[6].find("MUTED") != std::string::npos, "audio menu muted status");
+    ok &= require(audio_muted.size() == 10, "audio menu 7-arg overload line count");
+    ok &= require(audio_muted[8].find("MUTED") != std::string::npos, "audio menu muted status");
 
     // F2 Page 3: Controls & Input Settings presentation test
     const auto ctrl_menu = noctis::plus_controls_menu_lines(false, 1.0f, 1, "W", "S", "A", "D");

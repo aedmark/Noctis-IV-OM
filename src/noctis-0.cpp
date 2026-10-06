@@ -5886,11 +5886,14 @@ void draw_plus_overlay(bool surface) {
         const auto lines = noctis::plus_audio_menu_lines(
             noctis::get_selected_audio_category_index(),
             noctis::get_audio_category_volume(noctis::AudioCategory::master),
+            noctis::get_audio_category_volume(noctis::AudioCategory::music),
             noctis::get_audio_category_volume(noctis::AudioCategory::cabin),
             noctis::get_audio_category_volume(noctis::AudioCategory::propulsion),
             noctis::get_audio_category_volume(noctis::AudioCategory::weather),
             noctis::get_audio_category_volume(noctis::AudioCategory::foley),
-            noctis::is_audio_muted());
+            noctis::is_audio_muted(),
+            noctis::music_mode_name(noctis::get_music_mode()),
+            noctis::get_current_music_track_title());
         const int box_h = static_cast<int>(lines.size()) * 8 + 8;
         const int box_y = std::max(10, 185 - box_h);
         area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "music.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -23,6 +25,13 @@ struct AudioTelemetry {
     bool jetpack_active      = false; // Thruster firing
     bool rcs_active          = false; // Sublight RCS attitude thruster firing
     float entry_buffeting    = 0.0f;  // Atmospheric descent buffeting turbulence (0.0 to 1.0)
+    int star_class           = 0;     // Stellar spectral class (0..11)
+    int planet_type          = 0;     // Planetary body type (0..10)
+    float planet_temp_k      = 280.0f;// Estimated planetary surface temperature (Kelvin)
+    int surface_biome        = 0;     // 0=rocky/vacuum, 1=icy, 2=desert, 3=temperate, 4=venusian, 5=exotic
+    bool in_star_system      = true;  // In system vs deep interstellar void
+    bool on_surface          = false; // Landed on surface
+    bool in_orbit            = false; // In planetary orbit
 };
 
 // Subsystem lifecycle
@@ -51,6 +60,7 @@ void play_deck_lift();
 
 enum class AudioCategory {
     master,
+    music,
     cabin,
     propulsion,
     weather,
@@ -60,10 +70,12 @@ enum class AudioCategory {
 struct AudioSettings {
     bool muted              = false;
     float master_volume     = 0.80f;
+    float music_volume      = 0.75f;
     float cabin_volume      = 1.00f;
     float propulsion_volume = 1.00f;
     float weather_volume    = 1.00f;
     float foley_volume      = 1.00f;
+    MusicPlaybackMode music_mode = MusicPlaybackMode::generative;
 };
 
 // Audio settings & controls

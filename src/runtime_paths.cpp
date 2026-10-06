@@ -156,6 +156,7 @@ RuntimePaths resolve_runtime_paths(const std::filesystem::path &executable_dir,
     paths.data_dir = paths.user_root / "data";
     paths.gallery_dir = paths.user_root / "gallery";
     paths.movies_dir = paths.user_root / "movies";
+    paths.music_dir = paths.user_root / "music";
     paths.migration_source = migration_source_override.value_or(executable_dir);
     return paths;
 }
@@ -240,7 +241,7 @@ const RuntimePaths &runtime_paths() {
 RuntimeSetupResult prepare_runtime_storage(const RuntimePaths &paths) {
     RuntimeSetupResult result;
     std::error_code error;
-    for (const auto &directory : {paths.data_dir, paths.gallery_dir, paths.movies_dir, paths.config_dir}) {
+    for (const auto &directory : {paths.data_dir, paths.gallery_dir, paths.movies_dir, paths.music_dir, paths.config_dir}) {
         std::filesystem::create_directories(directory, error);
         if (error) {
             result.message = "could not create runtime directory " + directory.string() + ": " + error.message();
@@ -259,6 +260,8 @@ RuntimeSetupResult prepare_runtime_storage(const RuntimePaths &paths) {
         && !copy_tree_if_missing(paths.migration_source / "gallery", paths.gallery_dir, result)) return result;
     if (!same_path(paths.migration_source / "movies", paths.movies_dir)
         && !copy_tree_if_missing(paths.migration_source / "movies", paths.movies_dir, result)) return result;
+    if (!same_path(paths.migration_source / "music", paths.music_dir)
+        && !copy_tree_if_missing(paths.migration_source / "music", paths.music_dir, result)) return result;
 
     for (const char *name : {"STARMAP.BIN", "GUIDE.BIN"}) {
         if (!copy_file_if_missing(paths.seed_data_dir / name, paths.data_dir / name, result)) return result;

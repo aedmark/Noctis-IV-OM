@@ -407,22 +407,47 @@ std::string format_audio_slider_row(int index, const char *name, float vol, bool
 
 const std::vector<std::string> plus_audio_menu_lines(int selected_category,
                                                      float master_vol,
+                                                     float music_vol,
+                                                     float cabin_vol,
+                                                     float propulsion_vol,
+                                                     float weather_vol,
+                                                     float foley_vol,
+                                                     bool muted,
+                                                     std::string_view music_mode,
+                                                     std::string_view current_track) {
+    std::string mode_line = "MODE: " + std::string(music_mode) + " (G)";
+    if (!current_track.empty() && music_mode != "OFF") {
+        mode_line += "  TRACK: " + std::string(current_track);
+        if (mode_line.size() > 39) {
+            mode_line.resize(36);
+            mode_line += "...";
+        }
+    }
+
+    std::vector<std::string> lines = {
+        "NOCTIS IV OM AUDIO VOLUME SETTINGS",
+        format_audio_slider_row(1, "MASTER:", master_vol, selected_category == 0),
+        format_audio_slider_row(2, "MUSIC:", music_vol, selected_category == 1),
+        format_audio_slider_row(3, "CABIN:", cabin_vol, selected_category == 2),
+        format_audio_slider_row(4, "PROPULSION:", propulsion_vol, selected_category == 3),
+        format_audio_slider_row(5, "WEATHER:", weather_vol, selected_category == 4),
+        format_audio_slider_row(6, "FOLEY:", foley_vol, selected_category == 5),
+        mode_line,
+        muted ? "MUTE: AUDIO MUTED (M / F9)" : "MUTE: AUDIO ACTIVE (M / F9)",
+        "1-6: SELECT  -/+: ADJUST  G: MODE  TAB: CONTROLS"
+    };
+    return lines;
+}
+
+const std::vector<std::string> plus_audio_menu_lines(int selected_category,
+                                                     float master_vol,
                                                      float cabin_vol,
                                                      float propulsion_vol,
                                                      float weather_vol,
                                                      float foley_vol,
                                                      bool muted) {
-    std::vector<std::string> lines = {
-        "NOCTIS IV OM AUDIO VOLUME SETTINGS",
-        format_audio_slider_row(1, "MASTER:", master_vol, selected_category == 0),
-        format_audio_slider_row(2, "CABIN:", cabin_vol, selected_category == 1),
-        format_audio_slider_row(3, "PROPULSION:", propulsion_vol, selected_category == 2),
-        format_audio_slider_row(4, "WEATHER:", weather_vol, selected_category == 3),
-        format_audio_slider_row(5, "FOLEY:", foley_vol, selected_category == 4),
-        muted ? "MUTE: AUDIO MUTED (M / F9)" : "MUTE: AUDIO ACTIVE (M / F9)",
-        "1-5: SELECT  -/+: ADJUST  TAB: CONTROLS"
-    };
-    return lines;
+    return plus_audio_menu_lines(selected_category, master_vol, 0.75f, cabin_vol,
+                                 propulsion_vol, weather_vol, foley_vol, muted);
 }
 
 const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
