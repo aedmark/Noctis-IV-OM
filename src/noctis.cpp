@@ -10,6 +10,7 @@
 #include "gamepad.h"
 #include "brtl.h"
 #include "display.h"
+#include "engine_state.h"
 #include "gallery_viewer.h"
 #include "upscale.h"
 #include "flight_log.h"
@@ -108,9 +109,6 @@ int8_t mt_coord       = 0;
 int8_t manual_x_string[11];
 int8_t manual_y_string[11];
 int8_t manual_z_string[11];
-
-static noctis::TravelPhase g_active_travel_phase = noctis::TravelPhase::arrived;
-static float g_active_travel_speed               = 0.0f;
 
 // Set the autopilot travel parameters.
 void fix_remote_target() {
@@ -716,26 +714,30 @@ void run_goesnet_module() {
     std::string pname(reinterpret_cast<const char *>(planet_label), 20);
     while (!pname.empty() && pname.back() == ' ') pname.pop_back();
 
-    const noctis::GoesCommandContext context{starmap_file,
-                                             paths.data_dir / "GUIDE.BIN",
-                                             paths.data_dir / "guide-export.txt",
-                                             dzat_x,
-                                             dzat_y,
-                                             dzat_z,
-                                             nearstar_x,
-                                             nearstar_y,
-                                             nearstar_z,
-                                             paths.gallery_dir,
-                                             paths.movies_dir,
-                                             paths.config_dir / "bookmarks.ini",
-                                             nearstar_identity,
-                                             std::move(sname),
-                                             nearstar_class,
-                                             ip_targetted,
-                                             std::move(pname),
-                                             false,
-                                             0.0,
-                                             0.0};
+    noctis::GoesCommandContext context{starmap_file,
+                                       paths.data_dir / "GUIDE.BIN",
+                                       paths.data_dir / "guide-export.txt",
+                                       dzat_x,
+                                       dzat_y,
+                                       dzat_z,
+                                       nearstar_x,
+                                       nearstar_y,
+                                       nearstar_z,
+                                       paths.gallery_dir,
+                                       paths.movies_dir,
+                                       paths.config_dir / "bookmarks.ini",
+                                       nearstar_identity,
+                                       std::move(sname),
+                                       nearstar_class,
+                                       ip_targetted,
+                                       std::move(pname),
+                                       false,
+                                       0.0,
+                                       0.0};
+#ifndef __EMSCRIPTEN__
+    const auto image_export_directory = noctis::user_downloads_directory();
+    if (!image_export_directory.empty()) context.image_export_directory = image_export_directory;
+#endif
     auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
     goes_output_cells = std::move(answer.cells);
     noctis::play_goesnet_chime(answer.status == noctis::GoesResultStatus::ok);
@@ -1735,9 +1737,8 @@ void fcs_commands() {
 
     case 2:
         if (stspeed) {
-            stspeed               = 0;
-            g_active_travel_speed = 0.0f;
-            g_active_travel_phase = noctis::TravelPhase::arrived;
+            stspeed = 0;
+            noctis::engine_state().travel.reset();
             status("IDLE", 50);
         } else {
             if (lithium_collector || manual_target) {
@@ -1747,9 +1748,8 @@ void fcs_commands() {
             }
 
             if (pwr > 15000) {
-                stspeed               = 1;
-                g_active_travel_phase = noctis::TravelPhase::charging;
-                g_active_travel_speed = 0.0f;
+                stspeed = 1;
+                noctis::engine_state().travel.begin(noctis::TravelPhase::charging);
 
                 if (ap_targetted) {
                     nsnp         = 1;
@@ -1779,16 +1779,14 @@ void fcs_commands() {
         } else {
             if (ip_reaching) {
                 status("IDLE", 50);
-                ip_targetted          = -1;
-                ip_reaching           = 0;
-                ip_reached            = 1;
-                g_active_travel_speed = 0.0f;
-                g_active_travel_phase = noctis::TravelPhase::arrived;
+                ip_targetted = -1;
+                ip_reaching  = 0;
+                ip_reached   = 1;
+                noctis::engine_state().travel.reset();
             } else {
                 if (pwr > 15000) {
-                    ip_reaching           = 1;
-                    g_active_travel_phase = noctis::TravelPhase::warming_up;
-                    g_active_travel_speed = 0.0f;
+                    ip_reaching = 1;
+                    noctis::engine_state().travel.begin(noctis::TravelPhase::warming_up);
                     status("CONFIRM", 50);
                     noctis::play_goesnet_chime(true);
                 }
@@ -5996,10 +5994,9 @@ ext_1: //
 
             if (travel.arrived) {
                 status("CALIBRATED", 50);
-                ap_reached            = 1;
-                stspeed               = 0;
-                g_active_travel_speed = 0.0f;
-                g_active_travel_phase = noctis::TravelPhase::arrived;
+                ap_reached = 1;
+                stspeed    = 0;
+                noctis::engine_state().travel.reset();
 
                 const double star_ang = static_cast<double>(deg * navigation_beta);
                 dzat_x                = ap_target_x - ras * std::sin(star_ang);
@@ -6026,9 +6023,8 @@ ext_1: //
                 double move_ratio =
                     (guidance.current_coefficient > 0.0) ? (travel.distance / guidance.current_coefficient) : 0.0;
                 // Move ratio climbs from ~0.001 at start, up to 100,000 at peak warp, and drops to ~200 during parking
-                g_active_travel_speed =
-                    std::clamp(static_cast<float>(std::log10(std::max(1.0, move_ratio)) / 5.0), 0.0f, 1.0f);
-                g_active_travel_phase = travel.phase;
+                noctis::engine_state().travel.update(
+                    travel.phase, static_cast<float>(std::log10(std::max(1.0, move_ratio)) / 5.0));
             }
         }
     }
@@ -6104,10 +6100,9 @@ resynctoplanet:
 
             if (travel.arrived) {
                 status("STANDBY", 0);
-                ip_reaching           = 0;
-                ip_reached            = 1;
-                g_active_travel_speed = 0.0f;
-                g_active_travel_phase = noctis::TravelPhase::arrived;
+                ip_reaching = 0;
+                ip_reached  = 1;
+                noctis::engine_state().travel.reset();
 
                 std::string pname(reinterpret_cast<const char *>(planet_label), 20);
                 while (!pname.empty() && pname.back() == ' ') pname.pop_back();
@@ -6123,8 +6118,7 @@ resynctoplanet:
                 double move_ratio =
                     (guidance.current_coefficient > 0.0) ? (travel.distance / guidance.current_coefficient) : 0.0;
                 // Move ratio peaks at 20.0 during cruise approach, ~0.04 at warmup, and ~0.02 at refining
-                g_active_travel_speed = std::clamp(static_cast<float>(move_ratio / 20.0), 0.0f, 1.0f);
-                g_active_travel_phase = travel.phase;
+                noctis::engine_state().travel.update(travel.phase, static_cast<float>(move_ratio / 20.0));
             }
         }
     }
@@ -6514,8 +6508,9 @@ resynctoplanet:
         noctis::AudioTelemetry telemetry{};
         telemetry.scene              = ontheroof ? noctis::AudioScene::roof : noctis::AudioScene::cabin;
         telemetry.travel_active      = (stspeed == 1) || (ip_reaching == 1);
-        telemetry.travel_phase       = static_cast<int>(g_active_travel_phase);
-        telemetry.travel_speed       = telemetry.travel_active ? g_active_travel_speed : 0.0f;
+        const auto &travel_state      = noctis::engine_state().travel;
+        telemetry.travel_phase       = static_cast<int>(travel_state.phase);
+        telemetry.travel_speed       = telemetry.travel_active ? travel_state.normalized_speed : 0.0f;
         telemetry.atmosphere_density = 0.0f;
         telemetry.weather_rain       = 0.0f;
         telemetry.player_walking     = false;

@@ -269,7 +269,8 @@ GoesResult gallery_listing(const std::filesystem::path &directory) {
     return result(GoesResultStatus::ok, std::move(rows));
 }
 
-GoesResult view_image(const std::filesystem::path &directory, std::string_view key) {
+GoesResult view_image(const std::filesystem::path &directory, std::string_view key,
+                      const std::optional<std::filesystem::path> &export_directory) {
     const auto entries = scan_gallery(directory);
     if (entries.empty()) return result(GoesResultStatus::not_found, {"NO IMAGES ON FILE."});
 
@@ -298,7 +299,7 @@ GoesResult view_image(const std::filesystem::path &directory, std::string_view k
         const auto index = find_gallery_entry(entries, target_key);
         if (!index) return result(GoesResultStatus::not_found, {"IMAGE NOT ON FILE.", "TYPE GALLERY FOR A", "LISTING."});
         const auto &entry = entries[*index];
-        const bool ok = export_gallery_image(entry, std::nullopt, export_fmt);
+        const bool ok = export_gallery_image(entry, export_directory, export_fmt);
         const std::string ext = (export_fmt == GalleryExportFormat::png) ? ".PNG" : ".BMP";
         if (ok) {
             return result(GoesResultStatus::ok, {
@@ -631,7 +632,9 @@ GoesResult execute_goes_command(std::string_view console_line, const GoesCommand
     if (request.command == GoesCommand::clear) return {GoesResultStatus::ok, GoesResultAction::clear_output, {}, std::nullopt};
     if (request.command == GoesCommand::help) return help(request.argument);
     if (request.command == GoesCommand::gallery) return gallery_listing(context.gallery_path);
-    if (request.command == GoesCommand::view_image) return view_image(context.gallery_path, request.argument);
+    if (request.command == GoesCommand::view_image) {
+        return view_image(context.gallery_path, request.argument, context.image_export_directory);
+    }
     if (request.command == GoesCommand::movie) return handle_movie_command(context.movies_path, request.argument);
     if (request.command == GoesCommand::flight_log) {
         if (request.argument.empty()) {

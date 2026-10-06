@@ -1,0 +1,72 @@
+# M17 engine consolidation
+
+Status: IN PROGRESS
+
+## Purpose
+
+Noctis IV OM reached feature completeness while retaining the inherited global
+runtime at its center. M17 introduces explicit ownership and test seams around
+that runtime without changing deterministic generation, simulation results,
+save schemas, or indexed rendering behavior.
+
+This is an incremental strangler migration, not a rewrite. Each extraction must
+leave the game playable and the complete compatibility suite enforceable.
+
+## State ownership rule
+
+`noctis::EngineState` is the root for mutable application and simulation state
+extracted from the legacy translation units. New engine state must be placed in
+that root or in an owned subsystem; new cross-file `extern` state is prohibited.
+
+The first slice owns transient travel presentation state: the current travel
+phase and normalized speed consumed by audio telemetry. Compatibility-sensitive
+position, guidance, and targeting values remain in the legacy state until they
+can migrate together with save capture, restore, and journey fixtures. There
+must never be two authoritative copies.
+
+## Platform boundary rule
+
+Code that performs a player action may receive platform-selected paths and
+services, but it must not discover host state when a caller can provide it. The
+GOESnet image-export path now follows this rule:
+
+1. Desktop composition resolves the Downloads directory.
+2. GOESnet receives that directory in `GoesCommandContext`.
+3. Tests inject a directory inside their fixture workspace.
+4. Web leaves the destination absent and uses its browser download bridge.
+
+Later slices will apply this pattern to clocks, presentation, audio, and
+external process launching.
+
+## Migration sequence
+
+1. Establish `EngineState` and migrate transient travel state.
+2. Inject filesystem/export destinations and remove host-directory assumptions
+   from tests.
+3. Model the top-level cockpit, descent, surface, gallery, and movie modes as
+   explicit application transitions.
+4. Separate simulation stepping from presentation and add deterministic input
+   recording/replay for a complete journey.
+5. Put bounded interfaces around framebuffer and surface-map writes, then
+   remove compatibility padding where fixtures prove it safe.
+6. Continue migrating coherent state aggregates, with save-schema adapters at
+   the boundary.
+
+## Invariants
+
+- Galaxy, system, surface, and renderer fixture outputs do not change.
+- The fixed 55 ms simulation tick remains authoritative.
+- Native save version 1 and legacy imports remain byte compatible.
+- Browser, Linux, and Windows continue sharing simulation code.
+- No work item is complete without focused tests and the full native lane.
+- Refactoring does not silently alter a legacy quirk; intentional changes need
+  a decision record and new acceptance evidence.
+
+## First-slice evidence
+
+- `tests/engine_state_test.cpp` protects state defaults, transitions, clamping,
+  and reset behavior.
+- `tests/goesnet_commands_test.cpp` injects and verifies its image-export
+  destination instead of writing to the developer's Downloads directory.
+- Existing travel, scripted-journey, orbit/surface, audio, save, and renderer
+  fixtures remain the behavioral regression boundary.

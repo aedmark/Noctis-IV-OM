@@ -55,6 +55,7 @@ set(SOURCE_FILES
     src/legacy_numeric.cpp
     src/legacy_prng.cpp
     src/simulation_clock.cpp
+    src/engine_state.cpp
     src/input.cpp
     src/indexed_framebuffer.cpp
     src/travel.cpp
@@ -178,6 +179,12 @@ if(BUILD_TESTING)
     target_compile_features(simulation_clock_tests PRIVATE cxx_std_20)
     set_target_properties(simulation_clock_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
     add_test(NAME fixed_simulation_clock COMMAND simulation_clock_tests)
+
+    add_executable(engine_state_tests tests/engine_state_test.cpp src/engine_state.cpp)
+    target_include_directories(engine_state_tests PRIVATE src)
+    target_compile_features(engine_state_tests PRIVATE cxx_std_20)
+    set_target_properties(engine_state_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
+    add_test(NAME engine_state COMMAND engine_state_tests)
 
     add_executable(runtime_paths_tests tests/runtime_paths_test.cpp src/runtime_paths.cpp)
     target_include_directories(runtime_paths_tests PRIVATE src)

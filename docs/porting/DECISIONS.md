@@ -21,6 +21,8 @@ changes, add a new record that marks the old one `SUPERSEDED`.
 | ADR-0011 | Make versioned native state authoritative before legacy migration | ACCEPTED | 2026-09-29 |
 | ADR-0012 | Import only identified legacy save layouts through temporary state | ACCEPTED | 2026-09-29 |
 | ADR-0013 | Restore Moviemaker to first-release Plus scope | ACCEPTED | 2026-09-30 |
+| ADR-0014 | Separate installed assets from OS-native player profiles | ACCEPTED | 2026-09-30 |
+| ADR-0015 | Consolidate the engine through incremental state and platform seams | ACCEPTED | 2026-10-06 |
 
 ## ADR-0001 — Continue from Noctis IV LR in modern C++
 
@@ -509,6 +511,48 @@ the source. Keep diagnostics read-only and report all resolved paths.
   designed standalone configuration format is justified.
 - The W02/W03 CI runs remain evidence for producing packages, but a new Windows
   package run is required to accept this revised cross-platform layout.
+
+## ADR-0015 — Consolidate the engine through incremental state and platform seams
+
+Status: ACCEPTED
+Date: 2026-10-06
+Supersedes: none
+
+### Context
+
+The completed native port has strong subsystem tests and compatibility
+fixtures, but the live runtime still coordinates simulation, interface,
+rendering, and platform behavior through hundreds of inherited globals and
+large procedural loops. Continued feature work would increase coupling and
+make deterministic behavior harder to protect. A wholesale rewrite would carry
+greater compatibility risk than the existing architecture.
+
+The planned online portion of M16 would also add background I/O and service
+lifecycle concerns before the application has explicit runtime and platform
+boundaries.
+
+### Decision
+
+Defer the online M16 client/server work and perform an incremental engine
+consolidation as M17. Introduce one `EngineState` ownership root, migrate only
+coherent state slices, and keep serialization adapters at the boundary. Inject
+platform paths and services at composition points. Model application modes and
+simulation stepping explicitly before adding background networking.
+
+Every slice must preserve the existing deterministic and indexed-frame
+fixtures. No new cross-file mutable global state may be introduced.
+
+### Consequences
+
+- The engine remains continuously playable; there is no big-bang rewrite.
+- Some legacy globals temporarily remain authoritative until an entire
+  save-backed aggregate can move safely.
+- Tests can replace platform facilities without writing into a developer's
+  profile or opening desktop applications.
+- M16's offline packet exchange remains available, while its operational cloud
+  service waits for the lifecycle and platform seams established by M17.
+- Refactoring progress is measured by owned state and replaceable boundaries,
+  not by line-count churn.
 
 ## Decision record template
 

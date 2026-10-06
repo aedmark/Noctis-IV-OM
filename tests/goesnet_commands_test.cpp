@@ -40,9 +40,12 @@ int main(int argc, char **argv) {
     ok &= require(contains(answer, "GALLERY VIEW"), "HELP omits gallery commands");
 
     const auto gallery = std::filesystem::path(argv[4]).parent_path() / "goesnet-gallery";
+    const auto image_exports = std::filesystem::path(argv[4]).parent_path() / "goesnet-image-exports";
     std::filesystem::remove_all(gallery);
+    std::filesystem::remove_all(image_exports);
     std::filesystem::create_directories(gallery);
     context.gallery_path = gallery;
+    context.image_export_directory = image_exports;
     answer = execute_goes_command("GALLERY_", context);
     ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "NO IMAGES ON FILE."), "empty GALLERY mismatch");
     answer = execute_goes_command("VIEW_", context);
@@ -67,7 +70,10 @@ int main(int argc, char **argv) {
     ok &= require(answer.status == GoesResultStatus::not_found && contains(answer, "IMAGE NOT ON FILE."), "VIEW absent mismatch");
     answer = execute_goes_command("VIEW EXPORT 4_", context);
     ok &= require(answer.status == GoesResultStatus::ok && contains(answer, "IMAGE EXPORT OK"), "VIEW EXPORT mismatch");
+    ok &= require(std::filesystem::is_regular_file(image_exports / "00000004.png"),
+                  "VIEW EXPORT ignored injected destination");
     std::filesystem::remove_all(gallery);
+    std::filesystem::remove_all(image_exports);
 
     // MOVIE command test
     const auto movies = std::filesystem::path(argv[4]).parent_path() / "goesnet-movies";

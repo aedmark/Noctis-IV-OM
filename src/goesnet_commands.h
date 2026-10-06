@@ -3,6 +3,7 @@
 #include "goesnet_protocol.h"
 
 #include <filesystem>
+#include <optional>
 #include <string_view>
 
 namespace noctis {
@@ -28,6 +29,10 @@ struct GoesCommandContext {
     bool is_on_surface{false};
     double surface_lat{0.0};
     double surface_lon{0.0};
+    // Desktop composition supplies the user's Downloads directory. Tests and
+    // other hosts can inject a sandboxed destination; Web leaves this empty so
+    // export_gallery_image uses the browser download bridge.
+    std::optional<std::filesystem::path> image_export_directory;
 };
 
 GoesResult execute_goes_command(std::string_view console_line, const GoesCommandContext &context);

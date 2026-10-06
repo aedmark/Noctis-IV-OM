@@ -28,7 +28,8 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M13 | Atmospheric Scattering & Horizon Visual Fidelity | DONE |
 | M14 | Moviemaker Modernization & Direct Video Export | DONE |
 | M15 | Ambient Music & Generative Soundscapes | DONE |
-| M16 | Asynchronous Community GOESnet Catalog Exchange | PLANNED |
+| M16 | Asynchronous Community GOESnet Catalog Exchange | DEFERRED — after M17 |
+| M17 | Engine Consolidation & Runtime Architecture | IN PROGRESS |
 
 ## M0 — Foundation, provenance, and baseline selection
 
@@ -343,6 +344,9 @@ containers, not substitutes for that ledger.
 
 **Goal:** Connect explorers across platforms with optional cloud/community star catalog synchronization.
 
+M16-W01 and M16-W02 are deferred until M17 establishes explicit runtime and
+platform-service boundaries. The offline exchange layer remains supported.
+
 | ID | Work item | Status | Evidence/notes |
 | --- | --- | --- | --- |
 | M16-W01 | Community catalog sync protocol | PLANNED | Lightweight REST/WebSocket protocol for exchanging star names, planetary annotations, and exploration logs |
@@ -354,6 +358,34 @@ containers, not substitutes for that ledger.
 - Players can optionally synchronize catalog entries with a community server.
 - Local catalogs are never corrupted or overwritten destructively.
 - All test suites pass with 100% determinism.
+
+## M17 — Engine Consolidation & Runtime Architecture
+
+**Goal:** Give the completed engine an explicit state root, testable platform
+boundaries, and staged application lifecycle without changing universe identity
+or player-visible behavior.
+
+| ID | Work item | Status | Evidence/notes |
+| --- | --- | --- | --- |
+| M17-W01 | Record consolidation architecture and invariants | DONE | ADR-0015 and `ENGINE_CONSOLIDATION.md` |
+| M17-W02 | Establish application-owned engine state | DONE | `EngineState` owns transient travel phase/speed; live travel and audio telemetry migrated; focused state test |
+| M17-W03 | Inject filesystem/export platform boundaries | DONE | GOESnet image exports receive an explicit destination; fixture writes remain inside the test workspace |
+| M17-W04 | Introduce explicit application mode transitions | PLANNED | Replace implicit nested cockpit/descent/surface/viewer lifecycle control incrementally |
+| M17-W05 | Add deterministic input recording and replay | PLANNED | Full orbit-to-surface replay independent of presentation cadence |
+| M17-W06 | Bound renderer and surface-map memory access | PLANNED | Remove compatibility padding only after exact fixture and sanitizer evidence |
+| M17-W07 | Migrate coherent save-backed state aggregates | PLANNED | Explicit adapters preserve native v1 and legacy import schemas |
+
+**Exit criteria**
+
+- New engine state has one explicit owner and no new cross-file mutable globals.
+- Platform filesystem, clock, presentation, audio, and process services are
+  replaceable in headless tests.
+- Application modes transition through a testable state machine.
+- A recorded journey replays to identical simulation and indexed-frame
+  checkpoints at multiple presentation cadences.
+- Known renderer overrun padding is replaced by bounded operations with
+  sanitizer and exact-fixture evidence.
+- Linux Clang/GCC, sanitizers, Windows, and Web retain their supported gates.
 
 ## Work item template
 
