@@ -1,6 +1,7 @@
 #include "gallery_viewer.h"
 
 #include "audio.h"
+#include "engine_state.h"
 #include "gallery.h"
 
 #include <raylib.h>
@@ -62,6 +63,9 @@ void draw_text_shadowed(const char *text, int x, int y, int size, Color color) {
 void close_gallery_viewer() {
     if (!state.open) return;
     state.open = false;
+    if (engine_state().application.mode == ApplicationMode::gallery) {
+        (void) engine_state().application.transition_to(ApplicationMode::cockpit);
+    }
     release_texture();
     toast_timer = 0.0F;
 #ifndef __EMSCRIPTEN__
@@ -126,6 +130,7 @@ bool open_gallery_viewer(const std::filesystem::path &directory, std::string_vie
     auto scanned = scan_gallery(directory);
     const auto index = find_gallery_entry(scanned, key);
     if (!index) return false;
+    if (!engine_state().application.transition_to(ApplicationMode::gallery)) return false;
     release_texture();
     entries = std::move(scanned);
     state = GalleryViewerState{true, *index, entries.size(), false, 0.5F};

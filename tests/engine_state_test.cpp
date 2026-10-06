@@ -33,5 +33,30 @@ int main() {
     reset_engine_state();
     ok &= require(state.travel.phase == TravelPhase::arrived, "travel reset phase mismatch");
     ok &= require(state.travel.normalized_speed == 0.0F, "travel reset speed mismatch");
+
+    auto &application = state.application;
+    ok &= require(application.mode == ApplicationMode::cockpit, "default application mode mismatch");
+    ok &= require(application.transition_count == 0, "default transition count mismatch");
+    ok &= require(application.transition_to(ApplicationMode::descent), "cockpit to descent rejected");
+    ok &= require(application.transition_to(ApplicationMode::surface), "descent to surface rejected");
+    ok &= require(application.transition_to(ApplicationMode::descent), "surface to ascent rejected");
+    ok &= require(application.transition_to(ApplicationMode::cockpit), "ascent to cockpit rejected");
+    ok &= require(application.transition_count == 4, "surface journey transition count mismatch");
+
+    ok &= require(application.transition_to(ApplicationMode::gallery), "cockpit to gallery rejected");
+    ok &= require(!application.transition_to(ApplicationMode::movie_player), "gallery to movie accepted");
+    ok &= require(application.mode == ApplicationMode::gallery, "rejected transition changed mode");
+    ok &= require(application.transition_count == 5, "rejected transition changed count");
+    ok &= require(application.transition_to(ApplicationMode::cockpit), "gallery to cockpit rejected");
+    ok &= require(application.transition_to(ApplicationMode::movie_player), "cockpit to movie rejected");
+    ok &= require(application.transition_to(ApplicationMode::cockpit), "movie to cockpit rejected");
+
+    ok &= require(application.transition_to(ApplicationMode::shutting_down), "shutdown transition rejected");
+    ok &= require(!application.transition_to(ApplicationMode::cockpit), "transition out of shutdown accepted");
+    ok &= require(application.mode == ApplicationMode::shutting_down, "shutdown mode changed after rejection");
+
+    reset_engine_state();
+    ok &= require(application.mode == ApplicationMode::cockpit, "application reset mode mismatch");
+    ok &= require(application.transition_count == 0, "application reset count mismatch");
     return ok ? 0 : 1;
 }

@@ -2,6 +2,8 @@
 
 #include "travel.h"
 
+#include <cstdint>
+
 namespace noctis {
 
 // Transient runtime state owned by the application rather than by an
@@ -16,8 +18,28 @@ struct TravelRuntimeState {
     void reset() noexcept;
 };
 
+enum class ApplicationMode : std::uint8_t {
+    cockpit,
+    descent,
+    surface,
+    gallery,
+    movie_player,
+    shutting_down,
+};
+
+[[nodiscard]] bool can_transition(ApplicationMode from, ApplicationMode to) noexcept;
+
+struct ApplicationRuntimeState {
+    ApplicationMode mode = ApplicationMode::cockpit;
+    std::uint64_t transition_count = 0;
+
+    [[nodiscard]] bool transition_to(ApplicationMode next) noexcept;
+    void reset() noexcept;
+};
+
 struct EngineState {
     TravelRuntimeState travel;
+    ApplicationRuntimeState application;
 
     void reset() noexcept;
 };

@@ -3,6 +3,7 @@
 #include "music.h"
 #include "brtl.h"
 #include "display.h"
+#include "engine_state.h"
 #include "upscale.h"
 #include "legacy_numeric.h"
 #include "legacy_save.h"
@@ -32,6 +33,29 @@ float refx, refy, refz;
 float sp_x, sp_y, sp_z;
 
 namespace {
+bool transition_application_mode(noctis::ApplicationMode next) {
+    if (noctis::engine_state().application.transition_to(next)) return true;
+    noctis::log_event("error", "application_mode", "illegal surface-session mode transition");
+    return false;
+}
+
+class SurfaceApplicationModeScope {
+  public:
+    SurfaceApplicationModeScope()
+        : entered_(transition_application_mode(noctis::ApplicationMode::descent)) {}
+
+    ~SurfaceApplicationModeScope() {
+        if (!entered_ || noctis::engine_state().application.mode == noctis::ApplicationMode::shutting_down) return;
+        transition_application_mode(noctis::ApplicationMode::cockpit);
+    }
+
+    SurfaceApplicationModeScope(const SurfaceApplicationModeScope &) = delete;
+    SurfaceApplicationModeScope &operator=(const SurfaceApplicationModeScope &) = delete;
+
+  private:
+    bool entered_ = false;
+};
+
 void save_surface_display_settings() {
     noctis::set_setting_draw_hud(draw_hud);
     noctis::set_setting_lens_flare_mode(lens_flare_mode);
@@ -4044,6 +4068,8 @@ int8_t entryflag = 0; // flag: se settato all'ingresso di planetary_main,
 // di superficie.
 
 void planetary_main() {
+    SurfaceApplicationModeScope application_mode_scope;
+
     struct SurfaceActiveScope {
         const int8_t cached_body;
         SurfaceActiveScope(int8_t body) : cached_body(body) { surface_active = 1; }
@@ -4620,6 +4646,7 @@ nosecondarysun:
             landed         = 1;
             opencapdelta   = 0;
             opencapcount   = 0;
+            transition_application_mode(noctis::ApplicationMode::surface);
         } else if (restore_result.status == noctis::NativeSaveStatus::not_found) {
             goto nosurfacefile;
         } else {
@@ -4647,6 +4674,7 @@ nosecondarysun:
         landed       = 1;
         opencapdelta = 0;
         opencapcount = 0;
+        transition_application_mode(noctis::ApplicationMode::surface);
     }
 
     shift            = 0;
@@ -5254,6 +5282,7 @@ nosecondarysun:
                     atl_z2  = 8192;
                     gravity = 0;
                     landed  = 1;
+                    transition_application_mode(noctis::ApplicationMode::surface);
                     noctis::play_touchdown_clunk();
                 } else {
                     bounces++;
@@ -5785,6 +5814,7 @@ nosecondarysun:
             if (opencapcount > 32) {
                 pos_y -= 20 * (opencapcount - 31);
                 landed = 0;
+                transition_application_mode(noctis::ApplicationMode::descent);
             }
 
             if (opencapcount > 250) {

@@ -4252,12 +4252,15 @@ int main(int argc, char **argv) {
         noctis::reset_input_state();
         noctis::set_input_provider(scripted_landing_input);
         entryflag = 0;
+        noctis::engine_state().application.reset();
         planetary_main();
         noctis::reset_input_provider();
 
         const bool returned_normally = exitflag == 0 && !landed && landing_fixture_return_frame > 0 &&
                                        landing_fixture_frames < 10000 && dzat_x == ship_x && dzat_y == ship_y &&
-                                       dzat_z == ship_z && pos_x == 0 && pos_y == 0 && pos_z == -3100;
+                                       dzat_z == ship_z && pos_x == 0 && pos_y == 0 && pos_z == -3100 &&
+                                       noctis::engine_state().application.mode == noctis::ApplicationMode::cockpit &&
+                                       noctis::engine_state().application.transition_count == 4;
         if (!returned_normally) {
             fprintf(stderr,
                     "landing_fixture_debug exit=%d landed=%d touchdown=%u returned=%u frames=%u pos=%.3f,%.3f,%.3f "
@@ -4441,6 +4444,7 @@ int main(int argc, char **argv) {
             lifter      = 0;
         }
     } while (!session_can_end || (mc != 27) || stspeed || ip_reaching || lifter);
+    (void) noctis::engine_state().application.transition_to(noctis::ApplicationMode::shutting_down);
     remove(surface_file);
     remove(native_surface_file);
 

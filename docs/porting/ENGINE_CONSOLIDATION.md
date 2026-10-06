@@ -38,6 +38,22 @@ GOESnet image-export path now follows this rule:
 Later slices will apply this pattern to clocks, presentation, audio, and
 external process launching.
 
+## Application mode rule
+
+`ApplicationRuntimeState` records the active top-level mode and accepts only
+legal transitions:
+
+- cockpit to descent/ascent transfer, gallery, movie player, or shutdown;
+- descent to surface or cockpit;
+- surface to ascent transfer or cockpit;
+- gallery and movie player back to cockpit; and
+- any live mode to shutdown, which is terminal.
+
+Rejected transitions do not change the mode or transition counter. The current
+blocking surface loop is wrapped in an RAII session boundary, so fixture exits,
+load failures, surface aborts, and ordinary capsule return all restore a valid
+mode. This characterizes current ownership without yet replacing loop control.
+
 ## Migration sequence
 
 1. Establish `EngineState` and migrate transient travel state.
@@ -68,5 +84,11 @@ external process launching.
   and reset behavior.
 - `tests/goesnet_commands_test.cpp` injects and verifies its image-export
   destination instead of writing to the developer's Downloads directory.
+- `tests/engine_state_test.cpp` also verifies the legal application-mode graph,
+  rejected transitions, terminal shutdown, and reset behavior.
+- The landing-return fixture asserts the production cockpit → descent → surface
+  → ascent → cockpit sequence and exact transition count.
+- Movie-player tests verify that failed opens retain cockpit ownership and that
+  successful open/close restores it.
 - Existing travel, scripted-journey, orbit/surface, audio, save, and renderer
   fixtures remain the behavioral regression boundary.

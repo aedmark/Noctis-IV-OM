@@ -1,4 +1,5 @@
 #include "movie_player.h"
+#include "engine_state.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -72,15 +73,20 @@ int main(int argc, char **argv) {
     }
 
     bool ok = true;
+    reset_engine_state();
 
     // 1. Opening invalid / non-existent deck
     ok &= require(!open_movie_player(root / "movies", 999), "opening non-existent deck must return false");
     ok &= require(!open_movie_player(root / "nonexistent", 1), "opening non-existent directory must return false");
     ok &= require(!movie_player_open(), "player must remain closed after failed open");
+    ok &= require(engine_state().application.mode == ApplicationMode::cockpit,
+                  "failed open changed application mode");
 
     // 2. Open valid deck 001
     ok &= require(open_movie_player(root / "movies", 1), "opening valid deck 1 must succeed");
     ok &= require(movie_player_open(), "movie_player_open() must be true");
+    ok &= require(engine_state().application.mode == ApplicationMode::movie_player,
+                  "successful open did not enter movie mode");
     ok &= require(movie_player_current_deck() == 1, "current deck must be 1");
     ok &= require(movie_player_total_frames() == 6, "total frames must be 6");
     ok &= require(movie_player_current_frame() == 0, "initial frame must be 0");
@@ -133,6 +139,8 @@ int main(int argc, char **argv) {
     frame_esc.escape_down = true;
     ok &= require(movie_player_input(frame_esc), "escape should consume input");
     ok &= require(!movie_player_open(), "player should be closed after escape");
+    ok &= require(engine_state().application.mode == ApplicationMode::cockpit,
+                  "closing player did not restore cockpit mode");
 
     shutdown_movie_player();
     std::filesystem::remove_all(root, ec);

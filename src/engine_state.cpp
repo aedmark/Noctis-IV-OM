@@ -19,7 +19,45 @@ void TravelRuntimeState::reset() noexcept {
     normalized_speed = 0.0F;
 }
 
-void EngineState::reset() noexcept { travel.reset(); }
+bool can_transition(ApplicationMode from, ApplicationMode to) noexcept {
+    if (from == to) return true;
+    if (to == ApplicationMode::shutting_down) return true;
+
+    switch (from) {
+    case ApplicationMode::cockpit:
+        return to == ApplicationMode::descent || to == ApplicationMode::gallery ||
+               to == ApplicationMode::movie_player;
+    case ApplicationMode::descent:
+        return to == ApplicationMode::surface || to == ApplicationMode::cockpit;
+    case ApplicationMode::surface:
+        return to == ApplicationMode::descent || to == ApplicationMode::cockpit;
+    case ApplicationMode::gallery:
+    case ApplicationMode::movie_player:
+        return to == ApplicationMode::cockpit;
+    case ApplicationMode::shutting_down:
+        return false;
+    }
+    return false;
+}
+
+bool ApplicationRuntimeState::transition_to(ApplicationMode next) noexcept {
+    if (!can_transition(mode, next)) return false;
+    if (mode != next) {
+        mode = next;
+        ++transition_count;
+    }
+    return true;
+}
+
+void ApplicationRuntimeState::reset() noexcept {
+    mode = ApplicationMode::cockpit;
+    transition_count = 0;
+}
+
+void EngineState::reset() noexcept {
+    travel.reset();
+    application.reset();
+}
 
 EngineState &engine_state() noexcept {
     static EngineState state;

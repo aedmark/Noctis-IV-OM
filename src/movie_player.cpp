@@ -1,6 +1,7 @@
 #include "movie_player.h"
 
 #include "audio.h"
+#include "engine_state.h"
 #include "gallery.h"
 #include "input.h"
 #include "runtime_paths.h"
@@ -197,6 +198,8 @@ bool open_movie_player(const std::filesystem::path &movies_dir, std::uint16_t de
 
     std::sort(frames.begin(), frames.end());
 
+    if (!engine_state().application.transition_to(ApplicationMode::movie_player)) return false;
+
     release_player_texture();
     g_player = MoviePlayerState{};
     g_player.open = true;
@@ -224,6 +227,9 @@ bool movie_player_open() {
 void close_movie_player() {
     if (!g_player.open) return;
     g_player.open = false;
+    if (engine_state().application.mode == ApplicationMode::movie_player) {
+        (void) engine_state().application.transition_to(ApplicationMode::cockpit);
+    }
     release_player_texture();
     g_player.frame_files.clear();
 #ifndef __EMSCRIPTEN__

@@ -335,7 +335,8 @@ if(BUILD_TESTING)
     add_test(NAME video_export COMMAND video_export_tests
         ${CMAKE_CURRENT_BINARY_DIR}/video-export-test)
 
-    add_executable(movie_player_tests tests/movie_player_test.cpp src/movie_player.cpp src/video_export.cpp src/gallery.cpp src/gallery_platform.cpp src/runtime_paths.cpp)
+    add_executable(movie_player_tests tests/movie_player_test.cpp src/movie_player.cpp src/engine_state.cpp
+        src/video_export.cpp src/gallery.cpp src/gallery_platform.cpp src/runtime_paths.cpp)
     target_include_directories(movie_player_tests PRIVATE src)
     target_compile_features(movie_player_tests PRIVATE cxx_std_20)
     set_target_properties(movie_player_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
