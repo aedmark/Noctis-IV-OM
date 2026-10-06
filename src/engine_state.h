@@ -2,9 +2,12 @@
 
 #include "travel.h"
 
+#include <array>
 #include <cstdint>
 
 namespace noctis {
+
+struct NativeSaveState;
 
 // Transient runtime state owned by the application rather than by an
 // individual legacy translation unit. Persistent navigation values remain in
@@ -37,9 +40,23 @@ struct ApplicationRuntimeState {
     void reset() noexcept;
 };
 
+struct GoesTerminalState {
+    std::int8_t command_cursor = 0;
+    std::int32_t scroll_offset = 0;
+    std::array<char, 120> command{'_'};
+
+    void reset() noexcept;
+};
+
+// Persistence adapters deliberately keep NativeSaveState's v1 schema flat.
+// Runtime ownership can evolve without changing either native or legacy bytes.
+void capture_goes_terminal_state(const GoesTerminalState &terminal, NativeSaveState &save) noexcept;
+void restore_goes_terminal_state(const NativeSaveState &save, GoesTerminalState &terminal) noexcept;
+
 struct EngineState {
     TravelRuntimeState travel;
     ApplicationRuntimeState application;
+    GoesTerminalState goes_terminal;
 
     void reset() noexcept;
 };

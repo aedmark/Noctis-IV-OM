@@ -7,17 +7,18 @@ Replace this document at the end of every session; Git holds older versions.
 - Date: 2026-10-06.
 - Repository: local `Noctis-IV-OM`; branch `master`.
 - Active milestone: M17, Engine Consolidation & Runtime Architecture.
-- Published checkpoint: M17-W06 in this commit.
-- Working tree: clean after the W06 commit.
+- Published checkpoint: M17-W07 in this commit; M17 work items complete and
+  the milestone exit audit is next.
+- Working tree: clean after the W07 commit.
 
 ## Read first
 
 1. `ENGINE_CONSOLIDATION.md` for M17 rules, sequencing, and invariants.
-2. `RENDERER_BOUNDS.md` for the W06 memory boundary and sanitizer evidence.
+2. `SAVE_STATE_AGGREGATES.md` for the W07 ownership and persistence boundary.
 3. M17 in `ROADMAP.md` for work-item status and exit criteria.
 4. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
 
-## M17 completed through W06
+## M17 completed through W07
 
 - `EngineState` owns transient travel phase and normalized speed.
 - GOESnet image exports receive an explicit destination instead of discovering
@@ -35,21 +36,28 @@ Replace this document at the end of every session; Git holds older versions.
   its logical 200×200 capacity. Both legacy padding regions are gone.
 - FELYSIA crevasse generation bounds every neighbor write independently, which
   removes the border overflow previously hidden by surface-map padding.
+- `GoesTerminalState`, owned by `EngineState`, is the sole live owner of the
+  GOESnet command buffer, command cursor, and output scroll offset.
+- Explicit capture/restore adapters preserve the existing flat native v1
+  fields and all legacy normalization paths without a schema-version change.
 
 ## Verification
 
-- Linux Clang Debug: 57/57 tests passed in 30.37 seconds.
-- Linux GCC Debug: 57/57 tests passed in 27.36 seconds.
-- Clang ASan/UBSan: 57/57 tests passed in 95.39 seconds with leak detection
+- Linux Clang Debug: 57/57 tests passed in 29.61 seconds.
+- Linux GCC Debug: 57/57 tests passed in 27.10 seconds.
+- Clang ASan/UBSan: 57/57 tests passed in 93.41 seconds with leak detection
   disabled because LeakSanitizer cannot run under the desktop runner's ptrace
   policy.
 - MinGW Windows Release and Emscripten Web Release both compile and link.
+- Native v1 and all source-backed legacy layouts are byte-identical after the
+  terminal aggregate adapter round trip. The persistence journey restores and
+  resaves a distinctive command, cursor, and scroll offset across restart.
 - Canonical renderer, surface generation, live environment/content, scripted
   journey, and orbit/surface hashes and counters remain unchanged.
 
 ## Next step
 
-Begin M17-W07 by identifying one coherent save-backed state aggregate whose
-capture, restore, live mutation, and fixture coverage can move together. Define
-an adapter that preserves native v1 and legacy import bytes before replacing
-the corresponding globals; do not split authority between old and new state.
+Run the M17 exit audit against its six exit criteria, then record the next
+milestone before beginning further engine extraction. The next safe persistent
+candidate is the compact FCS status aggregate, but it should move only with its
+HUD mutation paths and the same native/legacy adapter evidence used by W07.

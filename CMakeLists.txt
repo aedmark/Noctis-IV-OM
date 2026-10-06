@@ -201,7 +201,8 @@ if(BUILD_TESTING)
         -DGUIDE=${CMAKE_CURRENT_SOURCE_DIR}/data/GUIDE.BIN
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/runtime_paths_fixture.cmake)
 
-    add_executable(native_save_tests tests/native_save_test.cpp src/native_save.cpp src/atomic_file.cpp)
+    add_executable(native_save_tests tests/native_save_test.cpp src/native_save.cpp src/atomic_file.cpp
+        src/engine_state.cpp)
     target_include_directories(native_save_tests PRIVATE src)
     target_compile_features(native_save_tests PRIVATE cxx_std_20)
     set_target_properties(native_save_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
@@ -224,7 +225,8 @@ if(BUILD_TESTING)
         -DSEED=${CMAKE_CURRENT_SOURCE_DIR}/docs/porting/fixtures/F01C_MIRACLE/seed-current.bin
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/persistence_fixture.cmake)
 
-    add_executable(legacy_save_tests tests/legacy_save_test.cpp src/legacy_save.cpp src/native_save.cpp src/atomic_file.cpp)
+    add_executable(legacy_save_tests tests/legacy_save_test.cpp src/legacy_save.cpp src/native_save.cpp src/atomic_file.cpp
+        src/engine_state.cpp)
     target_include_directories(legacy_save_tests PRIVATE src)
     target_compile_features(legacy_save_tests PRIVATE cxx_std_20)
     set_target_properties(legacy_save_tests PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)

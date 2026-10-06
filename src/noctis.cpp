@@ -473,9 +473,6 @@ void mswrite(int16_t screen_id, const char *text) {
     }
 }
 
-int8_t gnc_pos            = 0;   // Character number in command line.
-int32_t goesfile_pos      = 0;   // Position of the GOES output file
-char goesnet_command[120] = "_"; // GOES Net Command Line
 std::string goes_output_cells;
 
 namespace {
@@ -552,11 +549,9 @@ noctis::NativeSaveState capture_native_state() {
     CAPTURE(secs);
     CAPTURE(data);
     CAPTURE(surlight);
-    CAPTURE(gnc_pos);
-    CAPTURE(goesfile_pos);
 #undef CAPTURE
     std::copy(std::begin(fcs_status), std::end(fcs_status), state.fcs_status.begin());
-    std::copy(std::begin(goesnet_command), std::end(goesnet_command), state.goesnet_command.begin());
+    noctis::capture_goes_terminal_state(noctis::engine_state().goes_terminal, state);
     state.last_snapshot     = last_snapshot;
     state.option_mouse_look = option_mouse_look;
     state.roof_speed        = roof_speed;
@@ -643,13 +638,11 @@ void apply_native_state(const noctis::NativeSaveState &state) {
     APPLY(secs);
     APPLY(data);
     APPLY(surlight);
-    APPLY(gnc_pos);
-    APPLY(goesfile_pos);
 #undef APPLY
     std::copy(state.fcs_status.begin(), state.fcs_status.end(), std::begin(fcs_status));
     std::snprintf(reinterpret_cast<char *>(fcs_status_extended), sizeof(fcs_status_extended), "%s",
                   reinterpret_cast<char *>(fcs_status));
-    std::copy(state.goesnet_command.begin(), state.goesnet_command.end(), std::begin(goesnet_command));
+    noctis::restore_goes_terminal_state(state, noctis::engine_state().goes_terminal);
 }
 
 } // namespace
@@ -709,6 +702,7 @@ void update_planet_label();
 
 // Native GOESnet dispatch. No process, shell, or interchange file is involved.
 void run_goesnet_module() {
+    auto &terminal = noctis::engine_state().goes_terminal;
     const auto &paths = noctis::runtime_paths();
     std::string sname(reinterpret_cast<const char *>(star_label), 20);
     while (!sname.empty() && sname.back() == ' ') sname.pop_back();
@@ -739,7 +733,8 @@ void run_goesnet_module() {
     const auto image_export_directory = noctis::user_downloads_directory();
     if (!image_export_directory.empty()) context.image_export_directory = image_export_directory;
 #endif
-    auto answer       = noctis::execute_goes_command(std::string_view(goesnet_command, gnc_pos + 1), context);
+    auto answer       = noctis::execute_goes_command(
+        std::string_view(terminal.command.data(), terminal.command_cursor + 1), context);
     goes_output_cells = std::move(answer.cells);
     noctis::play_goesnet_chime(answer.status == noctis::GoesResultStatus::ok);
 
@@ -788,7 +783,7 @@ void run_goesnet_module() {
     }
 
     force_update = 1;
-    goesfile_pos = 0;
+    terminal.scroll_offset = 0;
 }
 
 /* On-board computer screen tracking group */
@@ -993,6 +988,7 @@ int16_t goesk_a = -1;
 int16_t goesk_e = -1;
 
 void vehicle(float opencapcount) {
+    auto &terminal = noctis::engine_state().goes_terminal;
     int16_t n, c, i, j, k;
     int8_t short_text[11];
     uint8_t chcol;
@@ -1061,30 +1057,30 @@ void vehicle(float opencapcount) {
                 goesk_e = c;
 
                 if (c == 0x47) {
-                    goesnet_command[0] = '_';
-                    goesnet_command[1] = 0;
-                    gnc_pos            = 0;
-                    goesk_e            = -1;
+                    terminal.command[0]     = '_';
+                    terminal.command[1]     = 0;
+                    terminal.command_cursor = 0;
+                    goesk_e                 = -1;
                     noctis::play_terminal_keystroke();
                 }
             } else {
                 if (c == 27) {
                     goesk_a = c; // Pass the keystroke
-                } else if (c == 8 && gnc_pos > 0) {
-                    goesnet_command[gnc_pos - 1] = '_';
-                    goesnet_command[gnc_pos]     = 0;
-                    gnc_pos--;
+                } else if (c == 8 && terminal.command_cursor > 0) {
+                    terminal.command[terminal.command_cursor - 1] = '_';
+                    terminal.command[terminal.command_cursor]     = 0;
+                    terminal.command_cursor--;
                     noctis::play_terminal_keystroke();
                 } else if (c == 13) {
                     noctis::play_goesnet_transmit();
                     run_goesnet_module();
                     n = 0;
 
-                    if (!memcmp(goesnet_command, "CAST", 4)) {
+                    if (!memcmp(terminal.command.data(), "CAST", 4)) {
                         i = 0;
 
-                        while (i < gnc_pos) {
-                            if (goesnet_command[i] == ':') {
+                        while (i < terminal.command_cursor) {
+                            if (terminal.command[i] == ':') {
                                 n = i + 1;
                                 break;
                             }
@@ -1092,9 +1088,9 @@ void vehicle(float opencapcount) {
                             i++;
                         }
                     }
-                    goesnet_command[n]     = '_';
-                    goesnet_command[n + 1] = 0;
-                    gnc_pos                = n;
+                    terminal.command[n]     = '_';
+                    terminal.command[n + 1] = 0;
+                    terminal.command_cursor = static_cast<std::int8_t>(n);
                 }
 
                 // Transform quotation marks.
@@ -1110,11 +1106,11 @@ void vehicle(float opencapcount) {
                 // Check for invalid characters.
                 if (c != 36 && c != 38 && c != 60 && c != 62) {
                     // Enter valid characters.
-                    if ((c >= 32 && c <= 90 && gnc_pos < 83) || (c == 95)) {
-                        goesnet_command[gnc_pos]     = c;
-                        goesnet_command[gnc_pos + 1] = '_';
-                        goesnet_command[gnc_pos + 2] = 0;
-                        gnc_pos++;
+                    if ((c >= 32 && c <= 90 && terminal.command_cursor < 83) || (c == 95)) {
+                        terminal.command[terminal.command_cursor]     = static_cast<char>(c);
+                        terminal.command[terminal.command_cursor + 1] = '_';
+                        terminal.command[terminal.command_cursor + 2] = 0;
+                        terminal.command_cursor++;
                         noctis::play_terminal_keystroke();
                     }
                 }
@@ -1123,7 +1119,7 @@ void vehicle(float opencapcount) {
 
         memset(osscreen[0] + 3 * 21, 0, 4 * 21);
         mslocate(0, 0, 3);
-        mswrite(0, (char *) goesnet_command);
+        mswrite(0, terminal.command.data());
     }
 
     /* Key interception (priority) for the "STARMAP TREE". */
@@ -1143,8 +1139,8 @@ void vehicle(float opencapcount) {
                 case 0x4F:
                 case 0x76:
                 case 0x91: {
-                    goesfile_pos =
-                        noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::end);
+                    terminal.scroll_offset = noctis::goes_scroll_offset(
+                        terminal.scroll_offset, goes_output_cells.size(), noctis::GoesScroll::end);
                     goesk_e = -1;
                     noctis::play_terminal_scroll();
                     break;
@@ -1152,22 +1148,23 @@ void vehicle(float opencapcount) {
                 case 0x47:
                 case 0x84:
                 case 0x8D:
-                    goesfile_pos = noctis::goes_scroll_offset(goesfile_pos, 0, noctis::GoesScroll::home);
-                    goesk_e      = -1;
+                    terminal.scroll_offset =
+                        noctis::goes_scroll_offset(terminal.scroll_offset, 0, noctis::GoesScroll::home);
+                    goesk_e = -1;
                     noctis::play_terminal_scroll();
                     break;
 
                 case 80:
-                    goesfile_pos += noctis::goes_screen_columns;
+                    terminal.scroll_offset += noctis::goes_screen_columns;
                     goesk_e = -1;
                     noctis::play_terminal_scroll();
                     break;
 
                 case 72:
-                    goesfile_pos -= noctis::goes_screen_columns;
+                    terminal.scroll_offset -= noctis::goes_screen_columns;
 
-                    if (goesfile_pos < 0) {
-                        goesfile_pos = 0;
+                    if (terminal.scroll_offset < 0) {
+                        terminal.scroll_offset = 0;
                     }
 
                     goesk_e = -1;
@@ -1175,16 +1172,16 @@ void vehicle(float opencapcount) {
                     break;
 
                 case 0x51:
-                    goesfile_pos += noctis::goes_screen_bytes;
+                    terminal.scroll_offset += noctis::goes_screen_bytes;
                     goesk_e = -1;
                     noctis::play_terminal_scroll();
                     break;
 
                 case 0x49:
-                    goesfile_pos -= noctis::goes_screen_bytes;
+                    terminal.scroll_offset -= noctis::goes_screen_bytes;
 
-                    if (goesfile_pos < 0) {
-                        goesfile_pos = 0;
+                    if (terminal.scroll_offset < 0) {
+                        terminal.scroll_offset = 0;
                     }
 
                     goesk_e = -1;
@@ -1201,12 +1198,13 @@ void vehicle(float opencapcount) {
         }
 
         std::array<std::uint8_t, noctis::goes_screen_bytes + 1> page{};
-        goesfile_pos = noctis::goes_scroll_offset(goesfile_pos, goes_output_cells.size(), noctis::GoesScroll::none);
-        const auto available = goesfile_pos < static_cast<std::int32_t>(goes_output_cells.size())
-                                   ? goes_output_cells.size() - static_cast<std::size_t>(goesfile_pos)
+        terminal.scroll_offset = noctis::goes_scroll_offset(
+            terminal.scroll_offset, goes_output_cells.size(), noctis::GoesScroll::none);
+        const auto available = terminal.scroll_offset < static_cast<std::int32_t>(goes_output_cells.size())
+                                   ? goes_output_cells.size() - static_cast<std::size_t>(terminal.scroll_offset)
                                    : 0;
         const auto count     = std::min<std::size_t>(available, noctis::goes_screen_bytes);
-        std::copy_n(goes_output_cells.begin() + goesfile_pos, count, page.begin());
+        std::copy_n(goes_output_cells.begin() + terminal.scroll_offset, count, page.begin());
         std::copy(page.begin(), page.end(), std::begin(osscreen[1]));
     }
 
@@ -3632,9 +3630,10 @@ int main(int argc, char **argv) {
     }
     if (persistence_fixture_mode) {
         const auto execute = [](const char *command) {
-            std::strncpy(goesnet_command, command, sizeof(goesnet_command) - 1);
-            goesnet_command[sizeof(goesnet_command) - 1] = 0;
-            gnc_pos                                      = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
+            auto &terminal = noctis::engine_state().goes_terminal;
+            std::strncpy(terminal.command.data(), command, terminal.command.size() - 1);
+            terminal.command.back() = 0;
+            terminal.command_cursor = static_cast<std::int8_t>(std::strlen(terminal.command.data()) - 1);
             run_goesnet_module();
         };
         if (std::string_view(persistence_fixture_phase) == "advance") {
@@ -3661,15 +3660,19 @@ int main(int argc, char **argv) {
             last_snapshot     = 76'543'210;
             option_mouse_look = 2;
             roof_speed        = 1;
+            noctis::engine_state().goes_terminal.scroll_offset = 42;
             freeze();
             std::printf("persistence_fixture phase=advance remote=balas local=felysia preferences=4 panel=3 omega=on "
                         "plus=restored\n");
             return 0;
         }
         if (std::string_view(persistence_fixture_phase) == "verify") {
+            const auto &terminal = noctis::engine_state().goes_terminal;
             if (ap_target_x != -18928 || ap_target_y != -29680 || ap_target_z != -67336 || ip_targetted != 3 ||
                 !autoscreenoff || !revcontrols || !menusalwayson || !depolarize || dev_page != 2 || data != 3 ||
-                charge != -1 || last_snapshot != 76'543'210 || option_mouse_look != 2 || roof_speed != 1) {
+                charge != -1 || last_snapshot != 76'543'210 || option_mouse_look != 2 || roof_speed != 1 ||
+                terminal.command_cursor != 10 || terminal.scroll_offset != 42 ||
+                std::string_view(terminal.command.data()) != "ST FELYSIA_") {
                 noctis::log_event("error", "persistence_fixture", "saved gameplay state was not restored");
                 return 1;
             }
@@ -3678,7 +3681,8 @@ int main(int argc, char **argv) {
             const auto loaded = noctis::load_native_save(native_situation_file, continued);
             if (loaded.status != noctis::NativeSaveStatus::ok || continued.charge != -1 ||
                 continued.last_snapshot != 76'543'210 || continued.option_mouse_look != 2 ||
-                continued.roof_speed != 1) {
+                continued.roof_speed != 1 || continued.gnc_pos != 10 || continued.goesfile_pos != 42 ||
+                std::string_view(continued.goesnet_command.data()) != "ST FELYSIA_") {
                 noctis::log_event("error", "persistence_fixture", "continued state did not resave");
                 return 1;
             }
@@ -3741,9 +3745,10 @@ int main(int argc, char **argv) {
     }
     if (goesnet_fixture_mode) {
         const auto execute = [](const char *command) {
-            std::strncpy(goesnet_command, command, sizeof(goesnet_command) - 1);
-            goesnet_command[sizeof(goesnet_command) - 1] = 0;
-            gnc_pos                                      = static_cast<int8_t>(std::strlen(goesnet_command) - 1);
+            auto &terminal = noctis::engine_state().goes_terminal;
+            std::strncpy(terminal.command.data(), command, terminal.command.size() - 1);
+            terminal.command.back() = 0;
+            terminal.command_cursor = static_cast<std::int8_t>(std::strlen(terminal.command.data()) - 1);
             run_goesnet_module();
         };
         execute("HELP_");
@@ -4915,9 +4920,10 @@ void loop() {
             prev_planet_id = -1;
         } else if (data) {
             datasheetdelta = -2;
-        } else if (active_screen == 0 && gnc_pos > 0) {
-            gnc_pos = 0;
-            goesnet_command[0] = 0;
+        } else if (active_screen == 0 && noctis::engine_state().goes_terminal.command_cursor > 0) {
+            auto &terminal = noctis::engine_state().goes_terminal;
+            terminal.command_cursor = 0;
+            terminal.command[0] = 0;
             status("CANCELLED", 50);
         }
     }
@@ -7600,9 +7606,10 @@ resynctoplanet:
                 if ((mc == 'j' || mc == 'J') && !(labstar || labplanet) && !graphics_menu_status &&
                     !ip_targetting && !manual_target) {
                     active_screen = 0;
-                    std::strncpy(goesnet_command, "BM_", sizeof(goesnet_command) - 1);
-                    goesnet_command[sizeof(goesnet_command) - 1] = 0;
-                    gnc_pos = 2;
+                    auto &terminal = noctis::engine_state().goes_terminal;
+                    std::strncpy(terminal.command.data(), "BM_", terminal.command.size() - 1);
+                    terminal.command.back() = 0;
+                    terminal.command_cursor = 2;
                     run_goesnet_module();
                     status("WAYPOINT JOURNAL", 50);
                     goto endmain;

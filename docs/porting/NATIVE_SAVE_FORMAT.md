@@ -28,6 +28,12 @@ snapshot numbering, mouselook, roof speed, visor/HUD state, and visual-effect
 preferences. Each field is encoded individually with a fixed width in the same
 logical order documented beside the inherited globals in `noctis-0.cpp`.
 
+M17-W07 does not alter this layout. At runtime, the GOESnet command buffer,
+command cursor, and output scroll offset are one engine-owned
+`GoesTerminalState`. Explicit capture/restore adapters map that aggregate to
+the same three flat v1 fields at the persistence boundary. See
+`SAVE_STATE_AGGREGATES.md`.
+
 The writer creates `current.niv.tmp`, flushes and closes it, and then replaces
 `current.niv`. The reader caps input at 1 MiB before allocation and accepts a
 v1 file only when its magic, version, declared sizes, total size, and checksum
@@ -62,4 +68,7 @@ Together with `legacy_save_import` and M5-W07's `persistence_journey`, these
 tests establish the v1 boundary, bounded migration, application integration,
 every-byte corruption refusal, semantic validation after checksum verification,
 failed-replacement durability, and continued play across a process restart.
+M17-W07 additionally proves that aggregate adaptation preserves the complete
+encoded native state and every normalized legacy layout byte-for-byte, while
+the application journey restores and resaves distinctive terminal state.
 See `PERSISTENCE_HARDENING.md`.

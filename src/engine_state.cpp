@@ -1,5 +1,7 @@
 #include "engine_state.h"
 
+#include "native_save.h"
+
 #include <algorithm>
 
 namespace noctis {
@@ -54,9 +56,29 @@ void ApplicationRuntimeState::reset() noexcept {
     transition_count = 0;
 }
 
+void GoesTerminalState::reset() noexcept {
+    command_cursor = 0;
+    scroll_offset  = 0;
+    command.fill(0);
+    command.front() = '_';
+}
+
+void capture_goes_terminal_state(const GoesTerminalState &terminal, NativeSaveState &save) noexcept {
+    save.gnc_pos         = terminal.command_cursor;
+    save.goesfile_pos    = terminal.scroll_offset;
+    save.goesnet_command = terminal.command;
+}
+
+void restore_goes_terminal_state(const NativeSaveState &save, GoesTerminalState &terminal) noexcept {
+    terminal.command_cursor = save.gnc_pos;
+    terminal.scroll_offset  = save.goesfile_pos;
+    terminal.command        = save.goesnet_command;
+}
+
 void EngineState::reset() noexcept {
     travel.reset();
     application.reset();
+    goes_terminal.reset();
 }
 
 EngineState &engine_state() noexcept {

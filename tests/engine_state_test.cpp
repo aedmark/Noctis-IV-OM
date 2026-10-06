@@ -1,6 +1,9 @@
 #include "engine_state.h"
+#include "native_save.h"
 
+#include <algorithm>
 #include <cstdio>
+#include <iterator>
 
 namespace {
 bool require(bool condition, const char *message) {
@@ -58,5 +61,28 @@ int main() {
     reset_engine_state();
     ok &= require(application.mode == ApplicationMode::cockpit, "application reset mode mismatch");
     ok &= require(application.transition_count == 0, "application reset count mismatch");
+
+    NativeSaveState save;
+    save.gnc_pos = 7;
+    save.goesfile_pos = 123456;
+    save.goesnet_command.fill(0);
+    constexpr char command[] = "CAST FELYSIA";
+    std::copy(std::begin(command), std::end(command), save.goesnet_command.begin());
+    restore_goes_terminal_state(save, state.goes_terminal);
+    ok &= require(state.goes_terminal.command_cursor == 7, "terminal cursor restore mismatch");
+    ok &= require(state.goes_terminal.scroll_offset == 123456, "terminal scroll restore mismatch");
+    ok &= require(state.goes_terminal.command == save.goesnet_command, "terminal command restore mismatch");
+
+    NativeSaveState recaptured;
+    capture_goes_terminal_state(state.goes_terminal, recaptured);
+    ok &= require(recaptured.gnc_pos == save.gnc_pos, "terminal cursor capture mismatch");
+    ok &= require(recaptured.goesfile_pos == save.goesfile_pos, "terminal scroll capture mismatch");
+    ok &= require(recaptured.goesnet_command == save.goesnet_command, "terminal command capture mismatch");
+
+    reset_engine_state();
+    ok &= require(state.goes_terminal.command_cursor == 0, "terminal reset cursor mismatch");
+    ok &= require(state.goes_terminal.scroll_offset == 0, "terminal reset scroll mismatch");
+    ok &= require(state.goes_terminal.command.front() == '_' && state.goes_terminal.command[1] == 0,
+                  "terminal reset command mismatch");
     return ok ? 0 : 1;
 }

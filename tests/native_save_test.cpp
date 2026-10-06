@@ -1,3 +1,4 @@
+#include "engine_state.h"
 #include "native_save.h"
 
 #include <algorithm>
@@ -99,6 +100,18 @@ int main() {
     const auto decoded_result = noctis::decode_native_save(bytes, decoded);
     if (!require(decoded_result.status == noctis::NativeSaveStatus::ok, "valid native save did not decode")
         || !require(noctis::encode_native_save(decoded) == bytes, "native save did not round-trip bit-exactly")) {
+        return 1;
+    }
+
+    noctis::GoesTerminalState terminal;
+    noctis::restore_goes_terminal_state(decoded, terminal);
+    auto adapted = decoded;
+    adapted.gnc_pos = 0;
+    adapted.goesfile_pos = 0;
+    adapted.goesnet_command = {};
+    noctis::capture_goes_terminal_state(terminal, adapted);
+    if (!require(noctis::encode_native_save(adapted) == bytes,
+                 "terminal state adapter changed native v1 bytes")) {
         return 1;
     }
 

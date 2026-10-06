@@ -19,10 +19,21 @@ extracted from the legacy translation units. New engine state must be placed in
 that root or in an owned subsystem; new cross-file `extern` state is prohibited.
 
 The first slice owns transient travel presentation state: the current travel
-phase and normalized speed consumed by audio telemetry. Compatibility-sensitive
-position, guidance, and targeting values remain in the legacy state until they
-can migrate together with save capture, restore, and journey fixtures. There
-must never be two authoritative copies.
+phase and normalized speed consumed by audio telemetry. `GoesTerminalState`
+now owns the first persistent aggregate: command buffer, command cursor, and
+output scroll offset. Compatibility-sensitive position, guidance, and
+targeting values remain in the legacy state until they can migrate together
+with save capture, restore, and journey fixtures. There must never be two
+authoritative copies.
+
+## Save-backed state rule
+
+Runtime aggregation does not imply an on-disk schema change. Explicit capture
+and restore adapters map `GoesTerminalState` to the existing flat
+`NativeSaveState` fields, so native v1 remains exactly 401 bytes and every
+accepted legacy layout normalizes identically. All live terminal mutations use
+the engine-owned aggregate; the former command, cursor, and scroll globals no
+longer exist. See `SAVE_STATE_AGGREGATES.md`.
 
 ## Platform boundary rule
 
@@ -122,5 +133,10 @@ use exact allocations rather than compatibility padding. See
 - Representative surface fixtures cover the repaired FELYSIA crevasse border
   writes while retaining every accepted height, texture, object, and live-frame
   hash.
+- Engine-state and save tests exercise terminal defaults, reset, capture, and
+  restore. Native v1 and each source-backed legacy layout remain byte-identical
+  after an aggregate adapter round trip.
+- The persistence journey carries a distinctive terminal command, cursor, and
+  scroll offset across a process restart and confirms the same fields resave.
 - Existing travel, scripted-journey, orbit/surface, audio, save, and renderer
   fixtures remain the behavioral regression boundary.

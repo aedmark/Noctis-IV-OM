@@ -1,3 +1,4 @@
+#include "engine_state.h"
 #include "legacy_save.h"
 
 #include <filesystem>
@@ -16,6 +17,17 @@ bool require(bool condition, const char *message) {
 std::vector<std::uint8_t> read_file(const std::filesystem::path &path) {
     std::ifstream input(path, std::ios::binary);
     return {std::istreambuf_iterator<char>(input), {}};
+}
+
+bool terminal_adapter_preserves(const noctis::NativeSaveState &state) {
+    noctis::GoesTerminalState terminal;
+    noctis::restore_goes_terminal_state(state, terminal);
+    auto adapted = state;
+    adapted.gnc_pos = 0;
+    adapted.goesfile_pos = 0;
+    adapted.goesnet_command = {};
+    noctis::capture_goes_terminal_state(terminal, adapted);
+    return noctis::encode_native_save(adapted) == noctis::encode_native_save(state);
 }
 
 } // namespace
@@ -50,6 +62,10 @@ int main(int argc, char **argv) {
                         "legacy situation fields were decoded incorrectly")) {
             return 1;
         }
+        if (!require(terminal_adapter_preserves(imported.state),
+                     "terminal state adapter changed normalized legacy bytes")) {
+            return 1;
+        }
         noctis::NativeSaveState upgraded;
         if (!require(noctis::save_native_save(upgrade_path, imported.state).status == noctis::NativeSaveStatus::ok,
                      "legacy situation did not migrate to native v1")
@@ -74,7 +90,9 @@ int main(int argc, char **argv) {
         if (!require(noctis::import_legacy_situation(std::span(extended.data(), test.size), imported).status
                          == noctis::NativeSaveStatus::ok,
                      "source-backed extended NIV+ layout was rejected")
-            || !require(imported.layout == test.layout, "extended NIV+ layout was misidentified")) {
+            || !require(imported.layout == test.layout, "extended NIV+ layout was misidentified")
+            || !require(terminal_adapter_preserves(imported.state),
+                        "terminal state adapter changed extended legacy bytes")) {
             return 1;
         }
         noctis::NativeSaveState upgraded;
@@ -103,7 +121,9 @@ int main(int argc, char **argv) {
         || !require(transitional_import.layout == noctis::LegacySituationLayout::nivplus_transitional_382,
                     "transitional NIV+ layout was misidentified")
         || !require(transitional_import.state.hud_closed == 0,
-                    "transitional NIV+ HUD state was not normalized")) {
+                    "transitional NIV+ HUD state was not normalized")
+        || !require(terminal_adapter_preserves(transitional_import.state),
+                    "terminal state adapter changed transitional legacy bytes")) {
         return 1;
     }
     noctis::NativeSaveState transitional_upgraded;
