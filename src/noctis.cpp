@@ -2720,6 +2720,17 @@ bool oakenshield_fixture_mode        = false;
 const char *surface_fixture_name     = "felysia-habitable";
 const char *environment_fixture_name = "felysia-habitable";
 
+#if defined(__EMSCRIPTEN__)
+bool export_browser_movie_deck(std::uint16_t deck, double fps) {
+    char deck_name[4];
+    std::snprintf(deck_name, sizeof(deck_name), "%03u", deck);
+    const auto deck_path = noctis::runtime_paths().movies_dir / deck_name;
+    const auto deck_path_string = deck_path.string();
+    return noctis::start_browser_deck_export(
+        deck_path_string.c_str(), deck_name, fps > 0.0 ? fps : 18.2);
+}
+#endif
+
 void handle_movie_extended_key(std::int16_t key) {
     if (key == 0x3D) {
         movie_recorder.toggle_menu();
@@ -2746,21 +2757,20 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
     }
     if (key == 13 && (movie_recorder.menu_open() || movie_recorder.session_active())) {
         if (movie_recorder.recording()) {
+            const auto completed_deck = movie_recorder.deck();
+            const auto completed_fps = movie_recorder.captured_fps();
             movie_recorder.stop();
             status("STOP REC", 100);
 #if defined(__EMSCRIPTEN__)
-            char deck_name[16];
-            std::snprintf(deck_name, sizeof(deck_name), "noctis_deck_%03u", movie_recorder.deck() > 1 ? movie_recorder.deck() - 1 : 1);
-            noctis::stop_browser_video_recording(deck_name);
+            status(export_browser_movie_deck(completed_deck, completed_fps)
+                       ? "EXPORTING WEBM" : "WEBM EXPORT FAILED",
+                   100);
 #endif
             return true;
         }
         const auto result = movie_recorder.start_or_resume(noctis::runtime_paths().movies_dir);
         if (result == noctis::MovieStartResult::started) {
             status("RECORDING", 100);
-#if defined(__EMSCRIPTEN__)
-            noctis::start_browser_video_recording(static_cast<int>(movie_recorder.captured_fps() > 0 ? movie_recorder.captured_fps() : 18.2));
-#endif
         } else if (result == noctis::MovieStartResult::resumed) {
             status("RESUME REC", 100);
         } else if (result == noctis::MovieStartResult::occupied) {
@@ -2784,6 +2794,11 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
     if (key == 'x' || key == 'X') {
         const auto deck_path = movie_recorder.deck_path(noctis::runtime_paths().movies_dir);
         if (movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir)) {
+#if defined(__EMSCRIPTEN__)
+            status(export_browser_movie_deck(movie_recorder.deck(), 18.2)
+                       ? "EXPORTING WEBM" : "EXPORT UNAVAILABLE",
+                   100);
+#else
             noctis::VideoExportOptions opts;
             opts.deck_dir = deck_path;
             opts.fps = 18.2;
@@ -2793,6 +2808,7 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
             } else {
                 status("EXPORT IN PROGRESS", 100);
             }
+#endif
         } else {
             status("DECK EMPTY", 100);
         }
@@ -2812,20 +2828,34 @@ bool handle_movie_key(std::int16_t key, bool label_entry) {
 }
 
 void advance_movie_capture(bool ascending_from_surface) {
+    const auto active_deck = movie_recorder.deck();
     const auto decision = movie_recorder.advance_simulation_frame(ascending_from_surface);
     if (decision.capture_path) {
         const bool written = write_indexed_bmp(*decision.capture_path);
         movie_recorder.confirm_capture(written);
         if (!written) {
             status("MOVIE ERROR", 100);
-        } else if (movie_recorder.black_flash()) {
+#if defined(__EMSCRIPTEN__)
+            if (movie_recorder.captured_frames() > 0) {
+                export_browser_movie_deck(active_deck, movie_recorder.captured_fps());
+            }
+#endif
+        }
+#if !defined(__EMSCRIPTEN__)
+        else if (movie_recorder.black_flash()) {
             std::memset(adapted, 0, adapted_width * adapted_height);
         } else {
-            std::fill(adapted + 198 * adapted_width, adapted + adapted_width * adapted_height, 127);
+            const auto indicator_y = std::min(adapted_height, 198 * internal_res_scale);
+            std::fill(adapted + indicator_y * adapted_width, adapted + adapted_width * adapted_height, 127);
         }
+#endif
     }
-    if (decision.stopped)
+    if (decision.stopped) {
         status("ASCENT CUT", 100);
+#if defined(__EMSCRIPTEN__)
+        export_browser_movie_deck(active_deck, movie_recorder.captured_fps());
+#endif
+    }
 }
 
 namespace {

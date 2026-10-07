@@ -558,7 +558,11 @@ GoesResult handle_movie_command(const std::filesystem::path &movies_path, std::s
         rows.push_back(std::string(divider));
         rows.push_back(std::to_string(decks.size()) + (decks.size() == 1 ? " DECK ON FILE." : " DECKS ON FILE."));
         rows.push_back("MOVIE PLAY [N] TO VIEW");
+#if defined(__EMSCRIPTEN__)
+        rows.push_back("MOVIE EXPORT [N] WEBM");
+#else
         rows.push_back("MOVIE EXPORT [N] TO MP4");
+#endif
         return result(GoesResultStatus::ok, std::move(rows));
     }
 
@@ -579,18 +583,36 @@ GoesResult handle_movie_command(const std::filesystem::path &movies_path, std::s
             return result(GoesResultStatus::not_found, {"DECK NOT FOUND.", "TYPE MOVIE FOR LIST."});
         }
 
+#if defined(__EMSCRIPTEN__)
+        const auto deck_path = target_deck->path.string();
+        const bool started = start_browser_deck_export(
+            deck_path.c_str(), target_deck->deck_str.c_str(), target_deck->fps);
+        if (!started) {
+            return result(GoesResultStatus::unavailable, {
+                " WEBM EXPORT BUSY   ",
+                std::string(divider),
+                "WAIT FOR THE CURRENT",
+                "EXPORT TO FINISH."
+            });
+        }
+#else
         VideoExportOptions opts;
         opts.deck_dir = target_deck->path;
         opts.fps = target_deck->fps;
         opts.format = VideoFormat::mp4;
         start_video_export_async(opts);
+#endif
 
         return result(GoesResultStatus::ok, {
             " EXPORTING MOVIEDECK ",
             std::string(divider),
             "DECK " + target_deck->deck_str + ": " + std::to_string(target_deck->frame_count) + " FRAMES",
             "ENCODING IN PROGRESS",
+#if defined(__EMSCRIPTEN__)
+            "DOWNLOADING WEBM",
+#else
             "SAVING TO DOWNLOADS",
+#endif
         }, GoesResultAction::export_created);
     }
 

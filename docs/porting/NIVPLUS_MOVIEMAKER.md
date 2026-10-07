@@ -16,6 +16,11 @@ image-sequence recorder available in space and on planetary surfaces.
 | `f` | Toggle black-flash versus unobtrusive capture indication |
 | Enter | Start from the open panel, or stop an active recording |
 | `p` | Pause or resume an active recording |
+| `v` / Space | Open the selected recorded deck in the player |
+| `x` | Export the selected deck to MP4 on desktop or WebM in the browser |
+
+The F3 panel also displays the player controls: Space or `p` toggles playback,
+Left/Right steps one frame, `l` toggles looping, and Escape closes the player.
 
 Recording produces `movies/DDD/FFFFFFFF.BMP`. The frame number restarts at one
 for a new deck, recording may continue through landing, and a surface recording
@@ -39,9 +44,16 @@ not require a save-schema change.
    driven by simulation frames, not rendering speed or wall time.
 5. One shared setup model renders in the cockpit and surface visor, with the
    compact cockpit status messages retained where the full panel cannot appear.
-6. Recording stays alive across the normal landing transition. Enter stops it
-   Enter, advance to the next deck candidate, and enforce the pinned ascent
+6. Recording stays alive across the normal landing transition. Enter stops it,
+   advances to the next deck candidate, and enforces the pinned ascent
    cutoff. Pause neither emits frames nor advances recording elapsed time.
+7. Browser recording suppresses the post-capture flash and produces its WebM
+   from the completed clean BMP deck rather than recording the viewport canvas.
+   Explicit browser deck export uses the same path; it does not ask the player
+   to start a second recording.
+8. The web shell cancels the browser's Ctrl-plus and Ctrl-minus defaults while
+   the game is active, including numpad variants, so those keys reach deck
+   selection without changing page zoom.
 
 The game will not invoke or bundle ffmpeg. Converting BMP sequences to a video
 remains an optional external workflow.

@@ -61,9 +61,13 @@ int main() {
                   "F2 advanced menu 4x resolution, far draw distance, detailed filter, vibrant scattering, and vibrant coronal flares line");
     const auto movie = noctis::plus_movie_menu_lines(7, 3, false, true, false, false, 0.0);
     const auto recording = noctis::plus_movie_menu_lines(7, 3, true, false, true, false, 12.5);
-    ok &= require(movie.size() == 5 && movie[1].find("007 EXISTS") != std::string::npos
+    ok &= require(movie.size() == 8 && movie[1].find("007 EXISTS") != std::string::npos
                       && movie[2].find("003") != std::string::npos
                       && movie[4] == "START RECORDING (ENTER)"
+                      && movie[5].find("PLAY DECK") != std::string::npos
+                      && movie[5].find("EXPORT") != std::string::npos
+                      && movie[6].find("LEFT/RIGHT STEP") != std::string::npos
+                      && movie[7].find("ESC: CLOSE") != std::string::npos
                       && recording[3] == "BLACK FLASH WHEN CAPTURING (F)"
                       && recording[4].find("FPS 12.50") != std::string::npos,
                   "F3 menu state text changed");

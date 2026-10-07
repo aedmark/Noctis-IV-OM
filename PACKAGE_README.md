@@ -1,6 +1,6 @@
-# Noctis IV OM — Linux 3.1.0 Release
+# Noctis IV OM — Linux 3.2.0 Release
 
-Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 3.1.0 release is
+Noctis IV OM is a hybrid of Noctis IV Plus and Noctis IV LR. This 3.2.0 release is
 verified on 64-bit Ubuntu 24.04+ using native Wayland and X11 display backends.
 It automatically selects native Wayland on Wayland compositors (GNOME, KDE Plasma)
 and falls back to X11 on X11 desktops.
@@ -92,13 +92,12 @@ building the game from source.
 
 ## Release status
 
-This is the 3.1.0 Engine Reliability Release. It adds deterministic semantic input
-recording and replay, explicit application-mode and persistent terminal-state
-ownership, bounded renderer and surface-map access, and complete Clang/GCC/
-sanitizer verification. Native v1 and legacy saves remain compatible, and
-accepted journey, universe, surface, and indexed-render outputs remain exact.
-It includes every audiovisual, cartography, media, and exploration feature from
-the 3.0.0 Atmospheric, Cinematic & Ambient Soundscape Release.
+This is the 3.2.0 Browser Moviemaker & WebM Release. It repairs scaled capture
+indicators, exports clean recorded decks as native-resolution WebM in browsers,
+adds direct web export from the projector, F3 panel, and GOESnet, and documents
+the complete playback control set. Browser movie-deck shortcuts no longer change
+page zoom. It includes the deterministic engine, save compatibility, and renderer
+safety work from the 3.1.0 Engine Reliability Release.
 Please keep the JSON Lines output from `./nivlr --diagnostics` with any startup report. Read
 `KNOWN_ISSUES.md` for compiler-specific presentation details, and consult
 `TROUBLESHOOTING.md` for solutions to common display, controls, and recovery

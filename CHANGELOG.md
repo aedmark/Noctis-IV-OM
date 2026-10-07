@@ -5,6 +5,16 @@ game, not translations of functions from Assembly to C++.
 
 # Versions
 
+## 3.2.0 (2026-10-06) — The Browser Moviemaker & WebM Release
+
+### Fixed
+* **Browser Moviemaker:**
+  * Prevented the native post-capture indicator from covering browser recordings at scaled internal resolutions.
+  * Added direct WebM export of recorded BMP decks in the web build, including the projector, F3, and GOESnet export paths.
+  * Generated automatic browser downloads from completed clean BMP decks instead of recording the viewport canvas.
+  * Reserved Ctrl-plus and Ctrl-minus for movie-deck selection while the web game is active instead of allowing browser zoom.
+  * Added the deck player and playback controls to the F3 panel.
+
 ## 3.1.0 (2026-10-06) — The Deterministic Engine & Reliability Release
 
 ### Engine Reliability

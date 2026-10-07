@@ -66,6 +66,8 @@ bool browser_media_recorder_supported();
 bool start_browser_video_recording(int fps = 20);
 bool stop_browser_video_recording(const char *deck_name = "noctis_movie");
 bool is_browser_video_recording();
+bool start_browser_deck_export(const char *deck_dir, const char *deck_name, double fps = 18.2);
+bool is_browser_deck_export_running();
 #endif
 
 } // namespace noctis

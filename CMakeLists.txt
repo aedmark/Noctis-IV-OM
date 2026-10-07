@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(nivlr VERSION 3.1.0 LANGUAGES C CXX)
+project(nivlr VERSION 3.2.0 LANGUAGES C CXX)
 
 # The inherited sources use the widely supported M_PI extension. MSVC keeps
 # those constants behind this definition.
@@ -664,8 +664,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32)
     set(CPACK_PACKAGE_NAME "Noctis-IV-OM")
     set(CPACK_PACKAGE_VENDOR "Noctis IV OM contributors")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-        "Noctis IV OM 3.1.0 Release")
-    set(CPACK_PACKAGE_VERSION "3.1.0")
+        "Noctis IV OM 3.2.0 Release")
+    set(CPACK_PACKAGE_VERSION "3.2.0")
     set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}")
     set(CPACK_PACKAGE_CHECKSUM "SHA256")
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)

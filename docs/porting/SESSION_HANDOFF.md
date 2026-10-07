@@ -6,16 +6,16 @@ Replace this document at the end of every session; Git holds older versions.
 
 - Date: 2026-10-06.
 - Repository: local `Noctis-IV-OM`; branch `master`.
-- Active milestone: M17, Engine Consolidation & Runtime Architecture.
-- Published checkpoint: v3.1.0 release commit; M17 complete.
-- Working tree: clean after the v3.1.0 release commit.
+- Active milestone: post-M17 browser Moviemaker maintenance.
+- Published checkpoint: v3.2.0 release; M17 remains complete.
+- Working tree: clean after the v3.2.0 release commit.
 
 ## Read first
 
-1. `ENGINE_CONSOLIDATION.md` for M17 rules, sequencing, and invariants.
-2. `RELEASE_3_1_0.md` for package hashes and release verification.
-3. M17 in `ROADMAP.md` for work-item status and exit criteria.
-4. ADR-0015 in `DECISIONS.md` for the incremental-migration decision.
+1. `RELEASE_3_2_0.md` for package hashes and release verification.
+2. `NIVPLUS_MOVIEMAKER.md` for capture, playback, and export behavior.
+3. `ENGINE_CONSOLIDATION.md` for M17 rules and preserved invariants.
+4. M17 in `ROADMAP.md` and ADR-0015 in `DECISIONS.md` for architecture context.
 
 ## M17 complete
 
@@ -42,11 +42,22 @@ Replace this document at the end of every session; Git holds older versions.
 - The exit audit passes all six roadmap criteria with direct code and fixture
   evidence; no deferred M17 blocker remains.
 
+## Browser Moviemaker maintenance complete
+
+- Completed browser decks export directly to WebM from the projector, F3, and
+  GOESnet paths instead of instructing the player to begin another recording.
+- The browser encoder reads clean BMP deck frames into an offscreen canvas, so
+  viewport letterboxing and capture indicators cannot enter the downloaded file.
+- The native capture indicator scales at 1x, 2x, and 4x internal resolutions.
+- The F3 panel displays playback, stepping, looping, close, and export controls.
+- Ctrl-plus/minus and numpad variants select decks in the active web game without
+  changing the browser zoom level.
+
 ## Verification
 
-- Linux Clang Debug: 57/57 tests passed in 29.61 seconds.
-- Linux GCC Debug: 57/57 tests passed in 27.10 seconds.
-- Clang ASan/UBSan: 57/57 tests passed in 93.41 seconds with leak detection
+- Linux Clang Release: 57/57 tests passed in 7.46 seconds.
+- Linux GCC Debug: 57/57 tests passed in 27.84 seconds.
+- Clang ASan/UBSan: 57/57 tests passed in 94.28 seconds with leak detection
   disabled because LeakSanitizer cannot run under the desktop runner's ptrace
   policy.
 - MinGW Windows Release and Emscripten Web Release both compile and link.
@@ -55,15 +66,16 @@ Replace this document at the end of every session; Git holds older versions.
   resaves a distinctive command, cursor, and scroll offset across restart.
 - Canonical renderer, surface generation, live environment/content, scripted
   journey, and orbit/surface hashes and counters remain unchanged.
-- Linux Clang Release: 57/57 tests passed in 6.91 seconds.
 - Extracted Linux package diagnostics and three-frame graphical smoke passed.
 - Extracted Windows package diagnostics passed under Wine.
 - Linux, Windows, and Web archives match their published SHA-256 files.
-- The release website passed desktop and 390×844 responsive visual checks; the
-  hosted WebAssembly payload reached its launch screen with no console errors.
+- A browser-exported deck decoded as a playable 640x400 VP9 WebM without the
+  reported white viewport rectangle.
+- The release website passed desktop and mobile responsive visual checks; the
+  WebAssembly payload reached its launch screen without console errors.
 
 ## Next step
 
-Begin planning the post-M17 milestone. The next safe persistent-state candidate
-is the compact FCS status aggregate, but it should move only with its HUD
-mutation paths and the same native/legacy adapter evidence used by W07.
+Plan the next engine milestone. The next safe persistent-state candidate remains
+the compact FCS status aggregate, but it should move only with its HUD mutation
+paths and the same native/legacy adapter evidence used by M17-W07.

@@ -23,7 +23,7 @@
         <a href="index.html#controls">Controls</a>
         <a href="devlog.html">Dev Diary</a>
         <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="index.html#download">Get 3.1.0</a>
+        <a class="nav-cta" href="index.html#download">Get 3.2.0</a>
       </nav>
     </div>
   </header>
@@ -209,6 +209,14 @@
     <p>The runtime now has explicit ownership for travel state, cockpit/surface/modal application modes, and the persisted GOESnet terminal session. A legal transition graph protects descent, landing, ascent, gallery, movie-player, and shutdown lifecycles, while explicit save adapters keep runtime architecture independent from the established disk format.</p>
     <p>A new versioned semantic input recorder captures fixed-tick player intent instead of host key codes. Both a scripted space journey and a complete 783-frame orbit-to-surface session replay at different presentation cadences with identical simulation, indexed-frame, and content checkpoints.</p>
     <p>The software renderer no longer relies on hidden allocation padding. Texture reads carry explicit capacities, framebuffer access is bounded to the active page, and the surface map and maximum framebuffer use their exact logical allocations. The complete 57-test suite passes under Clang, GCC, and AddressSanitizer/UndefinedBehaviorSanitizer, with Windows and WebAssembly release builds linked from the same simulation code.</p>
+  </section>
+
+  <section class="update-entry">
+    <h2>[UPDATE] 3.2.0: The Browser Moviemaker &amp; WebM Release — Clean Deck Export and Complete Controls</h2>
+    <p>Version 3.2.0 makes Moviemaker a first-class browser workflow. Web recordings now export from the clean numbered BMP deck rather than capturing the viewport canvas, preserving the movie's native resolution, cadence, and frame content without scaled capture indicators or page letterboxing.</p>
+    <p>The Stardrifter projector, F3 panel, and GOESnet MOVIE command all export recorded browser decks directly to WebM. Export no longer tells browser players to press Enter and begin a different recording; the selected completed deck is encoded and downloaded naturally.</p>
+    <p>The F3 panel now advertises deck playback, export, play/pause, frame stepping, looping, and close controls. Ctrl-plus and Ctrl-minus—including numpad variants—remain available for deck selection while the game is active instead of changing browser zoom.</p>
+    <p>Desktop capture behavior remains compatible, while the unobtrusive native capture indicator now scales correctly at 2× and 4× internal resolutions. All 57 regression tests pass, and the WebAssembly export path was verified with a playable VP9 WebM at the recorded deck's native 640×400 resolution.</p>
   </section>
 </article>
 </body>

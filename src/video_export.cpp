@@ -367,7 +367,8 @@ EM_JS(int, js_stop_canvas_recording, (const char *name_str), {
         if (!window._noctis_recorder) return 0;
         var name = (name_str ? UTF8ToString(name_str) : 'noctis_movie') + '.webm';
         window._noctis_recorder.onstop = function() {
-            var blob = new Blob(window._noctis_recorder_chunks, { type: 'video/webm' });
+            var blob = new Blob(window._noctis_recorder_chunks,
+                                { type: window._noctis_recorder.mimeType || 'video/webm' });
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.style.display = 'none';
@@ -394,6 +395,96 @@ EM_JS(int, js_is_canvas_recording, (), {
     return (window._noctis_recorder && window._noctis_recorder.state === 'recording') ? 1 : 0;
 });
 
+EM_JS(int, js_start_deck_export, (const char *deck_dir_str, const char *deck_name_str, double fps), {
+    try {
+        if (window._noctis_deck_exporting || typeof window.MediaRecorder !== 'function' ||
+            typeof window.createImageBitmap !== 'function' ||
+            typeof HTMLCanvasElement.prototype.captureStream !== 'function') return 0;
+
+        var deckDir = UTF8ToString(deck_dir_str);
+        var deckName = UTF8ToString(deck_name_str);
+        var frames = FS.readdir(deckDir)
+            .filter(function(name) {
+                if (name.length !== 12 || name.slice(8).toLowerCase() !== '.bmp') return false;
+                return Array.from(name.slice(0, 8)).every(function(ch) { return ch >= '0' && ch <= '9'; });
+            })
+            .sort();
+        if (!frames.length) return 0;
+
+        var rate = Number.isFinite(fps) && fps > 0 ? fps : 18.2;
+        window._noctis_deck_exporting = true;
+
+        (async function() {
+            var stream = null;
+            try {
+                var loadFrame = async function(name) {
+                    var bytes = FS.readFile(deckDir + '/' + name);
+                    return await createImageBitmap(new Blob([bytes], { type: 'image/bmp' }));
+                };
+
+                var first = await loadFrame(frames[0]);
+                var canvas = document.createElement('canvas');
+                canvas.width = first.width;
+                canvas.height = first.height;
+                var context = canvas.getContext('2d', { alpha: false });
+                context.imageSmoothingEnabled = false;
+                context.drawImage(first, 0, 0);
+                first.close();
+
+                stream = canvas.captureStream(rate);
+                var mimeType = 'video/webm;codecs=vp9';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+                var options = MediaRecorder.isTypeSupported(mimeType) ? { mimeType: mimeType } : {};
+                var chunks = [];
+                var recorder = new MediaRecorder(stream, options);
+                var stopped = new Promise(function(resolve) { recorder.onstop = resolve; });
+                recorder.ondataavailable = function(event) {
+                    if (event.data && event.data.size > 0) chunks.push(event.data);
+                };
+                recorder.start(250);
+
+                var frameDelay = 1000 / rate;
+                for (var index = 0; index < frames.length; ++index) {
+                    var bitmap = await loadFrame(frames[index]);
+                    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                    bitmap.close();
+                    await new Promise(function(resolve) { setTimeout(resolve, frameDelay); });
+                }
+
+                recorder.stop();
+                await stopped;
+                var blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+                var url = URL.createObjectURL(blob);
+                var anchor = document.createElement('a');
+                anchor.style.display = 'none';
+                anchor.href = url;
+                anchor.download = 'noctis_deck_' + deckName + '.webm';
+                document.body.appendChild(anchor);
+                anchor.click();
+                setTimeout(function() {
+                    document.body.removeChild(anchor);
+                    URL.revokeObjectURL(url);
+                }, 2000);
+            } catch (err) {
+                console.error('Noctis IV OM: Failed to export movie deck', err);
+            } finally {
+                if (stream) stream.getTracks().forEach(function(track) { track.stop(); });
+                window._noctis_deck_exporting = false;
+            }
+        })();
+        return 1;
+    } catch (err) {
+        window._noctis_deck_exporting = false;
+        console.error('Noctis IV OM: Failed to start movie deck export', err);
+        return 0;
+    }
+});
+
+EM_JS(int, js_is_deck_export_running, (), {
+    return window._noctis_deck_exporting ? 1 : 0;
+});
+
 bool browser_media_recorder_supported() {
     return js_media_recorder_supported() != 0;
 }
@@ -408,6 +499,14 @@ bool stop_browser_video_recording(const char *deck_name) {
 
 bool is_browser_video_recording() {
     return js_is_canvas_recording() != 0;
+}
+
+bool start_browser_deck_export(const char *deck_dir, const char *deck_name, double fps) {
+    return deck_dir != nullptr && deck_name != nullptr && js_start_deck_export(deck_dir, deck_name, fps) != 0;
+}
+
+bool is_browser_deck_export_running() {
+    return js_is_deck_export_running() != 0;
 }
 #endif
 

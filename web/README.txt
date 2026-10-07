@@ -1,4 +1,4 @@
-Noctis IV OM 3.1.0 web build
+Noctis IV OM 3.2.0 web build
 
 Serve this folder with any static web server and open index.html, e.g.
   python3 -m http.server 8090

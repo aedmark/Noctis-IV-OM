@@ -259,7 +259,10 @@
       'Tab', 'Backspace', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
       'PageUp', 'PageDown', 'Home', 'End', 'Slash', 'Quote']);
     window.addEventListener('keydown', function (event) {
-      if (launch.hidden && gameKeys.has(event.code)) event.preventDefault();
+      var movieDeckShortcut = event.ctrlKey &&
+        (event.code === 'Equal' || event.code === 'Minus' ||
+         event.code === 'NumpadAdd' || event.code === 'NumpadSubtract');
+      if (launch.hidden && (gameKeys.has(event.code) || movieDeckShortcut)) event.preventDefault();
     }, { capture: true });
 
     // Browsers only grant pointer lock and fullscreen from inside a user

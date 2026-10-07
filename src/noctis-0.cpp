@@ -5920,13 +5920,15 @@ void draw_plus_overlay(bool surface) {
             wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
     } else {
-        area_clear(adapted, 11 * scale, 130 * scale, 0, 0, 298 * scale, 42 * scale, 112);
         const auto lines = noctis::plus_movie_menu_lines(
             movie_recorder.deck(), movie_recorder.cadence(), movie_recorder.black_flash(),
             movie_recorder.deck_occupied(noctis::runtime_paths().movies_dir), movie_recorder.recording(),
             movie_recorder.paused(), movie_recorder.captured_fps());
+        const int box_h = static_cast<int>(lines.size()) * 8 + 8;
+        const int box_y = std::max(10, 185 - box_h);
+        area_clear(adapted, 11 * scale, box_y * scale, 0, 0, 298 * scale, box_h * scale, 112);
         for (std::size_t index = 0; index < lines.size(); ++index) {
-            wrouthud(14, static_cast<uint16_t>(133 + index * 8), 0, lines[index].c_str());
+            wrouthud(14, static_cast<uint16_t>(box_y + 4 + index * 8), 0, lines[index].c_str());
         }
     }
 }

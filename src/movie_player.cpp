@@ -122,8 +122,13 @@ bool draw_ui_button(const Rectangle &rect, const char *label, int font_size) {
 void trigger_movie_export() {
     if (g_player.frame_files.empty()) return;
 #if defined(__EMSCRIPTEN__)
-    show_toast("IN BROWSER: USE F3 ENTER FOR WEBM RECORDING", true);
-    play_goesnet_chime(true);
+    const auto deck_path = g_player.deck.path.string();
+    const bool started = start_browser_deck_export(
+        deck_path.c_str(), g_player.deck.deck_str.c_str(), g_player.fps);
+    show_toast(started ? "EXPORTING DECK " + g_player.deck.deck_str + " TO WEBM..."
+                       : "WEBM EXPORT UNAVAILABLE OR ALREADY RUNNING",
+               started, started ? 5.0f : 3.5f);
+    play_goesnet_chime(started);
 #else
     VideoExportOptions options;
     options.deck_dir = g_player.deck.path;

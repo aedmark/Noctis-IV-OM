@@ -504,7 +504,10 @@ const std::vector<std::string> plus_movie_menu_lines(std::uint16_t deck,
     else std::snprintf(action_line, sizeof(action_line), "START RECORDING (ENTER)");
     return {"NOCTIS IV+ MOVIEMAKER", deck_line, cadence_line,
             black_flash ? "BLACK FLASH WHEN CAPTURING (F)" : "NO BLACK FLASH WHEN CAPTURING (F)",
-            action_line};
+            action_line,
+            "PLAY DECK (V/SPACE)  EXPORT (X)",
+            "PLAYER: SPACE/P PLAY  LEFT/RIGHT STEP",
+            "L: LOOP  ESC: CLOSE"};
 }
 
 const std::vector<std::string> plus_controls_menu_lines(bool invert_y,
