@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Command & Systems Codex • Noctis IV OM v3.2</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🌌 Noctis IV OM</h1>
+            <span class="version-tag">Command & Systems Codex</span>
+            <p style="margin-top: 0.6rem; font-size: 0.85rem;"><a href="index.html" style="color: var(--accent-cyan); text-decoration: none;">&larr; Back to Stardrifter Codex</a></p>
+        </div>
+        <nav class="sidebar-nav">
+            
+            <section>
+                <h3>📡 GOESnet Terminal Commands</h3>
+                <ul>
+                    <li><a href="#cat-goesnet"><em>Overview (21 Commands)</em></a></li>
+                    <li><a href="#cmd-clr">CLR</a></li>
+                    <li><a href="#cmd-help">HELP</a></li>
+                    <li><a href="#cmd-par">PAR</a></li>
+                    <li><a href="#cmd-where">WHERE</a></li>
+                    <li><a href="#cmd-st">ST</a></li>
+                    <li><a href="#cmd-dl">DL</a></li>
+                    <li><a href="#cmd-cat">CAT</a></li>
+                    <li><a href="#cmd-cast">CAST</a></li>
+                    <li><a href="#cmd-rep">REP</a></li>
+                    <li><a href="#cmd-dele">DELE</a></li>
+                    <li><a href="#cmd-sl">SL</a></li>
+                    <li><a href="#cmd-pri">PRI</a></li>
+                    <li><a href="#cmd-clean">CLEAN</a></li>
+                    <li><a href="#cmd-inbox">INBOX</a></li>
+                    <li><a href="#cmd-outbox">OUTBOX</a></li>
+                    <li><a href="#cmd-gallery">GALLERY</a></li>
+                    <li><a href="#cmd-view">VIEW</a></li>
+                    <li><a href="#cmd-log">LOG</a></li>
+                    <li><a href="#cmd-name">NAME</a></li>
+                    <li><a href="#cmd-bm">BM</a></li>
+                    <li><a href="#cmd-movie">MOVIE</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>🕹️ Cockpit & Flight Systems</h3>
+                <ul>
+                    <li><a href="#cat-cockpit"><em>Overview (8 Systems)</em></a></li>
+                    <li><a href="#sys-onboard-mgr">Onboard Manager</a></li>
+                    <li><a href="#sys-screens">Bulkhead Screens</a></li>
+                    <li><a href="#sys-hud">Flight HUD</a></li>
+                    <li><a href="#sys-vimana">Vimana Sub-Light</a></li>
+                    <li><a href="#sys-jump">Hyperjump Drive</a></li>
+                    <li><a href="#sys-cabin-lights">Cabin Illumination</a></li>
+                    <li><a href="#sys-roof">Roof Airlock & Pacing</a></li>
+                    <li><a href="#sys-quick-jump">Quick-Jump (J)</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>🪐 Surface EVA & Mobility</h3>
+                <ul>
+                    <li><a href="#cat-surface"><em>Overview (7 Systems)</em></a></li>
+                    <li><a href="#sys-eva-move">Locomotion & Speed Gears</a></li>
+                    <li><a href="#sys-mouselook">Mouselook Modes</a></li>
+                    <li><a href="#sys-jump-jetpack">Jump & Jetpack Flight</a></li>
+                    <li><a href="#sys-visor-hud">Explorer's Visor HUD</a></li>
+                    <li><a href="#sys-lander-beacon">Lander Beacon (LDR)</a></li>
+                    <li><a href="#sys-surface-waypoint">Surface Waypoint (J)</a></li>
+                    <li><a href="#sys-suit-torch">Halogen Suit Torch</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>📷 Photography & Reconnaissance</h3>
+                <ul>
+                    <li><a href="#cat-photo"><em>Overview (5 Systems)</em></a></li>
+                    <li><a href="#sys-snap-normal">Standard Snapshot (M)</a></li>
+                    <li><a href="#sys-snap-raw">Raw Snapshot (B)</a></li>
+                    <li><a href="#sys-snap-pano">Panoramic Snapshot (N)</a></li>
+                    <li><a href="#sys-snap-raw-pano">Raw Panorama (V)</a></li>
+                    <li><a href="#sys-gallery-viewer">Image Archive & PNG (F4)</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>🎬 Moviemaker & Production</h3>
+                <ul>
+                    <li><a href="#cat-movie"><em>Overview (5 Systems)</em></a></li>
+                    <li><a href="#sys-movie-panel">Moviemaker Panel (F3)</a></li>
+                    <li><a href="#sys-movie-deck">Deck Selection</a></li>
+                    <li><a href="#sys-movie-cadence">Frame Cadence</a></li>
+                    <li><a href="#sys-movie-projector">Cockpit CRT Projector</a></li>
+                    <li><a href="#sys-movie-export">Video Export (MP4/WebM)</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>🎛️ Display & Shader Engine</h3>
+                <ul>
+                    <li><a href="#cat-display"><em>Overview (6 Systems)</em></a></li>
+                    <li><a href="#sys-hud-toggle">HUD Text Overlay (T)</a></li>
+                    <li><a href="#sys-lens-flare">Lens Flares (F)</a></li>
+                    <li><a href="#sys-border">Border Display (B)</a></li>
+                    <li><a href="#sys-timewarp">Timewarp Multiplier</a></li>
+                    <li><a href="#sys-res-scaling">Resolution & Scale2X</a></li>
+                    <li><a href="#sys-crt-shader">CRT & Subpixel Shaders</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>🔊 Acoustics & Audio Mixer</h3>
+                <ul>
+                    <li><a href="#cat-audio"><em>Overview (4 Systems)</em></a></li>
+                    <li><a href="#sys-audio-mixer">6-Channel Mixer (F2+Tab)</a></li>
+                    <li><a href="#sys-audio-modes">Generative Audio Modes</a></li>
+                    <li><a href="#sys-mute">Mute Toggle (F9/Ctrl+M)</a></li>
+                    <li><a href="#sys-track-skip">Track Skip (N/P)</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>💻 Command-Line Interface (CLI)</h3>
+                <ul>
+                    <li><a href="#cat-cli"><em>Overview (6 Utilities)</em></a></li>
+                    <li><a href="#cli-omega">--omega-drive</a></li>
+                    <li><a href="#cli-reset">--reset-data</a></li>
+                    <li><a href="#cli-starmap-export">--export-starmap</a></li>
+                    <li><a href="#cli-starmap-import">--import-starmap</a></li>
+                    <li><a href="#cli-starmap-validate">--validate-starmap</a></li>
+                    <li><a href="#cli-movie-export">--export-movie</a></li>
+                </ul>
+            </section>
+
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content">
+        <header>
+            <h1 class="doc-title">The Command & Systems Codex</h1>
+            <p class="subtitle">Exhaustive Triad Reference for All GOESnet Commands, Cockpit Systems, Controls & CLI Flags</p>
+            <div class="badge-row">
+                <span class="badge emerald">21 GOESnet Commands</span>
+                <span class="badge cyan">35 Integrated Systems</span>
+                <span class="badge purple">6 Native CLI Utilities</span>
+                <span class="badge">Strict Triad Breakdown</span>
+            </div>
+            <div class="callout info">
+                <div class="callout-title">The Three Standard Questions</div>
+                <p>
+                    Every entry in this codex answers three precise architectural questions:
+                    <strong>What it does</strong> (operational synopsis, flags, arguments, and visual effects),
+                    <strong>How it works</strong> (internal execution trace through C++20 routines, file descriptors, math formulas, and hardware registers), and
+                    <strong>Why it works</strong> (determinism guarantees, design safety boundaries, and engineering rationale).
+                </p>
+            </div>
+        </header>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 1: GOESNET -->
+        <section id="cat-goesnet">
+            <h2>📡 GOESnet Terminal Commands & Celestial Queries (21 Commands)</h2>
+            <p>Commands executed via Bulkhead Screen 0 and 1 using the retro 21-column pager console, interfacing with <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Command</th>
+                        <th>Synopsis</th>
+                        <th>Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong><a href="#cmd-clr">CLR</a></strong></td><td><code>CLR</code></td><td>Clears the terminal output buffer and resets screen paging</td></tr>
+                    <tr><td><strong><a href="#cmd-help">HELP</a></strong></td><td><code>HELP [topic]</code></td><td>Displays built-in documentation and command syntax assistance</td></tr>
+                    <tr><td><strong><a href="#cmd-par">PAR</a></strong></td><td><code>PAR &lt;object&gt;[:range]</code></td><td>Displays physical parameters and orbital properties of stars and planets</td></tr>
+                    <tr><td><strong><a href="#cmd-where">WHERE</a></strong></td><td><code>WHERE &lt;object&gt;</code></td><td>Queries parent celestial body and system coordinates</td></tr>
+                    <tr><td><strong><a href="#cmd-st">ST</a></strong></td><td><code>ST &lt;object&gt;[:range]</code></td><td>Sets ship navigation guidance lock on remote star or local planet</td></tr>
+                    <tr><td><strong><a href="#cmd-dl">DL</a></strong></td><td><code>DL &lt;object&gt;[:range]</code></td><td>Lists planetary system dependencies and notes count</td></tr>
+                    <tr><td><strong><a href="#cmd-cat">CAT</a></strong></td><td><code>CAT &lt;object&gt;[:range]</code></td><td>Opens the celestial guide and reads explorer annotations</td></tr>
+                    <tr><td><strong><a href="#cmd-cast">CAST</a></strong></td><td><code>CAST &lt;object&gt; &lt;text&gt;</code></td><td>Appends an immutable exploration note to a celestial guide entry</td></tr>
+                    <tr><td><strong><a href="#cmd-rep">REP</a></strong></td><td><code>REP &lt;obj&gt; &lt;idx&gt; &lt;text&gt;</code></td><td>Replaces an existing guide record owned by the player</td></tr>
+                    <tr><td><strong><a href="#cmd-dele">DELE</a></strong></td><td><code>DELE &lt;object&gt;[:range]</code></td><td>Deletes an exploration note and reclaims index entries</td></tr>
+                    <tr><td><strong><a href="#cmd-sl">SL</a></strong></td><td><code>SL [range]</code></td><td>Performs a stellar proximity search and lists nearby stars</td></tr>
+                    <tr><td><strong><a href="#cmd-pri">PRI</a></strong></td><td><code>PRI &lt;object&gt;[:range]</code></td><td>Exports formatted celestial guide records to the host filesystem</td></tr>
+                    <tr><td><strong><a href="#cmd-clean">CLEAN</a></strong></td><td><code>CLEAN</code></td><td>Defragments STARMAP.BIN and erases deletion tombstones</td></tr>
+                    <tr><td><strong><a href="#cmd-inbox">INBOX</a></strong></td><td><code>INBOX [CHECK|CK|&lt;file&gt;]</code></td><td>Imports and validates external community starmap packets (.nsm/.json)</td></tr>
+                    <tr><td><strong><a href="#cmd-outbox">OUTBOX</a></strong></td><td><code>OUTBOX [JSON|BIN|NSM]</code></td><td>Exports player discoveries to shareable packet archives</td></tr>
+                    <tr><td><strong><a href="#cmd-gallery">GALLERY</a></strong></td><td><code>GALLERY</code></td><td>Indexes all captured photographic reconnaissance images</td></tr>
+                    <tr><td><strong><a href="#cmd-view">VIEW</a></strong></td><td><code>VIEW [image_id]</code></td><td>Renders and exports a specific photo gallery image</td></tr>
+                    <tr><td><strong><a href="#cmd-log">LOG</a></strong></td><td><code>LOG [EXPORT]</code></td><td>Displays travel logbook summary or exports Markdown/JSON journals</td></tr>
+                    <tr><td><strong><a href="#cmd-name">NAME</a></strong></td><td><code>NAME &lt;object&gt; &lt;label&gt;</code></td><td>Assigns a permanent custom designation to a star or planet</td></tr>
+                    <tr><td><strong><a href="#cmd-bm">BM</a></strong></td><td><code>BM [LIST|ADD|GOTO|DEL|CLEAR]</code></td><td>Manages personal celestial bookmarks and surface waypoints</td></tr>
+                    <tr><td><strong><a href="#cmd-movie">MOVIE</a></strong></td><td><code>MOVIE [LIST|PLAY|EXPORT]</code></td><td>Controls Moviemaker decks, playback preview, and video rendering</td></tr>
+                </tbody>
+            </table>
+
+            <div class="triad-block" id="cmd-clr">
+                <h3><code>CLR</code> : Clear Output Buffer</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: clear_output</span>
+                </div>
+                <pre><code>SYNOPSIS: CLR</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Clears the entire text display buffer of Bulkhead Screen 1, resetting the scroll offset and returning the pager cursor to the top.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Dispatches <code>GoesCommand::clear</code>. The terminal state resets its 147-cell visible window memory to spaces and returns <code>GoesResultAction::clear_output</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Prevents long search results from cluttering subsequent parameter readouts, maintaining clean cockpit visibility.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-help">
+                <h3><code>HELP</code> : Command Documentation</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">21-Column Pager</span>
+                </div>
+                <pre><code>SYNOPSIS: HELP [topic]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Displays an alphabetical index of all available GOESnet commands or detailed multi-line instructions for a specified topic.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Parses optional topic argument. Formats output lines into exact 21-character rows wrapped with decorative <code>&&&&&&&&&&&&&&&&&&&&&</code> dividers.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Self-documenting terminal ensures explorers can operate ship systems without referring to external manuals during flight.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-par">
+                <h3><code>PAR</code> : Celestial Parameters</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Starmap Query</span>
+                </div>
+                <pre><code>SYNOPSIS: PAR &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Retrieves astrophysical parameters for a named star or planet, including coordinates, mass, temperature, radius, and orbit index.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li>Resolves <code>&lt;object&gt;</code> against <code>STARMAP.BIN</code> index and active flight logs.</li>
+                        <li>Derives star coordinates ($x, y, z$) within specified light-year search range (default 100).</li>
+                        <li>Calls <code>star_properties()</code> or <code>system_properties()</code> to compute procedural astrophysics.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Ensures that celestial telemetry displayed on screen matches the procedural simulation physics exactly.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-where">
+                <h3><code>WHERE</code> : Location & Parent Body</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Hierarchy Search</span>
+                </div>
+                <pre><code>SYNOPSIS: WHERE &lt;object&gt;</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Locates the parent star and planetary system holding a named moon or planetary body.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Inspects the target's <code>StarmapRecord</code> kind. If a planet, subtracts its orbital ordinal offset to resolve the host star ID, returning the primary star's name and galactic coordinates.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Prevents explorers from getting stranded when given an isolated planetary designation without stellar context.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-st">
+                <h3><code>ST</code> : Set Navigation Target</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: set_remote_target / set_local_target</span>
+                </div>
+                <pre><code>SYNOPSIS: ST &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Locks the Stardrifter's autopilot and navigation HUD onto the specified celestial destination across interstellar or interplanetary space.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Resolves coordinates and injects guidance vector into <code>EngineState</code>. Sets <code>GoesResultAction::set_remote_target</code> for stars or <code>GoesResultAction::set_local_target</code> with planet index.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Direct bridge between terminal text commands and active 3D flight HUD steering.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-dl">
+                <h3><code>DL</code> : Planetary Dependencies</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Index Count</span>
+                </div>
+                <pre><code>SYNOPSIS: DL &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Lists sub-bodies in a solar system and reports the count of recorded exploration notes attached to each planet.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Queries <code>GUIDE.BIN</code> records corresponding to the object's ID, tallying total annotations and printing a planetary summary.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Allows explorers to assess which worlds have been heavily surveyed versus virgin untouched planets.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-cat">
+                <h3><code>CAT</code> : Read Celestial Guide</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Guide Reader</span>
+                </div>
+                <pre><code>SYNOPSIS: CAT &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Displays all recorded field notes, geological journals, and explorer logs attached to a celestial body.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Opens <code>GUIDE.BIN</code> in read-only mode, extracts 147-byte text blocks matching the celestial ID, and formats them for the screen pager.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Delivers the core narrative magic of Noctis: reading historical journals penned by travelers across two decades.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-cast">
+                <h3><code>CAST</code> : Record Field Note</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: CAST &lt;object&gt; &lt;text&gt;</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Appends your personal field observations and notes to a named planet or star in <code>GUIDE.BIN</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Validates text length, constructs a new <code>GuideRecord</code> with timestamp and pilot ID, and appends the entry to <code>GUIDE.BIN</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Every traveler leaves an indelible mark on the universe without overwriting procedural generation seeds.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-rep">
+                <h3><code>REP</code> : Replace Guide Record</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: REP &lt;object&gt; &lt;record_idx&gt; &lt;text&gt;</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Replaces the text of an existing exploration note previously authored by your ship.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Verifies ownership of the record at <code>record_idx</code> and rewrites the payload while rejecting any attempts to modify protected records.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Permits typo corrections and survey updates while enforcing authorship protection.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-dele">
+                <h3><code>DELE</code> : Delete Guide Record</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: DELE &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Removes an exploration note from <code>GUIDE.BIN</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Marks the record as inactive with a tombstone marker for compaction during subsequent <code>CLEAN</code> cycles.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Fast non-blocking deletion without risking disk corruption.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-sl">
+                <h3><code>SL</code> : Stellar Proximity Search</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Proximity Search</span>
+                </div>
+                <pre><code>SYNOPSIS: SL [range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Scans the local galactic sector and lists all nearby stars within the specified light-year radius (default 100 LY).</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Iterates cubic sector coordinates surrounding the ship's current position, tests star existence via <code>galaxy_star_at()</code>, and formats names and distances.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Essential navigational radar when exploring uncharted sectors far from known trade lanes.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-pri">
+                <h3><code>PRI</code> : Export Guide Records</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: export_created</span>
+                </div>
+                <pre><code>SYNOPSIS: PRI &lt;object&gt;[:range]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Exports all guide entries for the target object into a clean plaintext file in your exports directory.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Dumps guide strings to <code>export/&lt;object&gt;.txt</code> or initiates a browser file download on web builds.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Allows external reading, archiving, and analysis of vast planetary survey records.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-clean">
+                <h3><code>CLEAN</code> : Compact Starmap Database</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: CLEAN</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Defragments <code>STARMAP.BIN</code>, erases deletion tombstones, reclaims disk space, and rebuilds spatial search indexes.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Invokes <code>compact_starmap()</code> in [`src/goesnet_commands.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/goesnet_commands.cpp), rewriting active records atomically and reporting reclaimed bytes.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Ensures that long campaigns with frequent renamings never degrade catalog read performance.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-inbox">
+                <h3><code>INBOX</code> : Import Starmap Packet</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: INBOX [CHECK|CK|&lt;file&gt;]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Inspects, validates, and merges external community starmap packets (<code>.nsm</code> or <code>.json</code>) into your local catalog.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li>If <code>CHECK</code> is passed, performs a non-destructive dry run reporting collision counts.</li>
+                        <li>Verifies packet CRC32 and validates bounding limits.</li>
+                        <li>Applies conflict resolution: skips canonical bodies and merges non-conflicting labels atomically.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Enables asynchronous community cartography without central servers.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-outbox">
+                <h3><code>OUTBOX</code> : Export Discoveries</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: export_created</span>
+                </div>
+                <pre><code>SYNOPSIS: OUTBOX [JSON|BIN|NSM]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Exports all custom celestial names and field notes authored on your ship into shareable packet files.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Collects non-default records, computes CRC32 checksum, and writes <code>data/outbox.nsm</code> and <code>data/outbox.json</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Simple one-command export for sharing starmap packets with other players.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-gallery">
+                <h3><code>GALLERY</code> : Photo Gallery Index</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge">Gallery Pager</span>
+                </div>
+                <pre><code>SYNOPSIS: GALLERY</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Lists all captured reconnaissance snapshots and panoramas stored on the ship with dates and image IDs.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Scans <code>data/images/</code> for 8-digit BMP/PNG snapshots and formats a paginated index on Bulkhead Screen 1.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Quick in-cockpit catalog of photographic evidence collected across deep-space missions.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-view">
+                <h3><code>VIEW</code> : Render Gallery Image</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: open_image</span>
+                </div>
+                <pre><code>SYNOPSIS: VIEW [image_id]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Opens a high-resolution viewer for the specified reconnaissance photograph and exports it to your host machine.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Loads image buffer and triggers <code>GoesResultAction::open_image</code>, displaying the photo in the cockpit viewer or initiating browser download.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Seamless review of planetary photographs from within the terminal environment.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-log">
+                <h3><code>LOG</code> : Flight Logbook</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: export_created</span>
+                </div>
+                <pre><code>SYNOPSIS: LOG [EXPORT]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Displays an executive flight logbook summary or exports full travel chronicles to Markdown and JSON.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Queries <code>active_flight_log()</code>. When called with <code>EXPORT</code>, writes <code>flight_log.md</code> and <code>flight_log.json</code> to disk.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Automated journaling ensures every historic arrival and landing is permanently memorialized.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-name">
+                <h3><code>NAME</code> : Celestial Designation</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: catalog_changed</span>
+                </div>
+                <pre><code>SYNOPSIS: NAME &lt;object&gt; &lt;label&gt;</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Assigns a permanent custom designation to an unnamed star, planet, or moon in <code>STARMAP.BIN</code>.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li>Sanitizes label text (uppercase alphanumeric <code>[A-Z0-9 _]</code>, max 20 chars).</li>
+                        <li>Verifies target is not a protected canonical body (e.g. Fenia, Sol).</li>
+                        <li>Updates or appends a <code>StarmapRecord</code> atomically.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Gives explorers naming rights over newly charted worlds while protecting established stellar landmarks.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-bm">
+                <h3><code>BM</code> : Bookmarks & Waypoints</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: set_remote_target</span>
+                </div>
+                <pre><code>SYNOPSIS: BM [LIST|ADD|GOTO|DEL|CLEAR]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Manages personal bookmarks for star systems, orbits, and planetary surface GPS locations.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Saves entries to <code>bookmarks.ini</code>. <code>BM GOTO &lt;id&gt;</code> automatically locks guidance computers onto the saved coordinates.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Eliminates the need to memorize 10-digit stellar coordinates when returning to favorite worlds.</p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cmd-movie">
+                <h3><code>MOVIE</code> : Moviemaker Control</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">📡 GOESnet Terminal</span>
+                    <span class="badge">Sync</span>
+                    <span class="badge purple">Action: open_movie</span>
+                </div>
+                <pre><code>SYNOPSIS: MOVIE [LIST|PLAY &lt;deck&gt;|EXPORT &lt;deck&gt;]</code></pre>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>Inspects recorded Moviemaker reels, launches in-cockpit CRT projection preview, or exports reels to video.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>Scans <code>movies/</code> directory. <code>PLAY</code> launches the projector player; <code>EXPORT</code> triggers background FFmpeg encoding.</p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>Brings full cinematography controls directly into the command terminal.</p>
+                </div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 2: COCKPIT -->
+        <section id="cat-cockpit">
+            <h2>🕹️ Cockpit Flight Controls & Shipboard Navigation (8 Systems)</h2>
+
+            <div class="triad-block" id="sys-onboard-mgr">
+                <h3>Central Onboard Manager</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">🕹️ Cockpit Flight</span>
+                    <span class="badge">HUD Navigation</span>
+                </div>
+                <pre><code>CONTROLS: Pages: [5] [R] [P] [X] | Rows: [6] [7] [8] [9]</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Selects flight modes, navigation arrays, system preferences, or turns the glass display off.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Selected via eye tracking or hotkeys. Row keys <kbd>6</kbd>–<kbd>9</kbd> execute visible commands.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Streamlined ergonomic control over complex shipboard avionics.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-screens">
+                <h3>Bulkhead Screen Focus</h3>
+                <div class="badge-row">
+                    <span class="badge emerald">🕹️ Cockpit Flight</span>
+                    <span class="badge">Console Terminals</span>
+                </div>
+                <pre><code>CONTROLS: Look & Click RMB on Wall Screens 0, 1, 2</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Switches focus to GOES input (0), output buffer (1), or planetary landing atlas (2).</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Adjusts cockpit camera orientation and transfers keyboard focus to terminal input buffers.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Physical spatial layout enhances immersion compared to flat 2D menus.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-hud">
+                <h3>Flight HUD & Sliding Data Sheets</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">Telemetry Overlay</span></div>
+                <pre><code>CONTROLS: Arrow Keys cycle targets | Data sheets update automatically</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Displays remote stellar targets, local planetary orbits, and environment data sheets.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Renders vector reticles, apparent magnitude indicators, and velocity vectors directly onto window glass.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Crucial flight data remains in the pilot's line of sight during manual maneuvers.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-vimana">
+                <h3>Vimana Sub-Light Flight Mode</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">Propulsion</span></div>
+                <pre><code>CONTROLS: Central Manager [5] -> Row [7] (Vimana)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Accelerates the Stardrifter across planetary distances toward selected orbital bodies.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Smoothly integrates sub-light acceleration curves, shifting cockpit star streaks and orbital distances.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Provides breathtaking visual transitions from deep space into planetary orbit.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-jump">
+                <h3>Interstellar Hyperjump Drive</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">Hyperspace</span></div>
+                <pre><code>CONTROLS: Central Manager [5] -> Row [6] (Remote Target Jump)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Executes an instantaneous hyperjump across light-years to a locked stellar target.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Consumes one Lithium fuel charge, calculates target sector coordinates, and generates target star systems.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Instantaneous jumps make crossing an infinite procedural galaxy enjoyable and frictionless.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-cabin-lights">
+                <h3>Cabin Illumination</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">Ambiance</span></div>
+                <pre><code>CONTROLS: [+] Increase Brightness | [-] Decrease Brightness</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Adjusts cockpit lighting from pitch black to bright cabin ambiance.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Scales ambient light shader uniforms applied to cockpit bulkhead textures.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Dimming cabin lights eliminates glass reflections when viewing faint stellar nebulae.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-roof">
+                <h3>Cupola Airlock & Roof Hatch</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">EVA Observation</span></div>
+                <pre><code>CONTROLS: [Up Arrow] Exit to Roof | Proximity Doors to Re-enter | [S]/[T] Roof Speed</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Exits the cabin to stand on top of the ship's exterior hull in space.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Transitions player state to roof geometry; toggling roof speed removes presentation pacing delays.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Delivers an awe-inspiring, unobstructed 360-degree panorama of the cosmos.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-quick-jump">
+                <h3>Cockpit Quick-Jump Hotkey</h3>
+                <div class="badge-row"><span class="badge emerald">🕹️ Cockpit Flight</span><span class="badge">Ergonomics</span></div>
+                <pre><code>CONTROLS: Press [J] in Cockpit</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Instantly centers the camera on Bulkhead Screen 1 with the bookmark command <code>BM_</code> ready.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Bypasses manual camera rotation, pre-filling the console command buffer with <code>BM </code>.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Streamlines frequent waypoint management between orbital hops.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 3: SURFACE EVA -->
+        <section id="cat-surface">
+            <h2>🪐 Planetary Surface Mobility & EVA Systems (7 Systems)</h2>
+
+            <div class="triad-block" id="sys-eva-move">
+                <h3>Locomotion & Speed Gears</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Locomotion</span></div>
+                <pre><code>CONTROLS: Mouse steering | Keys [0] through [9] (Speed gears) | LMB (Run/Swim)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Provides variable walking speeds across terrain, running, and swimming in planetary oceans.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Number keys set continuous forward velocity coefficients; LMB engages sprinting and buoyant swimming physics.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Enables effortless long-distance hiking across massive planetary landscapes.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-mouselook">
+                <h3>Mouselook Mode Cycling</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Camera Control</span></div>
+                <pre><code>CONTROLS: Press [Down Arrow] to cycle modes</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Cycles between Movement Mouse, Free Mouselook, and Inverted-Y Mouselook.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Updates camera pitch/yaw delta handlers in [`src/input.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/input.cpp); preference persists in `current.niv`.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Accommodates diverse player preferences and modern flight simulator conventions.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-jump-jetpack">
+                <h3>Jump & Jetpack Dynamics</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Mobility</span></div>
+                <pre><code>CONTROLS: [J] Jump | [Space] Jetpack Thrust | [C] Release/Cutoff</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Allows leaping over obstacles and sustained jetpack flight across canyons and mountains.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Applies vertical impulse vectors; repeated taps provide ascending thrust countered by planetary gravity.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Crucial for exploring rugged alien topography and ascending steep crater walls.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-visor-hud">
+                <h3>Explorer's Visor HUD</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Navigation</span></div>
+                <pre><code>CONTROLS: Automatic surface overlay | [Page Up]/[Page Down] Anti-radiation visor</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Projects a 360° cardinal compass tape, digital heading, and GPS coordinates (lat, lon, elevation).</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Calculates player spherical coordinates relative to planetary radius, rendering telemetry in real time.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Prevents loss of orientation on boundless procedural worlds.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-lander-beacon">
+                <h3>Lander Return Beacon (LDR)</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Homing Beacon</span></div>
+                <pre><code>TELEMETRY: [LDR] 8-Way Arrow & Vector Range (e.g. [^] 142M or DOCKED)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Guides the explorer back to the landed capsule from kilometers away.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Computes spherical surface vector between current player position and capsule touchdown site.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Guarantees safe returns to the ship even during violent dust storms and nighttime expeditions.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-surface-waypoint">
+                <h3>Surface GPS Waypoint Drop</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Cartography</span></div>
+                <pre><code>CONTROLS: Press [J] on Planetary Surface</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Records a persistent GPS bookmark at your exact surface coordinates.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Appends planetary ID, latitude, longitude, and elevation into <code>bookmarks.ini</code>.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Allows marking rare geological formations, alien ruins, and scenic viewpoints for future visits.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-suit-torch">
+                <h3>Halogen Suit Torch</h3>
+                <div class="badge-row"><span class="badge emerald">🪐 Surface EVA</span><span class="badge">Lighting</span></div>
+                <pre><code>CONTROLS: [L] or [F] Toggle Torch</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Projects an authentic forward spotlight beam from the helmet to illuminate dark planetary ground.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Applies perspective inverse-square distance attenuation, 4200K halogen blackbody tint, and `tanh` highlight compression.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Eliminates washed-out ground textures and flat horizon glow, preserving eerie nocturnal ambiance.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 4: PHOTOGRAPHY -->
+        <section id="cat-photo">
+            <h2>📷 Photography & Reconnaissance Suite (5 Systems)</h2>
+
+            <div class="triad-block" id="sys-snap-normal">
+                <h3>Standard Annotated Snapshot</h3>
+                <div class="badge-row"><span class="badge emerald">📷 Photography</span><span class="badge">Snapshots</span></div>
+                <pre><code>CONTROLS: [M] or [*] (Space & Surface)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Captures an annotated photograph with location, star classification, and target telemetry burned onto the border.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Renders active frame buffer and burns text overlays before saving to <code>data/images/NNNNNNNN.BMP</code>.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Preserves full astronomical context for archival scientific logs.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-snap-raw">
+                <h3>Raw Snapshot</h3>
+                <div class="badge-row"><span class="badge emerald">📷 Photography</span><span class="badge">Clean Art</span></div>
+                <pre><code>CONTROLS: [B] or [Delete] (Space & Surface)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Captures a pristine photograph with all telemetry, reticles, and border text suppressed.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Captures clean 3D scene buffers directly before UI composite passes.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Ideal for capturing wallpaper-worthy cosmic landscapes.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-snap-pano">
+                <h3>Panoramic 3-Frame Snapshot</h3>
+                <div class="badge-row"><span class="badge emerald">📷 Photography</span><span class="badge">Wide Angle</span></div>
+                <pre><code>CONTROLS: [N] or [/] (Surface Only)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Sweeps the camera across 3 consecutive frames, capturing a wide panoramic vista with telemetry.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Rotates view yaw in 3 calibrated arcs, rendering individual frames into temporary buffers before stitching.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Captures the colossal scale of planetary horizon curves and mountain chains.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-snap-raw-pano">
+                <h3>Raw Panoramic Snapshot</h3>
+                <div class="badge-row"><span class="badge emerald">📷 Photography</span><span class="badge">Clean Wide</span></div>
+                <pre><code>CONTROLS: [V] or [.] (Surface Only)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Captures a seamless 3-frame panoramic panorama without HUD text or telemetry.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Combines 3 clean view passes into a unified panoramic wide-angle image file.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Produces stunning unobstructed landscape photographs.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-gallery-viewer">
+                <h3>Image Archive & Lossless PNG Export</h3>
+                <div class="badge-row"><span class="badge emerald">📷 Photography</span><span class="badge">Media Gallery</span></div>
+                <pre><code>CONTROLS: [F4] Open Archive | [D] Export Lossless PNG</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Opens the in-engine photo gallery viewer and exports images directly to host desktop storage as PNGs.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Encodes 24-bit raw image data into standard PNG format, bypassing legacy TARGA/BMP limitations.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Immediate compatibility with modern image viewers and web browsers.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 5: MOVIEMAKER -->
+        <section id="cat-movie">
+            <h2>🎬 Moviemaker & Production Suite (5 Systems)</h2>
+
+            <div class="triad-block" id="sys-movie-panel">
+                <h3>Moviemaker Panel (<kbd>F3</kbd>)</h3>
+                <div class="badge-row"><span class="badge emerald">🎬 Moviemaker</span><span class="badge">Cinematography</span></div>
+                <pre><code>CONTROLS: [F3] Toggle Panel | [Enter] Start/Stop | [P] Pause/Resume</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Opens the in-game movie recording studio interface in space and on planetary surfaces.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Initializes the <code>movie_capture</code> subsystem, displaying active deck, cadence, and frame counters.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Unified interface for frame-accurate game cinematography.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-movie-deck">
+                <h3>Deck Selection</h3>
+                <div class="badge-row"><span class="badge emerald">🎬 Moviemaker</span><span class="badge">Reels</span></div>
+                <pre><code>CONTROLS: [Ctrl] + [+] / [-] Cycle Deck 001 through 999</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Selects the target recording reel; occupied decks are protected against accidental overwriting.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Inspects <code>movies/DDD/</code> directory paths, advancing to the next available empty deck.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Prevents loss of previously recorded footage.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-movie-cadence">
+                <h3>Simulation Frame Cadence</h3>
+                <div class="badge-row"><span class="badge emerald">🎬 Moviemaker</span><span class="badge">Timing</span></div>
+                <pre><code>CONTROLS: [+] / [-] Adjust Cadence (1 to 999 frames)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Sets how many simulation ticks elapse between each captured movie frame.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Ties recording directly to simulation updates rather than variable rendering refresh rates.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Guarantees smooth time-lapse or real-time videos free of frame drops.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-movie-projector">
+                <h3>In-Cockpit Bulkhead CRT Projector</h3>
+                <div class="badge-row"><span class="badge emerald">🎬 Moviemaker</span><span class="badge">Playback</span></div>
+                <pre><code>CONTROLS: [V] or [Space] Play Deck | Left/Right Step | [L] Loop</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Projects recorded movie decks directly onto the cabin display screen for review.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Streams sequential BMP frames with draggable timeline scrubbers and adjustable 6–60 FPS playback.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Allows in-universe screening of expedition recordings.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-movie-export">
+                <h3>Modern Video Export (MP4 & WebM)</h3>
+                <div class="badge-row"><span class="badge emerald">🎬 Moviemaker</span><span class="badge">Encoding</span></div>
+                <pre><code>CONTROLS: [X] Export Selected Deck</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Encodes image sequences to compressed MP4 or WebM video files with one click.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Launches asynchronous background FFmpeg workers on desktop or canvas blob download on Web.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Zero external video conversion tools required.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 6: DISPLAY -->
+        <section id="cat-display">
+            <h2>🎛️ Display & Shader Engine (6 Systems)</h2>
+
+            <div class="triad-block" id="sys-hud-toggle">
+                <h3>HUD Text Overlay</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Overlay</span></div>
+                <pre><code>CONTROLS: [F2] -> [T] HUD Text Toggle</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Toggles cockpit instrument text and reticles on or off.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Sets <code>draw_hud</code> boolean in display pipeline, suppressing HUD text rasterization passes.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Allows cinematic immersion when observing celestial horizons.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-lens-flare">
+                <h3>Visor Lens Flares</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Optics</span></div>
+                <pre><code>CONTROLS: [F2] -> [F] Cycle Lens Flare Modes</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Cycles between Always On, Visor Only, and Always Off.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Modulates chromatic lens flare shader passes across bright solar disks.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Lets players choose between cinematic flare intensity or realistic dark sky viewing.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-border">
+                <h3>Border Display Mode</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Framing</span></div>
+                <pre><code>CONTROLS: [F2] -> [B] Seamless Border Toggle</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Toggles between classic framed letterbox and modern borderless viewport filling.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Dynamically recomputes viewport aspect ratio scaling matrix in Raylib display backend.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Adapts cleanly to modern ultrawide and 16:9 displays.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-timewarp">
+                <h3>Timewarp Multiplier</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Simulation Speed</span></div>
+                <pre><code>CONTROLS: [F2] Menu: [ [ ] Decrease | [ ] ] Increase (1x to 16x)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Accelerates planetary rotations and orbital movements.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Multiplies delta simulation time ticks applied to planetary orbit calculations.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Allows watching solar sunsets and moon transits unfold in seconds.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-res-scaling">
+                <h3>Resolution & Scale2X Modes</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Upscaling</span></div>
+                <pre><code>CONTROLS: [F2] -> [A]: [R] Internal Resolution | [U] Upscale Filters</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Selects internal rendering resolution (320x200 up to 1280x800) and Scale2X/bilinear filters.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Allocates sized texture render targets and applies Scale2X pattern matching algorithms.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Maintains crisp pixel-art geometry on modern 4K monitors.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-crt-shader">
+                <h3>CRT & Sub-Pixel Shaders</h3>
+                <div class="badge-row"><span class="badge emerald">🎛️ Display & Shaders</span><span class="badge">Post-Processing</span></div>
+                <pre><code>CONTROLS: [F2] -> [A]: [C] CRT Shader | [G] Sub-Pixel Fidelity</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Emulates retro CRT scanlines and enables sub-pixel celestial coordinate rendering.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Applies fragment shader scanline curves and sub-pixel float rounding in star rasterization.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Eliminates star shimmering while preserving genuine 1990s cathode-ray aesthetic.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 7: AUDIO -->
+        <section id="cat-audio">
+            <h2>🔊 Acoustics & Audio Mixer (4 Systems)</h2>
+
+            <div class="triad-block" id="sys-audio-mixer">
+                <h3>6-Channel Studio Mixer</h3>
+                <div class="badge-row"><span class="badge emerald">🔊 Audio & Acoustics</span><span class="badge">Mixer</span></div>
+                <pre><code>CONTROLS: [F2] -> [Tab] Audio Menu | Arrow Keys adjust volume (0-100%)</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Controls individual levels for Master, Music, Cabin, Propulsion, Weather, and Foley channels.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Adjusts miniaudio sub-bus gain multipliers; values persist in <code>audio_settings.ini</code>.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Custom audio balancing for personal preference and recording streams.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-audio-modes">
+                <h3>Generative Audio Modes</h3>
+                <div class="badge-row"><span class="badge emerald">🔊 Audio & Acoustics</span><span class="badge">Synthesizer</span></div>
+                <pre><code>CONTROLS: [F2] -> [Tab] -> [G] Cycle Audio Modes</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Cycles between GENERATIVE procedural synth, RECORDED music playlist, HYBRID, and OFF.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Enables or disables procedural 4-voice audio callbacks in [`src/audio.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/audio.cpp).</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Choose between dynamic real-time synthesis and classic soundtrack albums.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-mute">
+                <h3>Instant Mute Toggle</h3>
+                <div class="badge-row"><span class="badge emerald">🔊 Audio & Acoustics</span><span class="badge">Hotkeys</span></div>
+                <pre><code>CONTROLS: [F9] or [Ctrl] + [M]</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Instantly mutes all sound output without changing slider positions.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Sets master output gain to 0.0 with soft anti-pop limiter ramping.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Convenient one-key silence when stepping away from the terminal.</p></div>
+            </div>
+
+            <div class="triad-block" id="sys-track-skip">
+                <h3>Music Track Skip</h3>
+                <div class="badge-row"><span class="badge emerald">🔊 Audio & Acoustics</span><span class="badge">Soundtrack</span></div>
+                <pre><code>CONTROLS: [N] Next Track | [P] Previous Track</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Cycles through recorded ambient soundtrack tracks in <code>data/music/</code>.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Signals <code>music_player</code> stream to advance or rewind track file pointers.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Effortless control over recorded expedition music.</p></div>
+            </div>
+
+        </section>
+
+        <hr class="divider">
+
+        <!-- CATEGORY 8: CLI -->
+        <section id="cat-cli">
+            <h2>💻 Command-Line Interface (CLI) Utilities (6 Utilities)</h2>
+
+            <div class="triad-block" id="cli-omega">
+                <h3><code>--omega-drive</code> & <code>--standard-drive</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Engine Flag</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --omega-drive | ./nivlr --standard-drive</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Equips infinite hyperjump fuel or restores conventional Lithium power (120 charges).</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Modifies the fuel state integer in <code>current.niv</code> safely without corrupting save bytes.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Eliminates hex-editing save files to experience the legendary Omega Drive.</p></div>
+            </div>
+
+            <div class="triad-block" id="cli-reset">
+                <h3><code>--reset-data</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Maintenance</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --reset-data</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Atomically wipes all save states and logs, restoring pristine seed catalog files.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Unlinks user save states and restores clean seed copies of <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code>.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Safe, one-command fresh start without manually deleting user data folders.</p></div>
+            </div>
+
+            <div class="triad-block" id="cli-starmap-export">
+                <h3><code>--export-starmap</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Cartography</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --export-starmap [PATH]</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Exports all player discoveries headlessly from the command line into an <code>.nsm</code> packet.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Runs <code>export_starmap_packet()</code> and terminates immediately with exit code 0.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Automated CI starmap backups and script integration.</p></div>
+            </div>
+
+            <div class="triad-block" id="cli-starmap-import">
+                <h3><code>--import-starmap</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Cartography</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --import-starmap &lt;PATH&gt;</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Imports and merges an external starmap packet headlessly without launching the game.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Validates CRC32 checksums, applies collision resolution, and updates catalogs atomically.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Allows automated catalog synchronization across local network clusters.</p></div>
+            </div>
+
+            <div class="triad-block" id="cli-starmap-validate">
+                <h3><code>--validate-starmap</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Integrity</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --validate-starmap &lt;PATH&gt;</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Verifies the integrity of a starmap packet without applying modifications.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Parses binary structures and outputs detailed reports on valid, corrupted, or colliding records.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Guarantees safe inspection of untrusted community packets before installation.</p></div>
+            </div>
+
+            <div class="triad-block" id="cli-movie-export">
+                <h3><code>--export-movie</code></h3>
+                <div class="badge-row"><span class="badge emerald">💻 CLI Utilities</span><span class="badge">Video Encoding</span></div>
+                <pre><code>SYNOPSIS: ./nivlr --export-movie &lt;deck&gt; [--export-fps 30] [--export-out path.mp4]</code></pre>
+                <div class="triad-section"><span class="triad-label what">What It Does</span><p>Encodes a recorded Moviemaker reel to MP4 video headlessly from the terminal.</p></div>
+                <div class="triad-section"><span class="triad-label how">How It Works</span><p>Reads <code>movies/DDD/</code> BMP files and streams them into FFmpeg libx264 encoders.</p></div>
+                <div class="triad-section"><span class="triad-label why">Why It Works</span><p>Batch video rendering pipelines for content creators and astronomers.</p></div>
+            </div>
+
+        </section>
+
+        <footer class="doc-footer">
+            <p>The Command & Systems Codex • Noctis IV OM v3.2 Documentation Suite</p>
+            <p>Authored for the Noctis Open Movement • Dedicated to Alessandro Ghignola & Explorers of the Void</p>
+        </footer>
+    </main>
+
+</body>
+</html>

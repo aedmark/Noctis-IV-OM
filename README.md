@@ -104,7 +104,13 @@ the exact locations and recovery override.
 | `tools/` | Verification and data utilities |
 | `.github/workflows/` | Linux Clang, GCC, ASan, and UBSan CI pipelines |
 
-## Project documentation
+## Documentation & Manuals
+
+- [**The Stardrifter's Codex**](manual/index.html) — Comprehensive architectural codex, system internals, and flight manual for Noctis IV OM.
+- [**The Command & Systems Codex**](manual/commands.html) — Exhaustive Triad reference (*What It Does*, *How It Works*, *Why It Works*) for all 21 GOESnet commands, cockpit avionics, surface mobility, Moviemaker, audio mixer, and CLI utilities.
+- [Historical Noctis IV Plus Manual](manual/legacy_manual.html) — Preserved archival manual.
+
+## Developer & Porting documentation
 
 - [Porting documentation index](docs/porting/README.md)
 - [Architecture and product blueprint](docs/porting/BLUEPRINT.md)

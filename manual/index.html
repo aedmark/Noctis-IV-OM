@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Stardrifter's Codex • Noctis IV OM v3.2</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🌌 Noctis IV OM</h1>
+            <span class="version-tag">v3.2.0 GA • Stardrifter Codex</span>
+            <p style="margin-top: 0.6rem; font-size: 0.85rem;">
+                <a href="commands.html" style="color: var(--accent-cyan); text-decoration: none;">&rarr; Command Codex (All Systems)</a><br>
+                <a href="legacy_manual.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem;">&larr; Historical Plus Manual (Archive)</a>
+            </p>
+        </div>
+        <nav class="sidebar-nav">
+            <section>
+                <h3>Book I: Lore & Universe</h3>
+                <ul>
+                    <li><a href="#soul-of-noctis" class="active">1. The Soul of Noctis</a></li>
+                    <li><a href="#open-movement-lineage">2. The Open Movement (OM)</a></li>
+                    <li><a href="#five-core-tenets">3. The Five Core Tenets</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book II: Engine & Runtimes</h3>
+                <ul>
+                    <li><a href="#engine-architecture">4. Native C++20 Architecture</a></li>
+                    <li><a href="#three-runtimes">5. The Three Runtimes</a></li>
+                    <li><a href="#deterministic-galaxy">6. Deterministic Procedural Universe</a></li>
+                    <li><a href="#proving-ground">7. The Proving Ground</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book III: Flight Manual</h3>
+                <ul>
+                    <li><a href="#stardrifter-anatomy">8. Shipboard Anatomy</a></li>
+                    <li><a href="#onboard-manager">9. Central Onboard Manager</a></li>
+                    <li><a href="#flight-hud">10. Flight HUD & Sliding Data</a></li>
+                    <li><a href="#propulsion-drives">11. Propulsion & Hyperdrive</a></li>
+                    <li><a href="#cabin-comfort">12. Shipboard Operations</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book IV: GOESnet Protocol</h3>
+                <ul>
+                    <li><a href="#goesnet-architecture">13. Protocol Architecture</a></li>
+                    <li><a href="#guide-catalog">14. Celestial Guide & Notes</a></li>
+                    <li><a href="#catalog-hygiene">15. Catalog Hygiene & Compaction</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book V: Planetary Exploration</h3>
+                <ul>
+                    <li><a href="#capsule-descent">16. Capsule Descent & Ascent</a></li>
+                    <li><a href="#explorer-visor">17. The Explorer's Visor HUD</a></li>
+                    <li><a href="#eva-mobility">18. EVA Mobility & Jetpack</a></li>
+                    <li><a href="#suit-torch">19. Suit Torch Physics</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book VI: Moviemaker & Media</h3>
+                <ul>
+                    <li><a href="#moviemaker-studio">20. Moviemaker Studio (F3)</a></li>
+                    <li><a href="#in-cockpit-preview">21. In-Cockpit Projector Preview</a></li>
+                    <li><a href="#video-export">22. Native Video Export (MP4/WebM)</a></li>
+                    <li><a href="#image-archive">23. Image Archive & PNG Export</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book VII: Ambient Soundscapes</h3>
+                <ul>
+                    <li><a href="#music-engine">24. Ambient Music Engine</a></li>
+                    <li><a href="#generative-synth">25. 4-Voice Generative Synthesizer</a></li>
+                    <li><a href="#sound-mixer">26. 6-Channel Audio Mixer</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book VIII: Visual Fidelity</h3>
+                <ul>
+                    <li><a href="#visual-settings">27. Visual Settings Matrix (F2)</a></li>
+                    <li><a href="#shader-pipeline">28. CRT & Subpixel Shaders</a></li>
+                    <li><a href="#celestial-optics">29. Celestial Color & Corona Optics</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book IX: Distributed Cartography</h3>
+                <ul>
+                    <li><a href="#starmap-exchange">30. Starmap Exchange (.nsm)</a></li>
+                    <li><a href="#canonical-protection">31. Canonical Seed Protection</a></li>
+                    <li><a href="#conflict-resolution">32. Collision Avoidance</a></li>
+                    <li><a href="#exchange-workflows">33. INBOX & OUTBOX Workflows</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book X: Navigation & Logs</h3>
+                <ul>
+                    <li><a href="#flight-journal">34. Automated Flight Journal</a></li>
+                    <li><a href="#waypoint-system">35. Bookmarks & Waypoints (BM)</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Book XI: Administration & CLI</h3>
+                <ul>
+                    <li><a href="#cli-reference">36. CLI Flag Directory</a></li>
+                    <li><a href="#config-reference">37. Configuration Files</a></li>
+                    <li><a href="#storage-reset">38. Storage & Reset Operations</a></li>
+                </ul>
+            </section>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content">
+        <header>
+            <h1 class="doc-title">The Stardrifter's Codex</h1>
+            <p class="subtitle">The Definitive Architectural Codex, System Internals, and Operating Manual for Noctis IV OM</p>
+            <div class="badge-row">
+                <span class="badge emerald">Release v3.2.0 GA</span>
+                <span class="badge cyan">ISO C++20 / WebAssembly</span>
+                <span class="badge purple">OpenGL / Raylib Native</span>
+                <span class="badge amber">miniaudio 6-Channel Mixer</span>
+                <span class="badge">100% Deterministic Galaxy</span>
+            </div>
+            <div class="callout info">
+                <div class="callout-title">The Three Standard Questions of Noctis IV OM</div>
+                <p>
+                    Every architectural component, shipboard instrument, and surface mobility system in this manual is evaluated through three engineering inquiries:
+                    <strong>What it does</strong> (observable mechanics, operational controls, and telemetry),
+                    <strong>How it works</strong> (mathematical formulas, state machines, procedural generation pipelines, and memory structures), and
+                    <strong>Why it works</strong> (architectural rationale, historical fidelity, safety bounds, and determinism guarantees).
+                </p>
+            </div>
+        </header>
+
+        <hr class="divider">
+
+        <!-- BOOK I -->
+        <section id="book-1">
+            <h2>Book I: Origins, Lore & The Living Universe</h2>
+
+            <h3 id="soul-of-noctis">1. The Soul of Noctis</h3>
+            <p>
+                Created originally by Italian developer <strong>Alessandro Ghignola</strong> ("Fuzz") in 2000, <em>Noctis</em> occupies a unique place in computing history. Unlike traditional space simulators defined by dogfighting, territorial conquest, or resource grinding, Noctis is a game of lonely, contemplative wanderlust. You are a <strong>Stardrifter</strong>, exploring an ancient, silent galaxy aboard a self-contained biological exploration vessel.
+            </p>
+            <p>
+                In Noctis, space is vast and dark. Stars shimmer as delicate points of light across billions of cubic light-years. Planets feature procedural fractal topographies, swirling cloud layers, alien atmospheres, ring systems, and deep subsurface canyons. There are no hostile armadas to fight. Your mission is purely cartographic and spiritual: navigate the unknown, step onto untouched worlds, observe celestial majesty, and record your discoveries for other explorers to stumble upon centuries later.
+            </p>
+
+            <center style="margin: 2rem 0;">
+                <img src="../doc/img/rings.png" alt="Noctis IV OM Ringed World" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            </center>
+
+            <h3 id="open-movement-lineage">2. The Open Movement (OM) Lineage</h3>
+            <p>
+                The original Noctis IV codebase was written in a combination of C and 16-bit x86 real-mode assembly designed for MS-DOS. For decades, running Noctis required emulators such as DOSBox, which introduced performance bottlenecks, audio crackling, input lag, and catastrophic memory corruption when catalogs grew too large.
+            </p>
+            <p>
+                The modernization path passed through several key iterations:
+            </p>
+            <ul>
+                <li><strong>Noctis IV Plus (NIV+):</strong> Alessandro Ghignola's expanded edition, adding panoramic photography, high-resolution visual effects, extended planetary terrain generators, and the Moviemaker recording studio.</li>
+                <li><strong>Noctis IV LR ("Lin-Re"):</strong> A reverse-engineered C++ port initiated by David Cole (dgcole) that eliminated 16-bit assembly, proving that Noctis could run natively on modern 64-bit platforms.</li>
+                <li><strong>Noctis IV OM (Open Movement):</strong> The modern hybrid culmination. OM combines the robust native C++20 foundation of Noctis IV LR with the rich feature set and visual atmosphere of Noctis IV Plus, while delivering cross-platform Linux, Windows, and WebAssembly builds, 100% galaxy determinism, and modern media export.</li>
+            </ul>
+
+            <h3 id="five-core-tenets">3. The Five Core Tenets of Noctis IV OM</h3>
+            <div class="callout success">
+                <div class="callout-title">The Five Immutable Laws of Noctis IV OM</div>
+                <ol>
+                    <li><strong>100% Procedural Determinism:</strong> Every star, planet, terrain ridge, and atmospheric color curve must generate identically to the canonical DOS reference. A coordinate entered in 2001 produces the exact same world in 2026.</li>
+                    <li><strong>Zero Cloud Dependency:</strong> Noctis IV OM operates completely offline. Starmap sharing, logbooks, and media generation rely on local, non-destructive file formats without mandatory remote servers.</li>
+                    <li><strong>Non-Destructive Persistence:</strong> User catalog edits, custom celestial names, and notes never destroy or corrupt the underlying procedural seeds. Canonical landmarks (Sol, Fenia) remain inviolable.</li>
+                    <li><strong>Decoupled Platform Boundaries:</strong> The simulation core is strictly decoupled from presentation, rendering backends, and storage drivers, enabling headless diagnostic testing and multi-compiler verification.</li>
+                    <li><strong>Continuous Mechanical Provenance:</strong> New features (such as 4-voice procedural audio, CRT shaders, and WebM video export) integrate beneath the physical universe rather than overwriting its vintage aesthetic.</li>
+                </ol>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK II -->
+        <section id="book-2">
+            <h2>Book II: Engine Architecture & Native Runtimes</h2>
+
+            <h3 id="engine-architecture">4. Native C++20 Architecture</h3>
+            <p>
+                Noctis IV OM replaces legacy MS-DOS segment registers and flat memory pools with an explicit, modular C++20 architecture. The system is partitioned into clear state boundaries:
+            </p>
+
+            <pre><code>+-----------------------------------------------------------------------------------+
+|                           APPLICATION LIFECYCLE & INPUT                           |
+|      Raylib Desktop Host (GLFW)   /   Emscripten Browser Runtime (HTML5/Canvas)    |
+|                                                                                   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
+|    | Keyboard & Mouse  |   | Gamepad Subsystem  |   | Input Recording/Replay  |   |
+|    | (input.cpp)       |   | (gamepad_flight)   |   | (INPUT_RECORDING.md)    |   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
++-----------------------------------------------------------------------------------+
+                                         |
+                                         v
++-----------------------------------------------------------------------------------+
+|                         SIMULATION CORE (DETERMINISTIC)                           |
+|                                                                                   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
+|    | Galaxy Generator  |   | System Physics     |   | Surface Fractal Noise   |   |
+|    | (galaxy_sector.h) |   | (star_properties)  |   | (SURFACE_GENERATION.md) |   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
+|              |                       |                           |                |
+|              v                       v                           v                |
+|    +-------------------+   +--------------------+   +-------------------------+   |
+|    | Stardrifter State |   | GOESnet Protocol   |   | Starmap Exchange        |   |
+|    | (engine_state.h)  |   | (goesnet_commands) |   | (starmap_exchange.cpp)  |   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
++-----------------------------------------------------------------------------------+
+                                         |
+                                         v
++-----------------------------------------------------------------------------------+
+|                        PRESENTATION & MULTIMEDIA PIPELINES                        |
+|                                                                                   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
+|    | Software 3D / GL  |   | miniaudio 6-Ch Mix |   | Media Export Pipeline   |   |
+|    | (display.cpp)     |   | (audio.cpp/music)  |   | (video_export / gallery)|   |
+|    +-------------------+   +--------------------+   +-------------------------+   |
++-----------------------------------------------------------------------------------+</code></pre>
+
+            <div class="triad-block" id="three-runtimes">
+                <h3>5. The Three Runtimes</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Executes Noctis IV OM across three distinct platform targets: Linux desktop (X11 & Wayland), Windows 64-bit desktop, and WebAssembly in standard web browsers.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Linux Native:</strong> Compiled via Clang or GCC using CMake and Ninja. Uses Raylib and GLFW to bridge Linux display protocols. Audio routes through ALSA or PulseAudio via miniaudio.</li>
+                        <li><strong>Windows Native:</strong> Compiled as a self-contained 64-bit MSVC binary. Links DirectX/WinMM backends seamlessly with zero external DLL dependencies.</li>
+                        <li><strong>WebAssembly Browser:</strong> Compiled via Emscripten. Memory is sandboxed inside a WebAssembly heap. Filesystem writes route through the MEMFS layer and synchronize asynchronously to the browser's IndexedDB store via <code>IDBFS</code> at <code>/persistent</code>.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        By abstracting platform dependencies into thin runtime bridges ([`src/runtime_paths.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/runtime_paths.cpp)), 100% of the game's simulation, procedural generation, and catalog math executes identically across all three runtimes without conditional compilation cluttering the core.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="deterministic-galaxy">
+                <h3>6. Deterministic Procedural Universe Architecture</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Generates millions of star systems, planetary orbits, physical radii, surface atmospheres, and surface topography from three-dimensional galactic coordinates without storing world maps on disk.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Sector Coordinates:</strong> Galactic space is divided into 100,000-unit cubic sectors ($x, y, z$).</li>
+                        <li><strong>Seed Derivation:</strong> A star's identifier is computed as:
+                            $$\text{ID} = \left(\frac{x}{100000}\right) \times \left(\frac{y}{100000}\right) \times \left(\frac{z}{100000}\right)$$
+                        </li>
+                        <li><strong>Spectral Classification:</strong> Integer seeds select between 12 stellar classes: <em>Blue Giants, White Dwarfs, Yellow Main-Sequence, Orange Dwarfs, Red Giants, Pulsars, Planetary Nebulae</em>, and rare exotic configurations.</li>
+                        <li><strong>Surface Topography:</strong> Terrain elevation is calculated on the fly using multi-octave pseudo-random fractal noise rooted in the planetary seed.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Floating-point operations and seed transitions are rigorously bounded to avoid architecture-dependent drift ([`docs/porting/FLOATING_POINT_AUDIT.md`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/docs/porting/FLOATING_POINT_AUDIT.md)). Every machine reproduces exact stellar geometry down to the sub-pixel level.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="proving-ground">
+                <h3>7. The Proving Ground: Test Engineering & CI</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        A continuous automated test harness consisting of 55+ test suites protecting galaxy determinism, save game integrity, GOESnet parser correctness, and audio synthesis.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Headless Execution:</strong> Production binaries accept fixture flags (e.g., <code>--goesnet-fixture</code>, <code>--ship-interface-fixture</code>) to execute complete flight workflows in CI without an open display window.</li>
+                        <li><strong>Sanitizer Verification:</strong> Automated pipelines run under Clang AddressSanitizer (ASan) and UndefinedBehaviorSanitizer (UBSan) to guarantee zero memory overruns or unaligned accesses.</li>
+                        <li><strong>Deterministic Input Replay:</strong> Scripted 783-frame orbit-to-surface sessions replay with 100% byte-exact parity across presentation speeds.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Ensures that no optimization, refactor, or visual improvement alters the fundamental behavior of the universe. "Verified means observed."
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK III -->
+        <section id="book-3">
+            <h2>Book III: The Stardrifter Flight Manual & Cabin Systems</h2>
+
+            <center style="margin: 2rem 0;">
+                <img src="../doc/img/SD.JPG" alt="Stardrifter Vessel" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            </center>
+
+            <h3 id="stardrifter-anatomy">8. Shipboard Anatomy</h3>
+            <p>
+                The Stardrifter is a biological vessel equipped with an advanced computational interface. As an explorer, you directly control your own physical body inside the cabin using the mouse and keyboard, interacting with the ship's consoles and panoramic observation viewport.
+            </p>
+            <ul>
+                <li><strong>The Main Observation Window:</strong> Forward-facing transparent viewport overlaying optical flight instruments, star trails, and planetary horizons.</li>
+                <li><strong>The Central Onboard Manager:</strong> Built directly into the left side of the main glass window, selected via your suit's infrared eye tracker.</li>
+                <li><strong>Bulkhead Screen 0 (GOES Command Entry):</strong> Right-wall console for typing queries and GOESnet commands.</li>
+                <li><strong>Bulkhead Screen 1 (GOES Output Buffer):</strong> Right-wall scrolling display rendering 21-column pager outputs.</li>
+                <li><strong>Bulkhead Screen 2 (Planetary Atlas):</strong> Right-wall orbital cartography terminal for selecting surface landing sites.</li>
+                <li><strong>Cupola & Roof Airlock:</strong> Walk to the center cupola and press <kbd>&uarr;</kbd> (Up Arrow) to exit onto the ship's exterior roof for unobstructed stargazing.</li>
+            </ul>
+
+            <div class="triad-block" id="onboard-manager">
+                <h3>9. The Central Onboard Manager</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        The primary flight control computer for interstellar navigation, sub-light transit, and cabin environment configuration.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        The manager displays four primary pages, activated by look-and-click or keyboard hotkeys:
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Page Key</th>
+                                <th>Category</th>
+                                <th>Available Commands (Rows 6, 7, 8, 9)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>5</kbd></td>
+                                <td><strong>Flight Control</strong></td>
+                                <td>Remote Target, Vimana Sub-Light Flight, Local Target Approach, Surface Capsule Deploy.</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>R</kbd></td>
+                                <td><strong>Onboard Devices</strong></td>
+                                <td>Navigation Array, Miscellaneous Utilities, Galactic Cartography, Emergency Functions.</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>P</kbd></td>
+                                <td><strong>Preferences</strong></td>
+                                <td>Screen Auto-Sleep, Reversed Pitch Control, Persistent Menus, Hull Polarization.</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>X</kbd></td>
+                                <td><strong>Display Off</strong></td>
+                                <td>Extinguishes the central manager overlay for unobstructed cosmic observation.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        The menu hierarchy separates tactical flight commands from deeper diagnostic settings, ensuring that critical navigation steps remain single-key operations while in orbit.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="flight-hud">
+                <h3>10. Flight HUD & Sliding Data Sheets</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Projects real-time celestial telemetry directly onto your suit's visor and the main observation window, displaying target names, light-year distances, and environmental readouts.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Outer HUD Layer:</strong> Displays remote stellar targets, local planetary destinations, target search readouts, and active flight velocity.</li>
+                        <li><strong>Inner Sliding Data Sheet:</strong> Provides three detailed telemetry routes:
+                            <ul>
+                                <li><em>Remote Target Data:</em> Stellar class, apparent magnitude, coordinates, and estimated jump time.</li>
+                                <li><em>Local Target Data:</em> Orbital velocity, planetary radius, atmospheric pressure, and surface temperature.</li>
+                                <li><em>External Environment Data:</em> Local radiation levels, cosmic ray flux, and star proximity.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Screen Suppression:</strong> Selecting a bulkhead wall screen automatically suppresses the outer HUD layer, keeping your field of view focused on terminal output.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Minimizes visual clutter while ensuring essential navigational telemetry remains visible during high-speed atmospheric entries and interstellar jumps.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="propulsion-drives">
+                <h3>11. Propulsion, Interstellar Jumps & The Omega Drive</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Drives the Stardrifter across sub-light interplanetary distances (Vimana mode) and instantaneous interstellar hyperspace jumps powered by Lithium fuel cells.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Vimana Sub-Light Flight:</strong> Drives the ship smoothly through planetary systems, accelerating towards selected planets and orbital waypoints.</li>
+                        <li><strong>Interstellar Jump Drive:</strong> Consumes one unit of Lithium fuel per jump. Standard Stardrifters hold a maximum capacity of 120 Lithium charges.</li>
+                        <li><strong>The Omega Drive:</strong> An experimental hyper-engine variant. In original Noctis lore, the Omega Drive provides infinite hyperspace jumps. In Noctis IV OM, launch with <code>--omega-drive</code> to equip infinite power without save corruption, or restore conventional fuel with <code>--standard-drive</code>.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Fuel management establishes a gentle survival boundary that encourages thoughtful exploration without punishing players with arbitrary failure states.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="cabin-comfort">
+                <h3>12. Shipboard Operations & Ergonomics</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Provides essential cabin adjustments including ambient illumination, roof pacing, and quick navigation shortcuts.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><kbd>+</kbd> / <kbd>-</kbd>: Adjusts cabin lighting levels from pitch-black night to bright cockpit illumination.</li>
+                        <li><kbd>S</kbd> or <kbd>T</kbd>: Toggles Roof Speed mode. When standing on top of the ship's exterior hull, this bypasses the standard presentation delay for rapid cosmic viewing.</li>
+                        <li><kbd>J</kbd>: Cockpit quick-jump hotkey that shifts focus immediately to Bulkhead Screen 1 with the GOESnet bookmark command <code>BM_</code> ready for entry.</li>
+                        <li>Double-Click RMB: Instantly reorients your character to the center of the main observation window from anywhere in the cabin.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Reduces repetitive navigational friction, allowing explorers to seamlessly balance cabin duties with deep-space observation.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK IV -->
+        <section id="book-4">
+            <h2>Book IV: The GOESnet Terminal & Autonomous Network Protocol</h2>
+
+            <center style="margin: 2rem 0;">
+                <img src="../doc/img/GOES.GIF" alt="GOESnet Terminal Interface" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            </center>
+
+            <h3 id="goesnet-architecture">13. Protocol Architecture</h3>
+            <p>
+                <strong>GOESnet</strong> (Galactic Observation and Exploration System Network) is the decentralized communication network connecting all Stardrifters. Accessed via Bulkhead Screen 0 and 1, GOESnet functions as a resident command shell formatted to an authentic 21-column retro terminal pager standard.
+            </p>
+            <p>
+                Commands are parsed via [`src/goesnet_protocol.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/goesnet_protocol.cpp). The system accepts standard ASCII text up to 83 characters, sanitizes case and forbidden characters (such as <code>$</code>, <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>), and returns status envelopes (<code>ok</code>, <code>not_found</code>, <code>ambiguous</code>, <code>write_failed</code>) accompanied by distinctive auditory chimes.
+            </p>
+
+            <div class="triad-block" id="guide-catalog">
+                <h3>14. The Celestial Guide & Annotation Database</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Stores planetary descriptions, star coordinates, and custom explorer annotations inside two local databases: <code>STARMAP.BIN</code> and <code>GUIDE.BIN</code>.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Querying Parameters (<code>PAR &lt;object&gt;</code>):</strong> Displays physical coordinates, mass, temperature, and planetary orbits.</li>
+                        <li><strong>Setting Navigation Guidance (<code>ST &lt;object&gt;</code>):</strong> Locks the ship's guidance system onto a named star or planet across any range.</li>
+                        <li><strong>Recording Exploration Notes (<code>CAST &lt;object&gt; &lt;text&gt;</code>):</strong> Appends an immutable field note to a planetary record.</li>
+                        <li><strong>Editing & Deletion (<code>REP</code>, <code>DELE</code>):</strong> Updates or deletes your own notes while protecting historical canonical records.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Decouples community prose from procedural galaxy seeds. Thousands of explorer notes can be stored without mutating the underlying celestial physics.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="catalog-hygiene">
+                <h3>15. Catalog Hygiene & Compaction</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Maintains disk storage integrity by defragmenting deletion tombstones and reclaiming unused space in <code>STARMAP.BIN</code> via the <code>CLEAN</code> command.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        When annotations or custom names are removed, legacy systems left tombstone markers that bloated search indexes. Running <code>CLEAN</code> triggers <code>compact_starmap()</code> in [`src/goesnet_commands.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/goesnet_commands.cpp), rewriting active records atomically and reporting reclaimed bytes.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Prevents database fragmentation and ensures search queries across millions of stars remain near-instantaneous even after years of active logging.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK V -->
+        <section id="book-5">
+            <h2>Book V: Planetary Descent, Visor HUD & Surface Exploration</h2>
+
+            <center style="margin: 2rem 0;">
+                <img src="../doc/img/FELYSIA.GIF" alt="Planetary Surface Descent" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            </center>
+
+            <div class="triad-block" id="capsule-descent">
+                <h3>16. Surface Capsule Descent & Ascent</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Transfers the explorer from orbit to any chosen latitude and longitude on a planetary surface via an automated landing capsule.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Site Selection:</strong> Select Bulkhead Screen 2 (Planetary Atlas) to view the rotating wireframe sphere. Use arrow keys to position the landing reticle over oceans, mountains, or poles. Press <kbd>Enter</kbd> to confirm.</li>
+                        <li><strong>Atmospheric Entry:</strong> The capsule detaches, descends through procedural cloud layers, and touches down gently on terrain.</li>
+                        <li><strong>Capsule Recovery:</strong> Walking back inside the capsule initiates automatic ascent, docking smoothly with the orbiting Stardrifter.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Separating orbital flight from surface walking ensures rock-solid physics simulation in both contexts without awkward coordinate scale discontinuities.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="explorer-visor">
+                <h3>17. The Explorer's Visor HUD</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        A comprehensive surface exploration HUD rendered directly on your helmet's visor, providing dynamic navigation telemetry.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>360° Cardinal Compass Tape:</strong> Renders an 8-point compass tape (N, NE, E, SE, S, SW, W, NW) across the top of your visor with digital heading degrees.</li>
+                        <li><strong>GPS Planetary Coordinates:</strong> Displays real-time latitude, longitude, and elevation in meters above sea level:
+                            <pre><code>LAT +42.8°  LON 118.4°  ELEV +0412M</code></pre>
+                        </li>
+                        <li><strong>Lander Return Beacon (<code>LDR</code>):</strong> Computes real-time vector range to your landed exploration capsule in meters or kilometers alongside an 8-way directional arrow (e.g. <code>[^]</code>, <code>[&gt;]</code>, <code>[v]</code>, <code>[&lt;]</code>) or <code>DOCKED</code>, ensuring you never get lost on massive planetary expanses.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Planets in Noctis IV OM are immense 1:1 scale worlds. The Explorer's Visor HUD eliminates disorientation and guarantees safe returns to the capsule.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="eva-mobility">
+                <h3>18. EVA Mobility & Jetpack Dynamics</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Enables fluid locomotion across mountains, deserts, and oceans with variable walking gears, jumping, and personal jetpack flight.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><kbd>0</kbd>–<kbd>9</kbd>: Sets continuous automated forward walking speed gears, freeing your hand from holding the mouse.</li>
+                        <li><kbd>LMB</kbd>: Hold to run forward or swim when submerged in liquid.</li>
+                        <li><kbd>J</kbd>: Performs a physical jump from ground level.</li>
+                        <li><kbd>Space</kbd>: Ignites the suit's personal jetpack; tap repeatedly to gain vertical thrust and glide over canyon chasms.</li>
+                        <li><kbd>C</kbd>: Cuts off jetpack directional control for rapid descent.</li>
+                        <li><kbd>Page Up</kbd> / <kbd>Page Down</kbd>: Raises or lowers the helmet's anti-radiation visor for clearer sight.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Combines authentic vintage movement physics with modern ergonomic automation, making planetary expeditions effortless and exhilarating.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="suit-torch">
+                <h3>19. Suit Torch Physics & Lighting Overhaul</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Projects an authentic forward-facing spotlight beam from your spacesuit helmet (<kbd>L</kbd> or <kbd>F</kbd>) to illuminate dark planetary surfaces.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Perspective Inverse-Square Falloff:</strong> Foreground ground is brightly illuminated while distant terrain and mountains $\ge 1\,\text{km}$ away receive zero light, eliminating unnatural flat horizon glow.</li>
+                        <li><strong>Halogen Blackbody Spectrum:</strong> Emits a realistic $4200\,\text{K}$ warm halogen tint rather than sterile artificial white.</li>
+                        <li><strong>Filmic Highlight Compression:</strong> Employs hyperbolic tangent (`tanh`) compression to prevent washed-out, blown-out ground textures at close range.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Preserves the chilling mystery of nighttime expeditions on airless moons, turning nocturnal exploration into an atmospheric journey into the unknown.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK VI -->
+        <section id="book-6">
+            <h2>Book VI: Moviemaker & Visual Media Studio</h2>
+
+            <center style="margin: 2rem 0;">
+                <img src="../doc/img/moviemaker.png" alt="Moviemaker Studio" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            </center>
+
+            <div class="triad-block" id="moviemaker-studio">
+                <h3>20. Moviemaker Studio (<kbd>F3</kbd>)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        An integrated, frame-accurate cinematography suite for recording gameplay sequences to numbered decks in space and on planetary surfaces.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><kbd>F3</kbd>: Opens the Moviemaker configuration panel.</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>-</kbd>: Selects recording deck (<code>001</code> to <code>999</code>). Occupied decks are protected against accidental overwriting.</li>
+                        <li><kbd>+</kbd> / <kbd>-</kbd>: Adjusts capture cadence (capturing every 1 to 999 simulation frames).</li>
+                        <li><kbd>Enter</kbd>: Starts or stops recording. Frames are written sequentially to <code>movies/DDD/FFFFFFFF.BMP</code>.</li>
+                        <li><kbd>P</kbd>: Pauses or resumes an active recording session.</li>
+                        <li><strong>Ascent Auto-Cutoff:</strong> Surface recordings automatically stop after 100 frames of capsule ascent to ensure clean transitions.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Cadence is tied to simulation frames rather than presentation FPS. This guarantees stutter-free, buttery-smooth cinematic sequences regardless of hardware rendering speed.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="in-cockpit-preview">
+                <h3>21. In-Cockpit Projector Preview</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Projects recorded movie reels directly onto the Stardrifter's bulkhead display screen inside the ship cabin for review.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        Pressing <kbd>V</kbd> or <kbd>Space</kbd> on an active deck launches the player with CRT framing, interactive draggable timeline scrubbers, frame stepping (<kbd>&larr;</kbd>/<kbd>&rarr;</kbd>), looping (<kbd>L</kbd>), and variable framerates (6 to 60 FPS).
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Preserves immersion by allowing explorers to review their expeditions without leaving the virtual world or opening third-party video software.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="video-export">
+                <h3>22. Native Video Export (MP4 & WebM)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Encodes raw BMP image decks into modern compressed video files with one click or command.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Desktop MP4 Export:</strong> Pressing <kbd>X</kbd> in Moviemaker or typing <code>MOVIE EXPORT &lt;deck&gt;</code> invokes a background worker thread (`export_movie_deck_async`) using bundled/system FFmpeg (`libx264`/`libvpx`), saving directly to the user's Downloads folder.</li>
+                        <li><strong>Web Browser WebM Export:</strong> WebAssembly builds encode captured decks directly into WebM video blobs in memory and trigger an immediate browser file download.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Eliminates manual command-line stitching. Explorers can share cinematic clips of their discoveries across modern social platforms instantly.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="image-archive">
+                <h3>23. Image Archive & Lossless Screenshots (<kbd>F4</kbd>)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Provides in-engine photo gallery management and lossless PNG screenshot export for celestial photography.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><kbd>M</kbd> / <kbd>*</kbd>: Standard snapshot with location/target telemetry overlays.</li>
+                        <li><kbd>B</kbd> / <kbd>Delete</kbd>: Raw snapshot with telemetry overlays suppressed.</li>
+                        <li><kbd>N</kbd> / <kbd>/</kbd>: Three-frame panoramic surface snapshot.</li>
+                        <li><kbd>F4</kbd>: Opens the Image Archive browser. Press <kbd>D</kbd> to export lossless PNGs directly to your host machine.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Captures high-fidelity astronomical observations in universal image formats suitable for desktop wallpapers and archival documentation.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK VII -->
+        <section id="book-7">
+            <h2>Book VII: Acoustics & Procedural Generative Soundscapes</h2>
+
+            <div class="triad-block" id="music-engine">
+                <h3>24. Ambient Exploration Music Engine</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Streams multi-format ambient exploration soundtracks in the background, providing soothing musical accompaniment during long space voyages.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        Implemented in [`src/music.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/music.cpp). Scans <code>data/music/</code> for <code>.ogg</code>, <code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.xm</code>, and <code>.mod</code> audio files. Features playlist auto-progression, shuffle, and instant track skipping with <kbd>N</kbd> (Next) and <kbd>P</kbd> (Previous).
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Music streams asynchronously through miniaudio without blocking simulation updates, ensuring glitch-free audio playback across all operating systems.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="generative-synth">
+                <h3>25. 4-Voice Procedural Generative Synthesizer</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Synthesizes infinite, non-repeating ambient musical textures procedurally in real time, shifting harmonics based on local star types and planetary environments.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Voice 1 (Foundation Bass Pad):</strong> Warm analog sub-bass pedal tone ($32.7\,\text{Hz}$ $C_1$) with subtle 2nd harmonic warmth.</li>
+                        <li><strong>Voice 2 (Stereo Chorused Chord Pad):</strong> Evolving 4-chord progressions with dual detuned oscillators and state-variable filtering (SVF) cycling every 14 seconds.</li>
+                        <li><strong>Voice 3 (Generative Melodic Chime):</strong> 8-step modal arpeggios advancing every 2.4s, featuring bell envelope decays and alternating ping-pong stereo panning.</li>
+                        <li><strong>Voice 4 (Celestial Glass Shimmer):</strong> High starlight crystal accents blooming dynamically on chord transitions.</li>
+                        <li><strong>12 Celestial Modal Scales:</strong> Harmonically mapped to all 12 stellar classes, shifting from bright Lydian modes near blue giants to solemn Phrygian modes near dying red giants.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Procedural synthesis requires zero disk space and never loops repetitively, providing an endless, organic soundscape tailored to each uncharted star system.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="sound-mixer">
+                <h3>26. 6-Channel Mixer & Sound Controls (<kbd>F2</kbd> + <kbd>Tab</kbd>)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Provides studio-grade control over individual sound layers, audio synthesis modes, and global mute toggles.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Six Independent Channels:</strong> Master, Music, Cabin, Propulsion, Weather, and Foley sliders accessible via <kbd>F2</kbd> &rarr; <kbd>Tab</kbd> with persistent storage in <code>audio_settings.ini</code>.</li>
+                        <li><strong>Audio Modes:</strong> Toggle between <code>GENERATIVE</code>, <code>RECORDED</code>, <code>HYBRID</code>, and <code>OFF</code> modes.</li>
+                        <li><strong>Instant Mute:</strong> Press <kbd>F9</kbd> or <kbd>Ctrl</kbd> + <kbd>M</kbd> to silence procedural audio instantly without altering volume slider positions.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Allows explorers to customize their acoustic environment, whether they prefer pure quiet contemplation or lush orchestral soundscapes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK VIII -->
+        <section id="book-8">
+            <h2>Book VIII: Visual Fidelity & Rendering Engine</h2>
+
+            <div class="triad-block" id="visual-settings">
+                <h3>27. Visual Settings Matrix (<kbd>F2</kbd>)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        An in-game overlay menu controlling optical lens flares, HUD visibility, window borders, and temporal simulation speed.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><kbd>T</kbd>: Toggles HUD text overlays on or off.</li>
+                        <li><kbd>F</kbd>: Cycles lens flare modes (Always On, Visor Only, Always Off).</li>
+                        <li><kbd>B</kbd>: Toggles between seamless borderless display and classic bordered frame.</li>
+                        <li><kbd>[</kbd> / <kbd>]</kbd>: Adjusts Timewarp acceleration multipliers (1× to 16×).</li>
+                        <li><kbd>A</kbd>: Toggles Advanced Effects submenu.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Settings update immediately in memory and persist across sessions in <code>display_settings.ini</code> without requiring engine restarts.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="shader-pipeline">
+                <h3>28. CRT & Subpixel Shaders</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Enhances the retro visual presentation with vintage CRT scanline emulation, sub-pixel fidelity, and advanced upscaling algorithms.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Internal Resolution Modes (<kbd>R</kbd>):</strong> Select between Authentic <code>320x200 1X</code>, Enhanced <code>640x400 2X</code>, and High-DPI <code>1280x800 4X</code>.</li>
+                        <li><strong>Upscaling Filters (<kbd>U</kbd>):</strong> Select between Crisp Pixel 1X, Scale2X edge detection, and Smooth Bilinear filtering.</li>
+                        <li><strong>CRT Shader Simulation (<kbd>C</kbd>):</strong> Emulates CRT shadow masks, scanline decay, and phosphor persistence.</li>
+                        <li><strong>Sub-Pixel Fidelity (<kbd>G</kbd>):</strong> Enables sub-pixel coordinate rasterization for celestial stars, eliminating shimmering artifacts.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Bridges vintage 1990s aesthetic charm with high-DPI modern displays, ensuring crisp rendering on 4K monitors while retaining retro soul.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="celestial-optics">
+                <h3>29. Celestial Color & Corona Optics</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Applies authentic astrophysical color curves and atmospheric scattering physics to stars and planetary horizons.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Planckian Blackbody Spectral Grading:</strong> Computes star colors based on true stellar surface temperatures ($2400\,\text{K}$ red dwarfs to $30000\,\text{K}$ blue hypergiants).</li>
+                        <li><strong>Atmospheric Scattering Modes (<kbd>S</kbd>):</strong> Cycles between Authentic DOS, Realistic Rayleigh/Mie scattering, and Vibrant cinematic horizons.</li>
+                        <li><strong>Coronal Flare Modes (<kbd>E</kbd>):</strong> Selects between Authentic, Realistic, and Vibrant coronal flares around stellar disks.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Grounding optical shaders in astrophysics elevates the visual realism of every solar sunrise without sacrificing procedural performance.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK IX -->
+        <section id="book-9">
+            <h2>Book IX: Distributed Cartography & Starmap Exchange</h2>
+
+            <div class="triad-block" id="starmap-exchange">
+                <h3>30. Starmap Exchange Protocol (`.nsm`)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Enables explorers to share custom star labels, planetary names, and guide notes through lightweight, portable files without centralized servers.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Packet Envelopes:</strong> Discoveries are packaged into binary <code>.nsm</code> files or structured <code>outbox.json</code> manifests.</li>
+                        <li><strong>CRC32 Checksumming:</strong> Every packet is sealed with a 32-bit CRC hash to detect bitrot or truncated network transfers.</li>
+                        <li><strong>Bounding Limits:</strong> Coordinates, star IDs, and character sets are strictly validated against galactic bounds ($[-10^7, +10^7]$).</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Allows asynchronous community cartography via email, Discord, or USB drives, matching the decentralized spirit of original space exploration.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="canonical-protection">
+                <h3>31. Canonical Seed Protection & Safety Interlocks</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Hard-blocks any attempt to overwrite, rename, or corrupt protected canonical celestial bodies (such as Fenia or Sol).
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        Implemented in [`src/starmap_exchange.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/starmap_exchange.cpp). Exchange engines maintain an immutable whitelist of canonical system IDs. Any imported packet containing conflicting names for canonical bodies is rejected with an explicit security warning.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Guarantees the foundational landmarks of the Noctis galaxy remain permanent and unvandalized for all future generations of explorers.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="conflict-resolution">
+                <h3>32. Collision Avoidance & Non-Destructive Merges</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Safely resolves naming collisions and duplicate discoveries when merging external starmaps into your local database.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>ID Collisions:</strong> If an incoming packet attempts to rename a celestial body that you have already labeled locally, the local label is preserved.</li>
+                        <li><strong>Name Collisions:</strong> If an imported name matches an existing local name on a different star, the incoming record is flagged and skipped.</li>
+                        <li><strong>Atomic Updates:</strong> Database writes use atomic file replacements (`atomic_replace`), ensuring zero catalog corruption during power interruptions.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Protects your personal cartography log from accidental overwrites when importing massive community catalog collections.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="exchange-workflows">
+                <h3>33. INBOX & OUTBOX Workflows</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Command-line, terminal, and browser interfaces for staging and ingesting starmap exchange packages.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><code>OUTBOX</code>: Exports all player discoveries to <code>data/outbox.nsm</code> and <code>data/outbox.json</code>.</li>
+                        <li><code>INBOX</code>: Inspects and merges packets from <code>data/inbox.nsm</code> or <code>data/inbox.json</code>.</li>
+                        <li><code>INBOX CHECK</code>: Performs a safe dry-run validation, reporting imported, skipped, and conflicting bodies without touching files.</li>
+                        <li>Web Browser Interface: Features dedicated <strong>EXPORT STARMAP</strong> and <strong>IMPORT STARMAP</strong> buttons with native file pickers.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Makes cartographic exchange as simple as downloading a file, allowing community databases to circulate effortlessly.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK X -->
+        <section id="book-10">
+            <h2>Book X: Navigation, Logs & Waypoints</h2>
+
+            <div class="triad-block" id="flight-journal">
+                <h3>34. Automated Flight Journal</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Chronicles your journey automatically, recording star arrivals, planetary landings, and custom celestial designations into structured files.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <p>
+                        Implemented in [`src/flight_log.cpp`](file:///home/gordonk/.gemini/antigravity/worktrees/public-builds/write_noctis_iv_docs/src/flight_log.cpp). Typing <code>LOG</code> in the GOESnet terminal prints an executive travel summary. Typing <code>LOG EXPORT</code> exports the complete journal to both Markdown (`flight_log.md`) and JSON (`flight_log.json`).
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Creates a permanent, human-readable record of your expeditions that can be read with any text editor or shared with fellow astronomers.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="waypoint-system">
+                <h3>35. Starmap Bookmarks & Waypoint System (`BM`)</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        A personal waypoint and bookmark manager integrated directly into the ship's guidance computers and surface navigation HUD.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><code>BM LIST</code>: Lists saved waypoints with calculated light-year distances and active guidance indicators.</li>
+                        <li><code>BM ADD &lt;label&gt;</code>: Saves your current celestial target as a named waypoint.</li>
+                        <li><code>BM GOTO &lt;id&gt;</code>: Locks guidance systems onto the specified bookmark.</li>
+                        <li>Surface Shortcut (<kbd>J</kbd>): Pressing <kbd>J</kbd> while walking on a planet drops an instant GPS waypoint at your exact latitude and longitude.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Allows explorers to mark favorite landing sites, mountain ranges, and binary stars for easy return journeys.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- BOOK XI -->
+        <section id="book-11">
+            <h2>Book XI: System Administration, CLI & Configuration</h2>
+
+            <div class="triad-block" id="cli-reference">
+                <h3>36. Command-Line Interface (CLI) Directory</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Command-line arguments accepted by desktop binaries (`nivlr` and `nivlr.exe`) for engine configuration and automated workflows.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Flag</th>
+                                <th>Argument</th>
+                                <th>Operational Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>--omega-drive</code></td>
+                                <td>None</td>
+                                <td>Equips the Stardrifter with infinite hyperspace jump energy without save corruption.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--standard-drive</code></td>
+                                <td>None</td>
+                                <td>Restores conventional Lithium fuel drive (120 charges) and resets infinite energy.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--reset-data</code></td>
+                                <td>None</td>
+                                <td>Atomically resets player save states and flight logs, restoring default catalog copies.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--export-starmap</code></td>
+                                <td><code>[PATH]</code></td>
+                                <td>Exports custom player discoveries to an external `.nsm` packet file.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--import-starmap</code></td>
+                                <td><code>&lt;PATH&gt;</code></td>
+                                <td>Imports and merges an external starmap packet into your local catalog.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--validate-starmap</code></td>
+                                <td><code>&lt;PATH&gt;</code></td>
+                                <td>Performs a dry-run integrity validation of an `.nsm` or `.json` packet.</td>
+                            </tr>
+                            <tr>
+                                <td><code>--export-movie</code></td>
+                                <td><code>&lt;deck&gt;</code></td>
+                                <td>Encodes the specified Moviemaker deck to MP4 format headlessly.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Enables headless script automation, external mod tooling, and seamless integration with desktop launcher scripts.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="config-reference">
+                <h3>37. Configuration File Reference</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Human-readable INI configuration files stored in the user application data directory.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ul>
+                        <li><code>config.ini</code>: Stores general settings, resolution, fullscreen state, and input mappings.</li>
+                        <li><code>display_settings.ini</code>: Stores CRT shaders, upscaling filters, coronal flare styles, and scattering modes.</li>
+                        <li><code>audio_settings.ini</code>: Stores 6-channel mixer volumes and ambient generative synthesizer preferences.</li>
+                        <li><code>bookmarks.ini</code>: Stores personal celestial waypoints and surface coordinates.</li>
+                    </ul>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Clean INI syntax enables direct manual editing with standard text editors without binary deserialization hazards.
+                    </p>
+                </div>
+            </div>
+
+            <div class="triad-block" id="storage-reset">
+                <h3>38. Storage Management & Fresh Start Procedures</h3>
+                <div class="triad-section">
+                    <span class="triad-label what">What It Does</span>
+                    <p>
+                        Safe, atomic procedures for wiping corrupted saves or starting a completely fresh exploration expedition.
+                    </p>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label how">How It Works</span>
+                    <ol>
+                        <li><strong>Desktop Fresh Start:</strong> Run <code>./nivlr --reset-data</code>. Wipes <code>current.niv</code>, <code>surface.niv</code>, and logs while preserving default seed catalogs.</li>
+                        <li><strong>Web Browser Reset:</strong> Release pointer lock (<kbd>Esc</kbd> or <kbd>F10</kbd>) and click <strong>RESET SAVED DATA</strong> in the top overlay. Closes IDBFS connections, wipes IndexedDB storage, and reloads clean seed files.</li>
+                    </ol>
+                </div>
+                <div class="triad-section">
+                    <span class="triad-label why">Why It Works</span>
+                    <p>
+                        Guarantees explorers can recover from unexpected anomalies without manually searching through browser application storage menus.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="doc-footer">
+            <p>The Stardrifter's Codex • Noctis IV OM v3.2 Documentation Suite</p>
+            <p>Authored for the Noctis Open Movement • Dedicated to Alessandro Ghignola & Explorers of the Void</p>
+        </footer>
+    </main>
+
+</body>
+</html>
