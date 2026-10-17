@@ -362,6 +362,15 @@ bool consume_cancel() {
     return res;
 }
 
+// The cancel chain and the legacy quit key race: ESC arms the cancel flag AND
+// queues 27, which main() reads as "end session". When the chain consumes a
+// cancel, the queued ESC must be disarmed too.
+void discard_queued_cancel() {
+    if (!keys.empty() && keys.top() == 27) {
+        keys.pop();
+    }
+}
+
 } // namespace noctis
 
 void handle_input() {

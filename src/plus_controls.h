@@ -21,7 +21,12 @@ enum class SnapshotAction : std::uint8_t { none, normal, raw, panorama, raw_pano
 SnapshotAction snapshot_action(std::int16_t key, bool surface, bool label_entry,
                                bool panorama_active);
 
-std::int8_t cycle_mouse_look(std::int8_t mode);
+struct MouseLookCycle { std::int8_t mode; bool invert_pitch; };
+// Three-stop cycle preserving the established Down/M convention over two
+// orthogonal settings: off -> on (Normal pitch) -> on (Inverted pitch) -> off.
+// The former mode 2 ("Inv. Y Axis") is folded into mode 1 + pitch inversion;
+// it is the same behavior expressed without a redundant third state.
+MouseLookCycle cycle_mouse_look(std::int8_t mode, bool pitch_inverted);
 
 struct MouseControlDelta {
     float shift{};
@@ -31,10 +36,16 @@ struct MouseControlDelta {
 };
 
 MouseControlDelta space_mouse_control(std::int8_t mode, bool right_button, std::int16_t dx,
-                                      std::int16_t dy, float user_pitch);
+                                      std::int16_t dy, float user_pitch,
+                                      bool pitch_inverted = false);
+// dy arrives pre-inverted by the input adapter (push forward -> positive) when
+// pitch_inverted is false. The walking branches of BOTH handlers restore the raw
+// DOS axis convention (mouse up = forward) independently of the camera pitch
+// flag, so one setting no longer couples look and walk.
 MouseControlDelta surface_mouse_control(std::int8_t mode, bool right_button, bool left_button,
                                         std::int16_t dx, std::int16_t dy, bool landed,
-                                        std::uint8_t movement_scale);
+                                        std::uint8_t movement_scale,
+                                        bool pitch_inverted = false);
 
 bool should_wait_for_frame(bool on_roof, bool roof_speed);
 bool is_roof_speed_key(std::int16_t key);

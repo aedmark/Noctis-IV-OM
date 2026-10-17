@@ -78,6 +78,7 @@ void set_crt_toggle_handler(DisplayToggleHandler handler);
 void set_overlay_input_handler(OverlayInputHandler handler);
 bool is_cancel_requested();
 bool consume_cancel();
+void discard_queued_cancel();
 
 } // namespace noctis
 

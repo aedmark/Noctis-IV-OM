@@ -4736,6 +4736,7 @@ nosecondarysun:
             } else if (about != 0) {
                 about = 0;
             }
+            noctis::discard_queued_cancel();
         }
 
         /*if (mpul & 2) {
@@ -4792,7 +4793,8 @@ nosecondarysun:
                 surface_speed_multiplier = 2;
         }
         const auto mouse_control = noctis::surface_mouse_control(option_mouse_look, (mpul & 2U) != 0, (mpul & 1U) != 0,
-                                                                 mdltx, mdlty, landed != 0, surface_speed_multiplier);
+                                                                 mdltx, mdlty, landed != 0, surface_speed_multiplier,
+                                                                 noctis::is_mouse_inversion_active());
         shift += mouse_control.shift;
         step += mouse_control.step;
         dlt_alfa += mouse_control.pitch;
@@ -6007,11 +6009,14 @@ nosecondarysun:
                 }
 
                 if (w == 0x50) {
-                    option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0   ? "MOUSELOOK DISABLED"
-                           : option_mouse_look == 1 ? "MOUSELOOK ENABLED"
-                                                    : "INVERTED Y AXIS",
+                    const auto cyc = noctis::cycle_mouse_look(option_mouse_look, noctis::is_mouse_inversion_active());
+                    option_mouse_look = cyc.mode;
+                    noctis::set_mouse_inversion(cyc.invert_pitch);
+                    status(cyc.mode == 0        ? "MOUSELOOK DISABLED"
+                           : !cyc.invert_pitch ? "MOUSELOOK ENABLED"
+                                               : "MOUSELOOK INV.",
                            50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                 }
 
                 /*  if (w == 80) {
@@ -6256,8 +6261,11 @@ nosecondarysun:
                         continue;
                     }
                     if (w == 'm' || w == 'M') {
-                        option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                        status(option_mouse_look == 0 ? "MOUSELOOK DISABLED" : option_mouse_look == 1 ? "MOUSELOOK ENABLED" : "INVERTED Y AXIS", 50);
+                        // M is a plain mouselook on/off toggle; the three-stop
+                        // cycle (including the inverted-pitch stop) belongs to
+                        // the Down arrow alone.
+                        option_mouse_look = option_mouse_look == 0 ? 1 : 0;
+                        status(option_mouse_look == 0 ? "MOUSELOOK DISABLED" : "MOUSELOOK ENABLED", 50);
                         noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                         noctis::play_cockpit_button();
                         continue;

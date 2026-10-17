@@ -36,21 +36,36 @@ int main() {
                       && noctis::snapshot_action('m', true, false, true) == SA::none,
                   "snapshot key routing changed");
 
-    ok &= require(noctis::cycle_mouse_look(0) == 1 && noctis::cycle_mouse_look(1) == 2
-                      && noctis::cycle_mouse_look(2) == 0,
-                  "three-mode mouselook cycle changed");
-    const auto space_move = noctis::space_mouse_control(0, false, 6, 4, 12);
-    const auto space_look = noctis::space_mouse_control(2, false, 6, 4, 12);
-    ok &= require(space_move.step == -12 && space_move.yaw == -2 && space_move.pitch == 0,
+    ok &= require(noctis::cycle_mouse_look(0, false).mode == 1 && !noctis::cycle_mouse_look(0, false).invert_pitch
+                      && noctis::cycle_mouse_look(1, false).mode == 1 && noctis::cycle_mouse_look(1, false).invert_pitch
+                      && noctis::cycle_mouse_look(1, true).mode == 0 && !noctis::cycle_mouse_look(1, true).invert_pitch,
+                  "mouselook three-stop cycle over two orthogonal settings changed");
+    const auto space_move = noctis::space_mouse_control(0, false, 6, 4, 12, false);
+    const auto space_look = noctis::space_mouse_control(1, false, 6, 4, 12, false);
+    ok &= require(space_move.step == 12 && space_move.yaw == -2 && space_move.pitch == 0,
                   "space movement-mode mouse mapping changed");
     ok &= require(space_look.step == 0 && space_look.yaw == -2 && space_look.pitch == -0.5F,
-                  "space inverted-look mouse mapping changed");
+                  "space mouselook pitch mapping changed");
+    // Gesture parity: a forward push (raw-negative) walks forward under EITHER
+    // pitch setting; the pitch flag never changes walking direction.
+    ok &= require(noctis::space_mouse_control(0, false, 0, -4, 12, true).step == 12
+                      && noctis::surface_mouse_control(0, false, false, 0, -4, true, 5, true).step == 20
+                      && noctis::surface_mouse_control(0, false, false, 0, 4, true, 5, false).step == 20,
+                  "walking direction coupled to mouse pitch setting");
     const auto surface_move = noctis::surface_mouse_control(0, false, true, 6, 4, true, 5);
     const auto surface_look = noctis::surface_mouse_control(1, false, true, 6, 4, true, 5);
-    ok &= require(surface_move.step == 55 && surface_move.yaw == -1 && surface_move.pitch == 0,
+    ok &= require(surface_move.step == 95 && surface_move.yaw == -1 && surface_move.pitch == 0,
                   "surface movement-mode mouse mapping changed");
-    ok &= require(surface_look.step == 75 && surface_look.yaw == -1 && surface_look.pitch == 0.5F,
+    ok &= require(surface_look.step == 75 && surface_look.yaw == -1 && surface_look.pitch == -0.5F,
                   "surface look-mode mouse mapping changed");
+    // Walking sign follows the raw DOS axis (mouse up = forward) and is
+    // decoupled from the camera pitch inversion flag: the same physical
+    // mouse position must walk the same direction under either flag.
+    ok &= require(noctis::surface_mouse_control(0, false, false, 0, -4, true, 5, true).step ==
+                  noctis::surface_mouse_control(0, false, false, 0,  4, true, 5, false).step,
+                  "surface walk sign coupled to pitch inversion");
+    ok &= require(noctis::surface_mouse_control(0, false, false, 0, 4, true, 5).step > 0.0F,
+                  "surface mouse-forward must walk forward");
 
     ok &= require(noctis::should_wait_for_frame(false, true)
                       && noctis::should_wait_for_frame(true, false)

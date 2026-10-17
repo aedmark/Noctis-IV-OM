@@ -31,26 +31,32 @@ SnapshotAction snapshot_action(std::int16_t key, bool surface, bool label_entry,
     return SnapshotAction::none;
 }
 
-std::int8_t cycle_mouse_look(std::int8_t mode) {
-    return mode >= 0 && mode < 2 ? static_cast<std::int8_t>(mode + 1) : 0;
+MouseLookCycle cycle_mouse_look(std::int8_t mode, bool pitch_inverted) {
+    if (mode == 0) return {1, false};
+    if (!pitch_inverted) return {1, true};
+    return {0, false};
 }
 
 MouseControlDelta space_mouse_control(std::int8_t mode, bool right_button, std::int16_t dx,
-                                      std::int16_t dy, float user_pitch) {
+                                      std::int16_t dy, float user_pitch, bool pitch_inverted) {
     MouseControlDelta result;
+    // Undo the adapter's global Y inversion for walking only, mirroring the
+    // surface handler: forward means forward at any pitch setting.
+    const float dy_raw = pitch_inverted ? static_cast<float>(dy) : -static_cast<float>(dy);
     if (right_button) {
         result.shift = 3.0F * dx;
         if (mode == 0) {
             result.pitch = -static_cast<float>(dy) / 8.0F;
         } else {
-            result.step = -3.0F * dy;
+            result.step = -3.0F * dy_raw;
             if (dy > 7 || dy < -7) result.pitch = -user_pitch / 6.0F;
         }
     } else {
-        if (mode == 1) result.pitch = static_cast<float>(dy) / 8.0F;
-        else if (mode == 2) result.pitch = -static_cast<float>(dy) / 8.0F;
+        // Look direction follows the label: with Mouse Pitch Normal, a forward
+        // push looks up. (Mode 2 folded into mode 1 + pitch inversion.)
+        if (mode == 1) result.pitch = -static_cast<float>(dy) / 8.0F;
         else {
-            result.step = -3.0F * dy;
+            result.step = -3.0F * dy_raw;
             if (dy > 7 || dy < -7) result.pitch = -user_pitch / 6.0F;
         }
         result.yaw = -static_cast<float>(dx) / 3.0F;
@@ -60,17 +66,26 @@ MouseControlDelta space_mouse_control(std::int8_t mode, bool right_button, std::
 
 MouseControlDelta surface_mouse_control(std::int8_t mode, bool right_button, bool left_button,
                                         std::int16_t dx, std::int16_t dy, bool landed,
-                                        std::uint8_t movement_scale) {
+                                        std::uint8_t movement_scale,
+                                        bool pitch_inverted) {
     MouseControlDelta result;
     const bool mouselook = right_button != (mode > 0);
     if (right_button) result.shift = dx;
     else result.yaw = -static_cast<float>(dx) / 6.0F;
     if (mouselook) {
-        result.pitch = (mode == 1 ? 1.0F : -1.0F) * static_cast<float>(dy) / 8.0F;
+        // Single camera convention: the pitch flag flows through the input
+        // adapter; mouselook itself only gates look-vs-walk.
+        result.pitch = -static_cast<float>(dy) / 8.0F;
     }
     if (landed) {
         if (left_button) result.step += 15.0F * movement_scale;
-        if (!mouselook) result.step -= static_cast<float>(movement_scale) * dy;
+        if (!mouselook) {
+            // Undo the adapter's global Y inversion so walking follows the raw
+            // DOS axis (mouse up = negative raw = forward), decoupled from the
+            // camera pitch inversion flag.
+            const float dy_raw = pitch_inverted ? static_cast<float>(dy) : -static_cast<float>(dy);
+            result.step -= movement_scale * dy_raw;
+        }
     }
     return result;
 }

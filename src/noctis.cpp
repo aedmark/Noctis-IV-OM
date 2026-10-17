@@ -489,7 +489,6 @@ noctis::NativeSaveState capture_native_state() {
     CAPTURE(ilight);
     CAPTURE(ilightv);
     CAPTURE(charge);
-    CAPTURE(revcontrols);
     CAPTURE(ap_targetting);
     CAPTURE(ap_targetted);
     CAPTURE(ip_targetting);
@@ -554,6 +553,7 @@ noctis::NativeSaveState capture_native_state() {
     noctis::capture_goes_terminal_state(noctis::engine_state().goes_terminal, state);
     state.last_snapshot     = last_snapshot;
     state.option_mouse_look = option_mouse_look;
+    state.revcontrols       = noctis::is_mouse_inversion_active() ? 1 : 0; // record of the setting, not a source
     state.roof_speed        = roof_speed;
     state.hud_closed        = preserved_save_state.hud_closed;
     state.draw_hud          = draw_hud;
@@ -566,6 +566,13 @@ void apply_native_state(const noctis::NativeSaveState &state) {
     preserved_save_state = state;
     last_snapshot        = state.last_snapshot;
     option_mouse_look    = state.option_mouse_look;
+    if (option_mouse_look == 2) {
+        // Legacy three-mode save: the former "Inv. Y Axis" mode is the same
+        // behavior as mouselook on + inverted pitch; fold it into the two
+        // orthogonal settings so the player's feel is preserved exactly.
+        option_mouse_look = 1;
+        noctis::set_mouse_inversion(true);
+    }
     roof_speed           = state.roof_speed;
     draw_hud             = state.draw_hud;
     lens_flare_mode      = state.lens_flare_mode;
@@ -578,7 +585,6 @@ void apply_native_state(const noctis::NativeSaveState &state) {
     APPLY(ilight);
     APPLY(ilightv);
     APPLY(charge);
-    APPLY(revcontrols);
     APPLY(ap_targetting);
     APPLY(ap_targetted);
     APPLY(ip_targetting);
@@ -2427,7 +2433,8 @@ void dev_commands() {
 
 void prefs() {
     command(0, noctis::ship_preference_label(noctis::ShipPreference::automatic_screen_sleep, autoscreenoff));
-    command(1, noctis::ship_preference_label(noctis::ShipPreference::reversed_pitch, revcontrols));
+    command(1, noctis::ship_preference_label(noctis::ShipPreference::reversed_pitch,
+                                             noctis::is_mouse_inversion_active() ? 1 : 0));
     command(2, noctis::ship_preference_label(noctis::ShipPreference::persistent_menus, menusalwayson));
     command(3, noctis::ship_preference_label(noctis::ShipPreference::polarized_hull, depolarize));
 }
@@ -2451,7 +2458,11 @@ void pfs_commands() {
         break;
 
     case 2:
-        toggle_option(&revcontrols);
+        // The ship's "Reverse Pitch Controls" preference IS the mouse pitch
+        // setting - one state, two surfaces. Toggling here flips the same
+        // control as F2/I/the cycle, and persists to controls.ini.
+        noctis::toggle_mouse_inversion();
+        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
         break;
 
     case 3:
@@ -3678,7 +3689,8 @@ int main(int argc, char **argv) {
                 noctis::log_event("error", "persistence_fixture", "local target setup failed");
                 return 1;
             }
-            autoscreenoff = revcontrols = menusalwayson = depolarize = 0;
+            autoscreenoff = menusalwayson = depolarize = 0;
+            noctis::set_mouse_inversion(false);
             sys                                                      = 3;
             for (s_command = 1; s_command <= 4; ++s_command)
                 pfs_commands();
@@ -3688,7 +3700,8 @@ int main(int argc, char **argv) {
             s_command = 4;
             dev_commands();
             last_snapshot     = 76'543'210;
-            option_mouse_look = 2;
+            option_mouse_look = 2; // legacy three-mode value: must fold to on + inverted pitch on load
+            noctis::set_mouse_inversion(false);
             roof_speed        = 1;
             noctis::engine_state().goes_terminal.scroll_offset = 42;
             freeze();
@@ -3699,8 +3712,8 @@ int main(int argc, char **argv) {
         if (std::string_view(persistence_fixture_phase) == "verify") {
             const auto &terminal = noctis::engine_state().goes_terminal;
             if (ap_target_x != -18928 || ap_target_y != -29680 || ap_target_z != -67336 || ip_targetted != 3 ||
-                !autoscreenoff || !revcontrols || !menusalwayson || !depolarize || dev_page != 2 || data != 3 ||
-                charge != -1 || last_snapshot != 76'543'210 || option_mouse_look != 2 || roof_speed != 1 ||
+                !autoscreenoff || !noctis::is_mouse_inversion_active() || !menusalwayson || !depolarize || dev_page != 2 || data != 3 ||
+                charge != -1 || last_snapshot != 76'543'210 || option_mouse_look != 1 || roof_speed != 1 ||
                 terminal.command_cursor != 10 || terminal.scroll_offset != 42 ||
                 std::string_view(terminal.command.data()) != "ST FELYSIA_") {
                 noctis::log_event("error", "persistence_fixture", "saved gameplay state was not restored");
@@ -3710,7 +3723,7 @@ int main(int argc, char **argv) {
             noctis::NativeSaveState continued;
             const auto loaded = noctis::load_native_save(native_situation_file, continued);
             if (loaded.status != noctis::NativeSaveStatus::ok || continued.charge != -1 ||
-                continued.last_snapshot != 76'543'210 || continued.option_mouse_look != 2 ||
+                continued.last_snapshot != 76'543'210 || continued.option_mouse_look != 1 ||
                 continued.roof_speed != 1 || continued.gnc_pos != 10 || continued.goesfile_pos != 42 ||
                 std::string_view(continued.goesnet_command.data()) != "ST FELYSIA_") {
                 noctis::log_event("error", "persistence_fixture", "continued state did not resave");
@@ -3977,7 +3990,8 @@ int main(int argc, char **argv) {
             return true;
         };
 
-        autoscreenoff = revcontrols = menusalwayson = depolarize = 0;
+        autoscreenoff = menusalwayson = depolarize = 0;
+        noctis::set_mouse_inversion(false);
         clear_onboard_screen();
         prefs();
         if (!all_commands_present() || std::string_view(&ctb[20]) != "auto screen sleep off" ||
@@ -3991,7 +4005,7 @@ int main(int argc, char **argv) {
         }
         clear_onboard_screen();
         prefs();
-        if (!autoscreenoff || !revcontrols || !menusalwayson || !depolarize || !all_commands_present() ||
+        if (!autoscreenoff || !noctis::is_mouse_inversion_active() || !menusalwayson || !depolarize || !all_commands_present() ||
             std::string_view(&ctb[20]) != "auto screen sleep on" ||
             std::string_view(&ctb[20 + 27]) != "reverse pitch controls") {
             noctis::log_event("error", "ship_interface_fixture",
@@ -4956,6 +4970,9 @@ void loop() {
             terminal.command[0] = 0;
             status("CANCELLED", 50);
         }
+        // A consumed cancel must also disarm the ESC key queued for the
+        // legacy handlers, or main() reads mc == 27 and ends the session.
+        noctis::discard_queued_cancel();
     }
 
     // Dev Bryce: Mouse Currently only rotates camera
@@ -4974,7 +4991,8 @@ void loop() {
     }*/
 
     const auto mouse_control =
-        noctis::space_mouse_control(option_mouse_look, (mpul & 2U) != 0, mdltx, mdlty, user_alfa);
+        noctis::space_mouse_control(option_mouse_look, (mpul & 2U) != 0, mdltx, mdlty, user_alfa,
+                                    noctis::is_mouse_inversion_active());
     shift += mouse_control.shift;
     step += mouse_control.step;
     dlt_alfa += mouse_control.pitch;
@@ -7003,10 +7021,12 @@ resynctoplanet:
                 } else if (mc == 72) {
                     lifter = -100;
                 } else if (mc == 80) {
-                    option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0   ? "MOUSELOOK OFF"
-                           : option_mouse_look == 1 ? "MOUSELOOK ON"
-                                                    : "INV. Y AXIS",
+                    const auto cyc = noctis::cycle_mouse_look(option_mouse_look, noctis::is_mouse_inversion_active());
+                    option_mouse_look = cyc.mode;
+                    noctis::set_mouse_inversion(cyc.invert_pitch);
+                    status(cyc.mode == 0        ? "MOUSELOOK OFF"
+                           : !cyc.invert_pitch ? "MOUSELOOK ON"
+                                               : "MOUSELOOK INV.",
                            50);
                     noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                 }
@@ -7162,8 +7182,10 @@ resynctoplanet:
                     noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                     noctis::play_cockpit_button();
                 } else if (mc == 'm' || mc == 'M') {
-                    option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0 ? "MOUSELOOK OFF" : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                    // Plain on/off toggle; the menu page itself shows the
+                    // MOUSELOOK state, so no status popup (menu-context
+                    // popups persist while the menu holds the screen).
+                    option_mouse_look = option_mouse_look == 0 ? 1 : 0;
                     noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                     noctis::play_cockpit_button();
                 } else if (mc == 'r' || mc == 'R') {
@@ -7290,9 +7312,24 @@ resynctoplanet:
                         goto endmain;
                     }
                 } else if (graphics_menu_status == 3) {
-                    if (mc == 72 || mc == 80) {
+                    if (mc == 72) {
                         const bool inv = noctis::toggle_mouse_inversion();
                         status(inv ? "MOUSE PITCH: INVERTED" : "MOUSE PITCH: NORMAL", 50);
+                        noctis::save_controls_settings(noctis::runtime_paths().config_dir);
+                        noctis::play_cockpit_button();
+                        goto endmain;
+                    }
+                    if (mc == 80) {
+                        // Down keeps its three-stop mouselook cycle convention
+                        // even inside the controls page; Up remains the pitch
+                        // toggle.
+                        const auto cyc = noctis::cycle_mouse_look(option_mouse_look, noctis::is_mouse_inversion_active());
+                        option_mouse_look = cyc.mode;
+                        noctis::set_mouse_inversion(cyc.invert_pitch);
+                        status(cyc.mode == 0   ? "MOUSELOOK OFF"
+                               : !cyc.invert_pitch ? "MOUSELOOK ON"
+                                                   : "MOUSELOOK INV.",
+                               50);
                         noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                         noctis::play_cockpit_button();
                         goto endmain;
@@ -7360,11 +7397,14 @@ resynctoplanet:
                 }
 
                 if (mc == 80) {
-                    option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                    status(option_mouse_look == 0   ? "MOUSELOOK OFF"
-                           : option_mouse_look == 1 ? "MOUSELOOK ON"
-                                                    : "INV. Y AXIS",
+                    const auto cyc = noctis::cycle_mouse_look(option_mouse_look, noctis::is_mouse_inversion_active());
+                    option_mouse_look = cyc.mode;
+                    noctis::set_mouse_inversion(cyc.invert_pitch);
+                    status(cyc.mode == 0   ? "MOUSELOOK OFF"
+                           : !cyc.invert_pitch ? "MOUSELOOK ON"
+                                               : "MOUSELOOK INV.",
                            50);
+                    noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                 }
             } else {
             goesk_a_reentry:
@@ -7581,8 +7621,8 @@ resynctoplanet:
                         goto endmain;
                     }
                     if (mc == 'm' || mc == 'M') {
-                        option_mouse_look = noctis::cycle_mouse_look(option_mouse_look);
-                        status(option_mouse_look == 0 ? "MOUSELOOK OFF" : option_mouse_look == 1 ? "MOUSELOOK ON" : "INV. Y AXIS", 50);
+                        // Plain on/off toggle; the menu page shows the state.
+                        option_mouse_look = option_mouse_look == 0 ? 1 : 0;
                         noctis::save_controls_settings(noctis::runtime_paths().config_dir);
                         noctis::play_cockpit_button();
                         goto endmain;

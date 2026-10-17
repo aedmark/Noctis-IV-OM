@@ -530,8 +530,7 @@ const std::vector<std::string> plus_controls_menu_lines(bool invert_y,
     std::snprintf(sens_buf, sizeof(sens_buf), "MOUSE SENSITIVITY: %s %3.1fX (-/+)", bar, sensitivity);
 
     const char *look_mode_str = (mouselook_mode == 0) ? "OFF (HOLD RMB) (M)"
-                              : (mouselook_mode == 1) ? "ON (ALWAYS) (M)"
-                                                      : "INV. Y AXIS (M)";
+                                                      : "ON (ALWAYS) (M)";
 
     char move_buf[48];
     std::snprintf(move_buf, sizeof(move_buf), "MOVE: %.*s %.*s %.*s %.*s   JUMP: SPACE",
