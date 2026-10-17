@@ -29,7 +29,7 @@ identifier even if reordered. Dependencies name other work items when relevant.
 | M14 | Moviemaker Modernization & Direct Video Export | DONE |
 | M15 | Ambient Music & Generative Soundscapes | DONE |
 | M16 | Asynchronous Community GOESnet Catalog Exchange | DEFERRED — after M17 |
-| M17 | Engine Consolidation & Runtime Architecture | IN PROGRESS |
+| M17 | Engine Consolidation & Runtime Architecture | DONE |
 
 ## M0 — Foundation, provenance, and baseline selection
 

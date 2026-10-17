@@ -47,7 +47,8 @@ sudo apt-get update
 sudo apt-get install -y clang cmake ninja-build \
   libasound2-dev libx11-dev libxrandr-dev libxi-dev \
   libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
-  libxinerama-dev
+  libxinerama-dev libwayland-dev libxkbcommon-dev \
+  wayland-protocols
 ```
 
 Then run the canonical build from the repository root:

@@ -605,6 +605,20 @@ add_custom_command(TARGET nivlr POST_BUILD
 # Runtime files use relative paths today, so installing them beside the
 # executable preserves the same layout exercised by development builds.
 install(TARGETS nivlr RUNTIME DESTINATION . COMPONENT Runtime)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT EMSCRIPTEN)
+    # Bundle the GLU runtime library and resolve it from beside the
+    # binary: current distros no longer install libglu1-mesa by default
+    # (Ubuntu 26.04 keeps it in universe only), so an unbundled release
+    # fails to start on clean systems despite being "self-contained".
+    set_target_properties(nivlr PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/lib")
+    find_file(NIVLR_LIBGLU NAMES libGLU.so.1
+              PATHS /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib REQUIRED)
+    get_filename_component(NIVLR_LIBGLU_REAL "${NIVLR_LIBGLU}" REALPATH)
+    install(FILES "${NIVLR_LIBGLU_REAL}" DESTINATION lib RENAME libGLU.so.1 COMPONENT Runtime)
+endif()
 install(DIRECTORY res/ DESTINATION res COMPONENT Runtime)
 install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/data/STARMAP.BIN

@@ -37,7 +37,7 @@ foreach(path IN LISTS required_files)
     endif()
 endforeach()
 
-foreach(path IN ITEMS defaults res licenses)
+foreach(path IN ITEMS defaults res licenses lib)
     if(NOT IS_DIRECTORY "${root}/${path}")
         message(FATAL_ERROR "required package directory is missing: ${path}")
     endif()
@@ -55,6 +55,7 @@ set(expected_top_level
     WTOF-LICENSE.md
     defaults
     licenses
+    lib
     nivlr
     res)
 list(SORT top_level)
@@ -71,6 +72,18 @@ file(GLOB_RECURSE forbidden RELATIVE "${root}"
     "${root}/*.h")
 if(forbidden)
     message(FATAL_ERROR "development or legacy files leaked into package: ${forbidden}")
+endif()
+
+# Runtime-link guard: the extracted binary must resolve every library it
+# needs from the archive or the base system, with GLU coming from the
+# bundle. This is the class of failure that breaks "extract and run" on
+# distros that dropped libglu1-mesa from the default install.
+execute_process(COMMAND ldd "${root}/nivlr" OUTPUT_VARIABLE ldd_out ERROR_QUIET)
+if(ldd_out MATCHES "not found")
+    message(FATAL_ERROR "packaged binary has unresolved runtime libraries:\n${ldd_out}")
+endif()
+if(ldd_out MATCHES "libGLU" AND NOT ldd_out MATCHES "/lib/libGLU\\.so\\.1")
+    message(FATAL_ERROR "packaged binary references libGLU but does not resolve it from the bundled lib/:\n${ldd_out}")
 endif()
 
 execute_process(

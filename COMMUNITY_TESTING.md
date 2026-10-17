@@ -40,8 +40,10 @@ Please note the result of each numbered check, even if it is simply “pass.” 
 a crash or data-loss problem occurs, stop and report it instead of continuing.
 
 1. **Clean start:** launch from the fresh extraction. Confirm that the game
-   opens and accepts keyboard and mouse input. This preview does not implement
-   game audio; silence is expected and is not a test failure.
+   opens and accepts keyboard and mouse input. Game audio is implemented
+   (since the 1.8.0 acoustics update) and its device should initialize at
+   startup; a machine with no usable audio backend may remain silent,
+   which is not a test failure.
 2. **Cockpit:** visit the main onboard computer pages and open contextual F1
    help. Toggle one F2 visual option and confirm that it changes the display.
    If the terminal repeatedly blinks off, check the ship's power: this is the
