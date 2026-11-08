@@ -1,508 +1,828 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Noctis IV OM is a modern C++20 hybrid of Noctis IV Plus and Noctis IV LR. Download the 3.2.0 release and explore billions of stars across the Noctis galaxy.">
-  <meta name="theme-color" content="#07080b">
-  <title>Noctis IV OM — Space Exploration Without Boundaries</title>
-  <link rel="stylesheet" href="site.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noctis IV OM — Stardrifter Operating Handbook</title>
+    <meta name="description" content="Noctis IV OM is a native C++20 hybrid of Noctis IV Plus and Noctis IV LR. Explore a deterministic procedural galaxy, land on uncharted worlds, and play in your browser or download 3.2.0 for Windows and Linux. No DOSBox.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="Noctis IV OM — Stardrifter Operating Handbook">
+    <meta property="og:description" content="A quiet galaxy, running natively. The 2000 space-exploration classic, running as a native C++20 game. No DOSBox, no combat, no destination but the one you choose.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="home.css">
+    <script src="home.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to the voyage</a>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="wordmark" href="index.html" aria-label="Noctis IV OM home">
-        <span class="wordmark-main">NOCTIS IV</span>
-        <span class="wordmark-mark">OM</span>
-      </a>
-      <nav aria-label="Primary navigation">
-        <a href="#download">Download</a>
-        <a href="#discover">The Galaxy</a>
-        <a href="#gallery">Views</a>
-        <a href="#first-flight">Flight Manual</a>
-        <a href="#controls">Controls</a>
-        <a href="devlog.html">Dev Diary</a>
-        <a href="play/">Play in Browser</a>
-        <a class="nav-cta" href="#download">Get 3.2.0</a>
-      </nav>
+<a class="skip" href="#main">Skip to the handbook</a>
+
+<div class="window-bar">
+    <span class="window-name">C:\NOCTIS\OM\HANDBOOK.TXT</span>
+    <span class="window-meta">STARDDRIFTER OPERATING HANDBOOK — EDITION 3.2.0</span>
+    <span class="window-controls" aria-hidden="true">[ □ ]</span>
+</div>
+
+<header class="site-head">
+    <div class="wrap head-inner">
+        <a class="brand" href="#top" aria-label="Noctis IV OM handbook, back to cover">
+            <span class="brand-mark" aria-hidden="true">N</span>
+            <span class="brand-name">NOCTIS IV <span>OM</span></span>
+            <span class="brand-ver">/ POH</span>
+        </a>
+        <nav class="head-nav" aria-label="Primary navigation">
+            <a href="manual/index.html">Codex</a>
+            <a href="https://github.com/aedmark/Noctis-IV-OM" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+            <a class="btn primary head-cta" href="play/">Play in browser</a>
+        </nav>
     </div>
-  </header>
+</header>
 
-  <main id="main">
-    <!-- HERO SECTION -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-image" role="img" aria-label="A green ringed world viewed from orbit"></div>
-      <div class="hero-shade"></div>
-      <div class="hero-content">
-        <span class="eyebrow">NOCTIS IV OM // C++20 HYBRID PORT</span>
-        <h1 id="hero-title">The universe is not waiting for you.</h1>
-        <p class="hero-lede">
-          Noctis IV OM brings Noctis IV Plus and Noctis IV LR together into a modern native game:
-          a vast, quiet space-exploration experience about choosing a star, crossing the dark,
-          and being the first person to see what is there.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#download">Download 3.2.0 Release</a>
-          <a class="btn btn-secondary" href="play/">Play in Browser</a>
-          <a class="btn btn-secondary" href="#first-flight">How to Fly</a>
-        </div>
-        <div class="hero-status-strip">
-          <span class="status-dot"></span>
-          <span>v3.2.0 Browser Moviemaker &amp; WebM Release now available · Clean WebM Deck Export · Native-Resolution Playback · Browser-Safe Movie Controls · Windows, Linux &amp; Web</span>
-        </div>
-      </div>
-    </section>
+<main id="main" class="desk" tabindex="-1">
+    <div class="sheet">
 
-    <!-- DOWNLOAD SECTION -->
-    <section class="download-section" id="download" aria-labelledby="download-title">
-      <div class="section">
-        <div class="section-heading">
-          <span class="eyebrow eyebrow-amber">3.2.0 RELEASE // BROWSER MOVIEMAKER &amp; WEBM</span>
-          <h2 id="download-title">Download Noctis IV OM</h2>
-          <p>
-            Step into the cockpit of the Stardrifter and venture across an untamed galaxy of billions of uncharted worlds.
-            Wander silent alien dunes under dynamic twilight skies, gaze at distant stars from your ship’s hull, and record
-            your discoveries in a quiet, contemplative space exploration experience.
-          </p>
-          <p>
-            Play instantly <strong>in your browser</strong> with local saves, or download standalone portable editions for
-            Windows and Linux. Zero installation, no accounts, and no DOSBox required—just launch and drift.
-          </p>
-        </div>
-
-        <div class="download-cards">
-          <!-- Windows Card -->
-          <div class="download-card">
-            <div class="card-platform-header">
-              <span class="platform-name">Windows 64-bit</span>
-              <span class="platform-badge">PORTABLE ZIP</span>
+        <aside class="rail">
+            <div class="rail-head">
+                <p class="rail-label">PILOT'S OPERATING HANDBOOK</p>
+                <p class="rail-title">NOCTIS <br>IV OM</p>
+                <p class="rail-meta">ED. 3.2.0 / 2026</p>
             </div>
-            <h3 class="card-title">Windows Release</h3>
-            <p class="card-desc">
-              Native 64-bit executable with all required runtime assets included.
-              Runs on Windows 10 &amp; 11 (and verified under Wine on Linux).
-            </p>
-            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-windows-x86_64.zip">
-              Download for Windows (.zip)
-            </a>
-            <div class="card-specs">
-              <span>Size: ~8.2 MB · v3.2.0</span>
-              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-windows-x86_64.zip.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
+            <nav class="rail-nav" aria-label="Handbook contents">
+                <a href="#top"><span>00</span> Cover</a>
+                <a href="#discover"><span>01</span> The quiet</a>
+                <a href="#first-flight"><span>02</span> First flight</a>
+                <a href="#systems"><span>03</span> Under the hull</a>
+                <a href="#gallery"><span>04</span> Plates</a>
+                <a href="#controls"><span>05</span> Cockpit card</a>
+                <a href="#download"><span>06</span> Release</a>
+                <a href="#source"><span>07</span> Source</a>
+                <a href="#faq"><span>08</span> Questions</a>
+                <a href="#credits"><span>09</span> Credits</a>
+            </nav>
+            <div class="rail-chart" aria-hidden="true">
+                <svg viewBox="0 0 180 118" role="presentation" focusable="false">
+                    <rect width="180" height="118" fill="#050505"/>
+                    <g fill="none" stroke="#2d2d2d" stroke-width="1">
+                        <circle cx="90" cy="59" r="48"/>
+                        <circle cx="90" cy="59" r="30"/>
+                        <path d="M8 59h164M90 4v110"/>
+                    </g>
+                    <path d="M23 88 67 61l43 13 34-34" fill="none" stroke="#00aaaa" stroke-width="1.4" stroke-dasharray="4 3"/>
+                    <g fill="#aaaaaa">
+                        <circle cx="23" cy="88" r="1.6"/><circle cx="43" cy="42" r="1.4"/>
+                        <circle cx="67" cy="61" r="2"/><circle cx="112" cy="84" r="1.7"/>
+                        <circle cx="138" cy="34" r="1.5"/><circle cx="154" cy="73" r="1.2"/>
+                    </g>
+                    <circle cx="67" cy="61" r="4.5" fill="none" stroke="#ffff55" stroke-width="1.4"/>
+                    <circle cx="138" cy="34" r="4.5" fill="none" stroke="#55ffff" stroke-width="1.4"/>
+                    <g fill="#ffff55" font-family="monospace" font-size="7" letter-spacing=".08em">
+                        <text x="16" y="101">BAL</text>
+                        <text x="130" y="24">FEL</text>
+                    </g>
+                    <g fill="#55ffff" font-family="monospace" font-size="6" letter-spacing=".08em">
+                        <text x="88" y="10">GALACTIC NORTH</text>
+                        <text x="8" y="20">EPOC 6012</text>
+                    </g>
+                </svg>
             </div>
-            <ul class="download-steps">
-              <li>Extract the downloaded <code>.zip</code> file anywhere.</li>
-              <li>Double-click <code>nivlr.exe</code> to begin exploring.</li>
-              <li>Saves, starmaps, and screenshots stay right in the game folder.</li>
-            </ul>
-          </div>
-
-          <!-- Linux Card -->
-          <div class="download-card">
-            <div class="card-platform-header">
-              <span class="platform-name">Linux 64-bit (x86_64)</span>
-              <span class="platform-badge">PORTABLE TAR.GZ</span>
-            </div>
-            <h3 class="card-title">Linux Release</h3>
-            <p class="card-desc">
-              Verified on Ubuntu 24.04+ (Native Wayland &amp; X11).
-              Self-contained release tarball configured in portable mode by default.
-            </p>
-            <a class="btn btn-primary card-download-btn" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-linux-x86_64.tar.gz">
-              Download for Linux (.tar.gz)
-            </a>
-            <div class="card-specs">
-              <span>Size: ~3.0 MB · v3.2.0</span>
-              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-linux-x86_64.tar.gz.sha256" target="_blank" rel="noopener">SHA-256 Checksum</a>
-            </div>
-            <ul class="download-steps">
-              <li>Extract the archive: <code>tar -xzf Noctis-IV-OM-linux-x86_64.tar.gz</code></li>
-              <li>Open a terminal in the folder and launch <code>./nivlr</code></li>
-              <li>All player data is preserved beside the executable.</li>
-            </ul>
-          </div>
-
-          <!-- Browser Card -->
-          <div class="download-card">
-            <div class="card-platform-header">
-              <span class="platform-name">Web Browser</span>
-              <span class="platform-badge">WEBASSEMBLY</span>
-            </div>
-            <h3 class="card-title">Play in Browser</h3>
-            <p class="card-desc">
-              The complete game in any modern browser with WebGL2.
-              No install; progress autosaves in your browser.
-            </p>
-            <a class="btn btn-primary card-download-btn" href="play/">
-              Launch in Browser
-            </a>
-            <div class="card-specs">
-              <span>Download: ~7 MB · v3.2.0</span>
-              <a href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-web.zip" target="_blank" rel="noopener">Self-host bundle (.zip)</a>
-            </div>
-            <ul class="download-steps">
-              <li>Click <strong>Launch</strong>, then fly with <code>W A S D</code>, Gamepad, and mouse.</li>
-              <li>Share starmaps with <strong>EXPORT</strong> and <strong>IMPORT</strong> buttons.</li>
-              <li>Click <strong>RESET SAVED DATA</strong> (or press <code>Esc</code> in-game) to start fresh.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="download-footnote">
-          <p class="footnote-text">
-            <strong>Migrating an old DOS profile?</strong>
-            Run <code>./nivlr --prepare-user-data --migrate-from "/path/to/old Noctis"</code>
-            to safely import your catalogs, saves, and screenshots without overwriting anything.
-          </p>
-          <a class="footnote-link" href="https://github.com/aedmark/Noctis-IV-OM/releases/tag/v3.2.0" target="_blank" rel="noopener">
-            View Release on GitHub →
-          </a>
-        </div>
-
-        <!-- TECHNICAL FEATURES & ENGINE ARCHITECTURE -->
-        <div class="technical-features" id="technical-features" aria-labelledby="tech-features-title">
-          <div class="tech-header">
-            <span class="eyebrow">UNDER THE HOOD // SIMULATION &amp; ENGINE</span>
-            <h3 id="tech-features-title">Technical Features &amp; Architecture</h3>
-            <p>
-              Underneath its contemplative surface, Noctis IV OM pairs authentic retro software rendering with
-              modern astronomical optics, generative acoustics, deterministic replay, and lossless recording pipelines.
-            </p>
-          </div>
-
-          <div class="tech-grid">
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-tag">OPTICS &amp; ATMOSPHERE</span>
-                <h4>Planetary Simulation</h4>
-              </div>
-              <ul class="tech-list">
-                <li><strong>Atmospheric Scattering:</strong> Physically based Rayleigh &amp; Mie dual-exponential scattering with ozone absorption and dynamic day/night terminator transitions.</li>
-                <li><strong>Stellar Coronal Flares:</strong> Procedural limb-darkened coronal streamers governed by Eddington approximations.</li>
-                <li><strong>Flashlight Distance Attenuation:</strong> Realistic inverse-square light falloff with highlight compression for surface EVA exploration.</li>
-                <li><strong>Sub-Pixel Geometry:</strong> Jitter-free sub-pixel polygon rasterizer with an interactive timewarp slider (1x–5000x).</li>
-              </ul>
-            </div>
-
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-tag">AUDIO &amp; CINEMA</span>
-                <h4>Audio &amp; Media Suite</h4>
-              </div>
-              <ul class="tech-list">
-                <li><strong>Generative Ambient Synthesizer:</strong> 4-voice procedural soundscape synthesizer featuring 12 celestial modal scales reacting to stellar classification and terrain biomes.</li>
-                <li><strong>Ambient Music Player:</strong> In-cockpit stereo audio player for curated and custom exploration soundtracks.</li>
-                <li><strong>Moviemaker Video Export:</strong> Native VP8 / WebM journey recording with in-cockpit bulkhead movie reel preview.</li>
-                <li><strong>Lossless Screenshot Export:</strong> Direct lossless PNG screenshot export (<kbd>F4</kbd> + <kbd>D</kbd>) preserved straight to disk.</li>
-              </ul>
-            </div>
-
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-tag">NAVIGATION &amp; DATA</span>
-                <h4>Cartography &amp; Discovery</h4>
-              </div>
-              <ul class="tech-list">
-                <li><strong>Starmap Exchange Engine:</strong> Shareable binary (<code>.nsm</code>) and JSON discovery packets for exchanging astronomical catalogs with other drifters.</li>
-                <li><strong>Flight Log &amp; Journal:</strong> Automated flight telemetry recorder (<code>LOG</code>) logging jump coordinates, planetfalls, and observations.</li>
-                <li><strong>Celestial Naming:</strong> Seamless, persistent naming for uncharted stars, planets, and moons.</li>
-                <li><strong>Waypoints &amp; Visor HUD:</strong> Surface GPS bookmark coordinates (<code>BM</code>) and Explorer's Visor HUD (<kbd>V</kbd>) with Lander Return Beacon guidance.</li>
-              </ul>
-            </div>
-
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-tag">ENGINE &amp; DISPLAY</span>
-                <h4>Platform &amp; Display</h4>
-              </div>
-              <ul class="tech-list">
-                <li><strong>Cross-Platform C++20:</strong> Modern native architecture compiled for 64-bit Windows, Linux (Wayland &amp; X11), and WebAssembly (WebGL2).</li>
-                <li><strong>Deterministic Upscaling:</strong> Scale2x / EPX pixel scaling (<kbd>F7</kbd>) and vintage GLSL curved CRT shader (<kbd>F6</kbd>).</li>
-                <li><strong>Native Controller Input:</strong> Full Gamepad and Joystick flight control alongside classic keyboard and mouse.</li>
-                <li><strong>Deterministic Core:</strong> Fixed-tick semantic input replay and exact cross-platform journey fixtures protect simulation and indexed-render behavior.</li>
-                <li><strong>Zero-Friction Portability:</strong> Self-contained portable releases with local data retention—no installers, no background services, and no DOSBox required.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- IN-GAME SCREENSHOT GALLERY -->
-    <section class="gallery-section" id="gallery" aria-labelledby="gallery-title">
-      <div class="section-full">
-        <div class="section-heading">
-          <span class="eyebrow">OBSERVATIONS &amp; TELEMETRY</span>
-          <h2 id="gallery-title">In-Game Views</h2>
-          <p>
-            Rendered in authentic retro-3D with procedural planetary generation,
-            smooth software shading, and real-time astronomical coordinate tracking.
-          </p>
-        </div>
-
-        <div class="gallery-grid">
-          <!-- Featured wide image: Roof EVA -->
-          <figure class="gallery-item item-featured">
-            <img src="doc/img/roof.png" alt="Standing outside on the roof of the Stardrifter spacecraft looking at stars">
-            <figcaption>
-              <span class="caption-tag">EVA HULL WALK</span>
-              Step outside through the cupola onto the Stardrifter hull. A silent ocean of billions of procedural stars stretches out in every direction.
-            </figcaption>
-          </figure>
-
-          <!-- Side image: Felysia surface -->
-          <figure class="gallery-item item-side">
-            <img src="doc/img/FELYSIA.GIF" alt="The green alien landscape of planet Felysia">
-            <figcaption>
-              <span class="caption-tag">PLANETFALL // FELYSIA</span>
-              Touch down on procedural worlds. Walk across alien plains, mountain ranges, and ancient ruins left by the vanished Felysian race.
-            </figcaption>
-          </figure>
-
-          <!-- Stardrifter craft -->
-          <figure class="gallery-item item-third">
-            <img src="doc/img/SD.JPG" alt="The Stardrifter exploratory spacecraft in orbit">
-            <figcaption>
-              <span class="caption-tag">THE STARDRIFTER</span>
-              Your home across the light years, fitted with lithium-powered Vimana drives and an orbital surface exploration capsule.
-            </figcaption>
-          </figure>
-
-          <!-- Cockpit telemetry -->
-          <figure class="gallery-item item-third">
-            <img src="doc/img/HUD.JPG" alt="Cockpit heads up display and star navigation">
-            <figcaption>
-              <span class="caption-tag">FLIGHT TELEMETRY</span>
-              Real-time vector alignment, stellar classification instruments, and interstellar jump diagnostics.
-            </figcaption>
-          </figure>
-
-          <!-- Moviemaker deck -->
-          <figure class="gallery-item item-third">
-            <img src="doc/img/moviemaker.png" alt="Moviemaker camera controls and recording deck">
-            <figcaption>
-              <span class="caption-tag">MOVIEMAKER SUITE</span>
-              Record animated journey decks and photograph wide-angle surface panoramas to share your discoveries.
-            </figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- INTRO / LORE SECTION -->
-    <section class="section intro-section" id="discover" aria-labelledby="discover-title">
-      <div class="section-heading">
-        <span class="eyebrow">THE ARCHIVES</span>
-        <h2 id="discover-title">The World of Noctis</h2>
-      </div>
-
-      <div class="intro-grid">
-        <div class="intro-copy">
-          <p class="large-copy">
-            You explore the Noctis galaxy in a vehicle called a Stardrifter.
-            You are a Felysian: a race descended from large cat-like creatures indigenous to the world Felysia in the Balastrackonastreyan system.
-          </p>
-          <p>
-            There are no enemies to defeat and no campaign pushing you onward.
-            In epoc 5991, the Stardrifters returned to Balastrackonastreya to find the system empty;
-            the Felisians were gone, leaving only ruins on their terraformed moons.
-          </p>
-          <p>
-            Now, in epoc 6012, you drift alone through a galaxy of billions of uncharted worlds.
-            You read the instruments, pick a distant point of light, travel to it using lithium-powered
-            Vimana drives, and decide whether to descend to the surface.
-          </p>
-          <p>
-            Noctis IV OM is an independent hybrid: it uses the clean, native C++20 foundation of
-            Noctis IV LR and preserves the complete feature set of Noctis IV Plus—including
-            the expanded GOESnet star catalog, cockpit controls, Moviemaker recording, and authentic visual balance.
-          </p>
-        </div>
-
-        <aside class="manifesto-panel" aria-label="The spirit of Noctis">
-          <p class="manifesto-quote">“No combat. No economy. No chosen-one story.”</p>
-          <p class="manifesto-sub">
-            Just distance, mystery, and the quiet pleasure of arriving somewhere in the galaxy that no human has ever seen before.
-          </p>
+            <p class="rail-status"><span aria-hidden="true"></span> GENERAL AVAILABILITY</p>
+            <p class="rail-note">ORIGINAL GAME<br>ALESSANDRO GHIGNOLA, 2000</p>
         </aside>
-      </div>
-    </section>
 
-    <!-- FLIGHT MANUAL -->
-    <section class="section first-flight" id="first-flight" aria-labelledby="flight-title">
-      <div class="section-heading">
-        <span class="eyebrow">FLIGHT MANUAL</span>
-        <h2 id="flight-title">Primary Directives: Your First Voyage</h2>
-        <p>
-          Noctis expects you to learn your ship, not follow a quest marker.
-          Here is how to take your Stardrifter from orbit down to another world:
-        </p>
-      </div>
+        <div class="paper">
 
-      <ol class="flight-steps">
-        <li>
-          <div class="step-number">01</div>
-          <div class="step-body">
-            <span class="step-kicker">Navigation &amp; Orientation</span>
-            <h3>Orient Yourself Aboard the Ship</h3>
-            <p>
-              Move around the cabin with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and use the mouse to look and select.
-              The central console operates flight drives; the wall terminals hold navigation, GOES.Net, and star catalogs.
-              Press <kbd>F1</kbd> at any time for the in-cockpit reminder.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div class="step-number">02</div>
-          <div class="step-body">
-            <span class="step-kicker">Starmap Telemetry</span>
-            <h3>Access GOES.Net</h3>
-            <p>
-              Walk to the GOES.Net terminal on the right-hand wall.
-              Type <code>HELP</code> for command syntax.
-              Type <code>ST MIRACLE</code> to lock the legendary star MIRACLE as your remote jump target,
-              or <code>ST BALASTRACKONASTREYA</code> to visit the ancestral Felysian home.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div class="step-number">03</div>
-          <div class="step-body">
-            <span class="step-kicker">Interstellar Transit</span>
-            <h3>Engage Vimana Flight</h3>
-            <p>
-              Step back to the central console. Press <kbd>5</kbd> for the flight-control page, then <kbd>7</kbd> to ignite
-              the lithium-powered Vimana drive. Watch the distance counter drop as you cross interstellar space.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div class="step-number">04</div>
-          <div class="step-body">
-            <span class="step-kicker">Orbital Insertion</span>
-            <h3>Local Approach</h3>
-            <p>
-              Once you reach the destination system, inspect its planets on the left terminal.
-              Press <kbd>5</kbd> then <kbd>8</kbd> to begin fine orbital approach toward your chosen world.
-              Check planetary gravity, pressure, and atmosphere before descending.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div class="step-number">05</div>
-          <div class="step-body">
-            <span class="step-kicker">Touchdown</span>
-            <h3>Deploy the Surface Capsule</h3>
-            <p>
-              Press <kbd>5</kbd> then <kbd>9</kbd>. The central cupola of the Stardrifter doubles as your surface capsule.
-              Choose your touchdown coordinates in the planetary atlas using the arrow keys, press <kbd>Enter</kbd>,
-              and drop through the floor down to the surface below.
-            </p>
-          </div>
-        </li>
-      </ol>
+            <section class="chapter cover" id="top" aria-labelledby="cover-title">
+                <div class="chapter-cap">
+                    <span>NIV-OM / POH</span>
+                    <span>00 / COVER</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
 
-      <div class="guide-note">
-        <span class="eyebrow eyebrow-amber">RECOMMENDED EXPEDITION</span>
-        <h3>Destination: FELYSIA</h3>
-        <p>
-          FELYSIA is a lush, landable world in the BALASTRACKONASTREYA system and the recommended maiden voyage.
-          At the GOES console, enter <code>ST BALASTRACKONASTREYA</code>, complete the interstellar jump, then enter
-          <code>ST FELYSIA</code> for local approach and surface landing.
-        </p>
-      </div>
-    </section>
+                <div class="cover-grid">
+                    <div class="cover-copy">
+                        <p class="kicker">NOCTIS IV <span>/</span> OPEN MOVEMENT</p>
+                        <h1 id="cover-title">NOCTIS IV <span class="om-mark">OM</span></h1>
+                        <p class="cover-sub">A quiet galaxy, running natively.</p>
+                        <p class="lede">Noctis IV OM is the 2000 space-exploration classic, brought forward as a native game. It pairs the feature set of Noctis IV Plus with the native C++ foundation of Noctis IV LR: a deterministic galaxy, a living ship, and no DOSBox between you and the dark.</p>
+                        <div class="actions">
+                            <a class="btn primary" href="play/">Play in browser <span aria-hidden="true">→</span></a>
+                            <a class="btn" href="#download">Download 3.2.0</a>
+                            <a class="text-link" href="manual/index.html"> Read the Codex <span aria-hidden="true">↗</span></a>
+                        </div>
+                        <p class="meta"><span>WINDOWS</span><span>LINUX</span><span>WEBASSEMBLY</span><span>NO ACCOUNT</span><span>NO DOSBOX</span></p>
+                        <p class="release-stamp"><span>GENERAL AVAILABILITY</span><b>3.2.0</b></p>
+                    </div>
 
-    <!-- CONTROLS MATRIX -->
-    <section class="section controls-section" id="controls" aria-labelledby="controls-title">
-      <div class="section-heading">
-        <span class="eyebrow">SYSTEM CONFIGURATION</span>
-        <h2 id="controls-title">Stardrifter Input Matrix</h2>
-        <p>Menu pages follow a consistent pattern: select a page with a number or key, then press <kbd>6</kbd> through <kbd>9</kbd> to select row options.</p>
-      </div>
+                    <figure class="hero-plate">
+                        <div class="plate-frame">
+                            <img src="doc/img/rings.png" width="717" height="448" alt="A ringed planet and its star seen from orbit in Noctis IV OM.">
+                        </div>
+                        <figcaption>
+                            <span><b>PLATE 01</b> ORBITAL SURVEY / RING SYSTEM</span>
+                            <span class="plate-spec">717 × 448</span>
+                        </figcaption>
+                    </figure>
+                </div>
 
-      <div class="controls-grid">
-        <div class="control-card">
-          <span class="eyebrow">A // CABIN &amp; MOVEMENT</span>
-          <h3>Move &amp; Look</h3>
-          <dl>
-            <div><dt><kbd>W A S D</kbd></dt><dd>Walk around the cabin</dd></div>
-            <div><dt><kbd>Mouse</kbd></dt><dd>Look and aim helmet visor</dd></div>
-            <div><dt><kbd>PgUp / PgDn</kbd></dt><dd>Raise/lower anti-radiation visor</dd></div>
-            <div><dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Cabin illumination intensity</dd></div>
-          </dl>
+                <p class="provenance-line"><b>Independent community hybrid.</b> Original Noctis IV by Alessandro Ghignola, 2000. Built from Noctis IV Plus and Noctis IV LR, with their contributors and licenses preserved. <a href="#credits">Credits</a>.</p>
+            </section>
+
+            <section class="chapter" id="discover" aria-labelledby="discover-title">
+                <div class="chapter-cap">
+                    <span>THE_QUIET.TXT</span>
+                    <span>01 / ORIGINS &amp; THE LOOP</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">01</span>
+                        <div>
+                            <p class="kicker">THE QUIET</p>
+                            <h2 id="discover-title">No one is coming to tell you what to do.</h2>
+                        </div>
+                        <span class="sec-ref">§ 1.0</span>
+                    </div>
+
+                    <p class="lede">A vast, procedural galaxy, an analogue starship, and the next coordinate. You read the instruments, pick a point of light, and set out into the dark to see what awaits.</p>
+
+                    <div class="quiet-grid">
+                        <div class="quiet-copy">
+                            <p>When Alessandro Ghignola released <em>Noctis IV</em> in 2000, he built something singular: a space simulator with billions of stars generated deterministically from pure mathematical coordinates. You awaken as a Felysian stardrifter aboard a living biological vessel, free to wander anywhere across the cosmos.</p>
+                            <p>The exploration loop is contemplative, atmospheric, and quiet. Read the stellar spectral class and distance. Engage the sub-light Vimana drive across the void. Deploy the planetary capsule down into an alien atmosphere, walk across an untouched horizon, and leave an entry in the starmap for the next explorer.</p>
+                            <p>Noctis IV OM revives this experience for modern hardware. It unites the expanded features of Noctis IV Plus (panoramas, Moviemaker, celestial catalogs) with the native C++20 architecture of Noctis IV LR—running seamlessly on modern desktop systems and directly in the browser.</p>
+                            <blockquote class="pull">
+                                <p>The galaxy is computed, not stored. The same coordinate can produce the same world again.</p>
+                            </blockquote>
+                        </div>
+
+                        <aside class="side-note" aria-label="The ship and its lineage">
+                            <p class="card-label">THE SHIP</p>
+                            <figure class="ship-plate">
+                                <img src="doc/img/SD.JPG" width="320" height="200" loading="lazy" alt="The Stardrifter, a flat teal exploration vessel, against a field of stars.">
+                                <figcaption>STARDRIFTER / LONG-RANGE EXPLORATION VESSEL</figcaption>
+                            </figure>
+                            <p class="side-copy">A biological vessel you inhabit rather than menu through. The cabin is the interface: a central console, two right-hand bulkheads, and a cupola that opens onto the hull.</p>
+
+                            <p class="card-label lineage-label">LINEAGE</p>
+                            <dl class="lineage">
+                                <div><dt>2000 / NOCTIS IV</dt><dd>Alessandro Ghignola's original DOS game.</dd></div>
+                                <div><dt>PLUS / EXPANSION</dt><dd>Expanded feature set, panoramas, Moviemaker.</dd></div>
+                                <div><dt>LR / C++ PORT</dt><dd>Native translation and its contributors.</dd></div>
+                                <div><dt>2026 / OM</dt><dd>This hybrid. Plus features, LR foundation.</dd></div>
+                            </dl>
+                            <p class="side-foot"><a href="docs/porting/PROVENANCE.md">Provenance register</a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM" target="_blank" rel="noopener">Repository <span aria-hidden="true">↗</span></a></p>
+                        </aside>
+                    </div>
+
+                    <p class="callout"><b>Pure exploration.</b> A quiet, contemplative journey where your curiosity is the only navigation marker.</p>
+
+                    <ol class="loop" aria-label="The exploration loop">
+                        <li>
+                            <span class="loop-num" aria-hidden="true">01</span>
+                            <h3>READ</h3>
+                            <p>Star class, distance, atmosphere, gravity.</p>
+                        </li>
+                        <li>
+                            <span class="loop-num" aria-hidden="true">02</span>
+                            <h3>CHOOSE</h3>
+                            <p>Lock a target in GOESnet.</p>
+                        </li>
+                        <li>
+                            <span class="loop-num" aria-hidden="true">03</span>
+                            <h3>CROSS</h3>
+                            <p>Vimana sub-light, or a lithium jump.</p>
+                        </li>
+                        <li>
+                            <span class="loop-num" aria-hidden="true">04</span>
+                            <h3>LAND</h3>
+                            <p>Capsule down. Pick a site.</p>
+                        </li>
+                        <li>
+                            <span class="loop-num" aria-hidden="true">05</span>
+                            <h3>RECORD</h3>
+                            <p>Name the world. Leave a note.</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <section class="chapter" id="first-flight" aria-labelledby="flight-title">
+                <div class="chapter-cap">
+                    <span>FIRST_FLIGHT.TXT</span>
+                    <span>02 / COLD START TO FELYSIA</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">02</span>
+                        <div>
+                            <p class="kicker">FIRST FLIGHT</p>
+                            <h2 id="flight-title">A first flight that actually works.</h2>
+                        </div>
+                        <span class="sec-ref">§ 2.0</span>
+                    </div>
+
+                    <p class="lede">Noctis does not put a marker on the next objective. The ship is the interface. This is the shortest reliable route from a cold launch to standing on Felysia.</p>
+
+                    <div class="flight-grid">
+                        <ol class="flight-steps">
+                            <li>
+                                <span class="step-num" aria-hidden="true">01</span>
+                                <div class="step-body">
+                                    <h3>Walk the cabin</h3>
+                                    <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> moves; the mouse looks. The central console is the flight computer. The right-hand bulkhead holds the GOESnet terminal and the planetary atlas. <kbd>F1</kbd> brings up the in-cockpit reminder.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-num" aria-hidden="true">02</span>
+                                <div class="step-body">
+                                    <h3>Lock the home system</h3>
+                                    <p>At the GOESnet console, type <code>HELP</code> for the syntax if you need it, then <code>ST BALASTRACKONASTREYA</code>. That locks the Felysian home system as your remote target.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-num" aria-hidden="true">03</span>
+                                <div class="step-body">
+                                    <h3>Cross the dark</h3>
+                                    <p>At the central console, press <kbd>5</kbd> for flight control, then <kbd>7</kbd> to engage the Vimana drive. The distance counter is the only progress bar you get.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-num" aria-hidden="true">04</span>
+                                <div class="step-body">
+                                    <h3>Choose a world</h3>
+                                    <p>In the destination system, open the planetary list on the left terminal. Press <kbd>5</kbd>, then <kbd>8</kbd> for local approach. Read gravity, pressure, and atmosphere before you commit.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-num" aria-hidden="true">05</span>
+                                <div class="step-body">
+                                    <h3>Land</h3>
+                                    <p>Press <kbd>5</kbd>, then <kbd>9</kbd> for the surface capsule. In the atlas, move the landing reticle with the arrow keys and press <kbd>Enter</kbd>.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span class="step-num" aria-hidden="true">06</span>
+                                <div class="step-body">
+                                    <h3>Step outside</h3>
+                                    <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk, <kbd>L</kbd> for the suit torch, <kbd>V</kbd> to cycle the visor, <kbd>Space</kbd> to fire the jetpack. Walk back into the capsule to return to orbit.</p>
+                                </div>
+                            </li>
+                        </ol>
+
+                        <aside class="flight-card" aria-label="GOESnet and flight-control command card">
+                            <div class="terminal">
+                                <div class="terminal-bar"><span>GOESNET / BULKHEAD 0</span><span>COMMAND CARD</span></div>
+                                <div class="terminal-body">
+<pre><span class="t-dim">NOCTIS IV OM / COMMAND ENTRY</span>
+
+<span class="t-prompt">&gt;</span> <span class="t-cmd">HELP</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">ST BALASTRACKONASTREYA</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">ST FELYSIA</span> <span class="t-dim">(after arrival)</span>
+
+<span class="t-cyan">FLIGHT CONTROL / PAGE 5</span>
+<span class="t-dim">[7]</span> <span class="t-cmd">VIMANA</span>
+<span class="t-dim">[8]</span> <span class="t-cmd">LOCAL APPROACH</span>
+<span class="t-dim">[9]</span> <span class="t-cmd">SURFACE CAPSULE</span>
+
+<span class="t-prompt">&gt;</span> <span class="t-cursor" aria-hidden="true"></span></pre>
+                                </div>
+                                <div class="terminal-foot"><span>INPUTS, NOT RECORDED OUTPUT</span><span>F1 / HELP</span></div>
+                            </div>
+                            <p class="specimen-note"><b>Read the card.</b> The game generates the output. These are the commands and console keys that get you to the surface without guessing.</p>
+
+                            <div class="guide-note">
+                                <p class="card-label">RECOMMENDED FIRST LANDING</p>
+                                <h3>FELYSIA</h3>
+                                <p>The canonical surface fixture in <code>BALASTRACKONASTREYA</code>. A good first world, not a tutorial. The Codex has the <a href="manual/index.html#capsule-descent">capsule procedure</a> and the <a href="manual/index.html#goesnet-architecture">GOESnet reference</a>.</p>
+                            </div>
+                        </aside>
+                    </div>
+
+                    <p class="flight-foot"><b>If you get lost:</b> <kbd>F1</kbd> opens the in-cockpit help, <kbd>Esc</kbd> releases the mouse, <kbd>F10</kbd> locks it again, and <kbd>F11</kbd> toggles fullscreen. The full key list is in the <a href="manual/commands.html">Command &amp; Systems Codex</a>.</p>
+                </div>
+            </section>
+
+            <section class="chapter" id="systems" aria-labelledby="systems-title">
+                <div class="chapter-cap">
+                    <span>THE_INSTRUMENT.TXT</span>
+                    <span>03 / ENGINE &amp; COMPATIBILITY</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">03</span>
+                        <div>
+                            <p class="kicker">UNDER THE HULL</p>
+                            <h2 id="systems-title">The old game is the specification. The new engine is the work.</h2>
+                        </div>
+                        <span class="sec-ref">§ 3.0</span>
+                    </div>
+
+                    <p class="lede">The surface is deliberately 1990s: a 320×200 indexed framebuffer, flat-shaded polygons, a palette. Under it is a C++20 engine with fixed-tick simulation, explicit platform seams, and compatibility fixtures that decide what “finished” means.</p>
+
+                    <div class="system-grid">
+                        <div class="system-copy">
+                            <p>Noctis IV has captivated nerds for decades, but keeping a DOS-era assembly and C codebase alive on modern hardware is notoriously demanding. After spending months reverse-engineering Sierra’s SCI engine, I saw the monumental porting work started by the community and asked myself two simple questions: <em>Can I do this?</em> and <em>Why wouldn't I?</em></p>
+                            <p>The original DOS executable and the LR porting baseline serve as our exact behavioral specification. Every planetary formula, star seed, and flight calculation is pinned against automated test fixtures to guarantee total historical fidelity, compiled natively to modern C++20 and WebAssembly.</p>
+                            <p>Subtle, handcrafted visual enhancements—Rayleigh and Mie atmospheric scattering, day/night terminators, limb-darkened stars, procedural coronal streamers, and a physically modeled suit torch—sit cleanly atop the simulation without altering its underlying mathematical seeds.</p>
+
+                            <table class="spec-table">
+                                <caption class="visually-hidden">Noctis IV OM implementation at a glance</caption>
+                                <tbody>
+                                    <tr><th scope="row">Language</th><td>C++20, CMake, Raylib, GLM; dependencies pinned through CPM.</td></tr>
+                                    <tr><th scope="row">Simulation</th><td>Fixed 55 ms ticks. Presentation advances independently.</td></tr>
+                                    <tr><th scope="row">Galaxy</th><td>Coordinate-seeded. DOS-compatible PRNG. Twelve stellar classes.</td></tr>
+                                    <tr><th scope="row">Renderer</th><td>8-bit indexed framebuffer, software rasterizer, Scale2x and CRT shader.</td></tr>
+                                    <tr><th scope="row">Audio</th><td>miniaudio, a 4-voice generative synth, and a 6-channel mixer.</td></tr>
+                                    <tr><th scope="row">Saves</th><td>401-byte native v1; legacy profile migration; atomic replacement.</td></tr>
+                                    <tr><th scope="row">Targets</th><td>Linux x86-64 (Wayland/X11), Windows x86-64, WebAssembly/WebGL2.</td></tr>
+                                    <tr><th scope="row">Tests</th><td>57 CTest suites on Linux Clang/GCC and ASan/UBSan.</td></tr>
+                                </tbody>
+                            </table>
+
+                            <p class="small-note"><b>Determinism, precisely.</b> Stars, systems, and surface seeds are pinned against the DOS reference. A few rasterized surface pixels still differ between compilers because of floating-point rounding; those hashes are accepted explicitly per platform and enforced in CI. Read <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/KNOWN_ISSUES.md" target="_blank" rel="noopener">Known issues <span aria-hidden="true">↗</span></a>.</p>
+                        </div>
+
+                        <aside class="proof" aria-label="Build and test evidence">
+                            <div class="terminal">
+                                <div class="terminal-bar"><span>LINUX / CLANG DEBUG</span><span>SPECIMEN</span></div>
+                                <div class="terminal-body">
+<pre><span class="t-prompt">$</span> <span class="t-cmd">ctest --preset linux-clang-debug --output-on-failure</span>
+<span class="t-dim">Test project build/linux-clang-debug</span>
+<span class="t-dim">        Start  1: legacy_prng.fixed_sequence</span>
+<span class="t-dim">        ...</span>
+<span class="t-dim">100% tests passed, 0 tests failed out of 57</span>
+
+<span class="t-prompt">$</span> <span class="t-cmd">./nivlr --diagnostics</span>
+<span class="t-dim">JSON Lines: compiler, runtime, resources, paths.</span>
+<span class="t-prompt">$</span> <span class="t-cursor" aria-hidden="true"></span></pre>
+                                </div>
+                                <div class="terminal-foot"><span>RELEASE 3.2.0</span><span>57 / 57</span></div>
+                            </div>
+
+                            <dl class="proof-list">
+                                <div><dt>Linux / Clang</dt><dd>57 / 57</dd></div>
+                                <div><dt>Linux / GCC</dt><dd>57 / 57</dd></div>
+                                <div><dt>ASan + UBSan</dt><dd>CLEAN</dd></div>
+                                <div><dt>Windows / WASM</dt><dd>BUILD + LINK</dd></div>
+                            </dl>
+
+                            <p class="specimen-note"><b>What is pinned.</b> All twelve star classes, important galaxy-generation branches, known DOS reference stars, Felysia's planetary properties, and its initial surface seeds. The evidence lives in <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/COMPATIBILITY_FIXTURES.md" target="_blank" rel="noopener">compatibility fixtures <span aria-hidden="true">↗</span></a>.</p>
+                        </aside>
+                    </div>
+
+                    <div class="architecture">
+                        <article>
+                            <p class="card-label">SIMULATION</p>
+                            <h3>One tick at a time</h3>
+                            <p>Engine-owned state, fixed 55 ms ticks, semantic input replay, and a 401-byte native save. The simulation does not care how fast the screen is drawn.</p>
+                        </article>
+                        <article>
+                            <p class="card-label">PRESENTATION</p>
+                            <h3>The look is the spec</h3>
+                            <p>An 8-bit indexed framebuffer and software polygon renderer, scaled by crisp pixels, Scale2x, or a CRT shader. 4:3, 16:10, and 16:9 are deliberate choices.</p>
+                        </article>
+                        <article>
+                            <p class="card-label">PLATFORM</p>
+                            <h3>Thin seams, same core</h3>
+                            <p>Raylib and GLFW on the desktop; Emscripten and WebGL2 in the browser; miniaudio underneath. The procedural core is shared, not forked.</p>
+                        </article>
+                    </div>
+
+                    <p class="doc-line"><b>Go deeper:</b> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/BLUEPRINT.md" target="_blank" rel="noopener">blueprint <span aria-hidden="true">↗</span></a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/ROADMAP.md" target="_blank" rel="noopener">roadmap <span aria-hidden="true">↗</span></a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/DECISIONS.md" target="_blank" rel="noopener">decisions <span aria-hidden="true">↗</span></a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/PROVENANCE.md" target="_blank" rel="noopener">provenance <span aria-hidden="true">↗</span></a></p>
+                </div>
+            </section>
+
+            <section class="chapter" id="gallery" aria-labelledby="gallery-title">
+                <div class="chapter-cap">
+                    <span>OBSERVATIONS.TXT</span>
+                    <span>04 / PLATES</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">04</span>
+                        <div>
+                            <p class="kicker">OBSERVATIONS</p>
+                            <h2 id="gallery-title">What the instruments see.</h2>
+                        </div>
+                        <span class="sec-ref">§ 4.0</span>
+                    </div>
+
+                    <p class="lede">Reference frames from the project, scaled with nearest-neighbour pixels. The 320×200 originals are game frames, not a filter.</p>
+
+                    <div class="plate-grid">
+                        <figure class="plate plate-wide">
+                            <div class="plate-frame">
+                                <img src="doc/img/roof.png" width="960" height="600" loading="lazy" alt="The view from the Stardrifter's roof: a pink starfield, a bright star, and the curved hull.">
+                            </div>
+                            <figcaption>
+                                <span><b>PLATE 02</b> EVA / STARDRIFTER ROOF</span>
+                                <span>Step out through the cupola. The ship becomes a balcony.</span>
+                            </figcaption>
+                        </figure>
+
+                        <figure class="plate plate-narrow">
+                            <div class="plate-frame">
+                                <img src="doc/img/FELYSIA.GIF" width="320" height="200" loading="lazy" alt="Felysia, a pale green planet, against a black starfield.">
+                            </div>
+                            <figcaption>
+                                <span><b>PLATE 03</b> FELYSIA / ORBITAL APPROACH</span>
+                                <span>The canonical landing fixture in BALASTRACKONASTREYA.</span>
+                            </figcaption>
+                        </figure>
+
+                        <figure class="plate plate-narrow">
+                            <div class="plate-frame">
+                                <img src="doc/img/HUD.JPG" width="320" height="200" loading="lazy" alt="Cockpit telemetry showing an unknown S11 star and a nameless planet at 1.13 diameters.">
+                            </div>
+                            <figcaption>
+                                <span><b>PLATE 04</b> COCKPIT / REMOTE TARGET</span>
+                                <span>Class, coordinates, distance, and the instruments that decide the trip.</span>
+                            </figcaption>
+                        </figure>
+
+                        <figure class="plate plate-wide">
+                            <div class="plate-frame">
+                                <img src="doc/img/moviemaker.png" width="640" height="400" loading="lazy" alt="Moviemaker deck controls over a dark planetary horizon, set to capture every frame.">
+                            </div>
+                            <figcaption>
+                                <span><b>PLATE 05</b> MOVIEMAKER / DECK 01</span>
+                                <span>3.2.0 records a clean BMP deck and exports it to WebM at native size.</span>
+                            </figcaption>
+                        </figure>
+                    </div>
+
+                    <p class="plate-note"><b>Reference frames from the project's image set.</b> The browser build presents the same indexed framebuffer through WebGL2. Screenshots are not concept art.</p>
+                </div>
+            </section>
+
+            <section class="chapter" id="controls" aria-labelledby="controls-title">
+                <div class="chapter-cap">
+                    <span>COCKPIT_CARD.TXT</span>
+                    <span>05 / QUICK REFERENCE</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">05</span>
+                        <div>
+                            <p class="kicker">COCKPIT CARD</p>
+                            <h2 id="controls-title">The keys before the manual.</h2>
+                        </div>
+                        <span class="sec-ref">§ 5.0</span>
+                    </div>
+
+                    <p class="lede">The game has no HUD tutorial. These are the keys you will use before the Codex makes sense. The full list is in the Command &amp; Systems Codex.</p>
+
+                    <div class="controls-grid">
+                        <section class="control-card" aria-labelledby="controls-cabin">
+                            <p class="card-label">A / CABIN &amp; MOVEMENT</p>
+                            <h3 id="controls-cabin">Move &amp; look</h3>
+                            <dl>
+                                <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Walk around the cabin</dd></div>
+                                <div><dt><kbd>Mouse</kbd></dt><dd>Look and aim</dd></div>
+                                <div><dt><kbd>F10</kbd></dt><dd>Release or capture the cursor</dd></div>
+                                <div><dt><kbd>F11</kbd></dt><dd>Toggle fullscreen</dd></div>
+                                <div><dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Cabin illumination</dd></div>
+                            </dl>
+                        </section>
+
+                        <section class="control-card" aria-labelledby="controls-ship">
+                            <p class="card-label">B / SHIP COMPUTER</p>
+                            <h3 id="controls-ship">Guidance &amp; drives</h3>
+                            <dl>
+                                <div><dt><kbd>5</kbd></dt><dd>Flight-control page</dd></div>
+                                <div><dt><kbd>R</kbd></dt><dd>Onboard devices</dd></div>
+                                <div><dt><kbd>P</kbd></dt><dd>Preferences and audio</dd></div>
+                                <div><dt><kbd>J</kbd></dt><dd>GOESnet bookmarks</dd></div>
+                                <div><dt><kbd>X</kbd></dt><dd>Display off</dd></div>
+                            </dl>
+                        </section>
+
+                        <section class="control-card" aria-labelledby="controls-surface">
+                            <p class="card-label">C / PLANETFALL</p>
+                            <h3 id="controls-surface">Surface exploration</h3>
+                            <dl>
+                                <div><dt><kbd>L</kbd></dt><dd>Suit torch</dd></div>
+                                <div><dt><kbd>V</kbd></dt><dd>Cycle the Explorer's Visor</dd></div>
+                                <div><dt><kbd>Space</kbd></dt><dd>Fire the jetpack</dd></div>
+                                <div><dt><kbd>C</kbd></dt><dd>Cut jetpack steering</dd></div>
+                                <div><dt><kbd>J</kbd></dt><dd>Drop a GPS waypoint</dd></div>
+                                <div><dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Walking-speed gears</dd></div>
+                            </dl>
+                        </section>
+
+                        <section class="control-card" aria-labelledby="controls-media">
+                            <p class="card-label">D / DISPLAY &amp; MEDIA</p>
+                            <h3 id="controls-media">Screen &amp; archive</h3>
+                            <dl>
+                                <div><dt><kbd>F3</kbd></dt><dd>Moviemaker</dd></div>
+                                <div><dt><kbd>F4</kbd></dt><dd>Image archive</dd></div>
+                                <div><dt><kbd>F6</kbd></dt><dd>CRT shader</dd></div>
+                                <div><dt><kbd>F7</kbd></dt><dd>Pixel / Scale2x / smooth upscale</dd></div>
+                                <div><dt><kbd>F8</kbd></dt><dd>4:3 / 16:10 / 16:9</dd></div>
+                                <div><dt><kbd>F9</kbd></dt><dd>Mute procedural audio</dd></div>
+                            </dl>
+                        </section>
+                    </div>
+
+                    <div class="manual-bar">
+                        <span>The Codex covers the ship, GOESnet, the surface, Moviemaker, and the audio mixer in full.</span>
+                        <span class="manual-links"><a href="manual/index.html">Stardrifter's Codex <span aria-hidden="true">→</span></a> <a href="manual/commands.html">Command reference <span aria-hidden="true">→</span></a></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chapter" id="download" aria-labelledby="download-title">
+                <div class="chapter-cap">
+                    <span>RELEASE_3.2.0.TXT</span>
+                    <span>06 / DOWNLOAD</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">06</span>
+                        <div>
+                            <p class="kicker">RELEASE</p>
+                            <h2 id="download-title">3.2.0, the Browser Moviemaker release.</h2>
+                        </div>
+                        <span class="sec-ref">§ 6.0</span>
+                    </div>
+
+                    <p class="lede">The current stable release. Native builds are portable and self-contained; the browser build saves to IndexedDB in this browser. No installer, no account, no DOSBox.</p>
+
+                    <div class="release-head">
+                        <div>
+                            <p class="card-label">GENERAL AVAILABILITY</p>
+                            <p class="release-title">Noctis IV OM <b>3.2.0</b></p>
+                            <p class="release-date">Released 2026-10-06 · Browser Moviemaker &amp; WebM</p>
+                        </div>
+                        <a class="btn primary" href="play/">Play now <span aria-hidden="true">→</span></a>
+                    </div>
+
+                    <div class="release-grid">
+                        <div class="release-copy">
+                            <p class="card-label">IN THIS RELEASE</p>
+                            <ul class="release-list">
+                                <li>Record a numbered BMP deck in the browser, then export it directly to WebM from the F3 panel, the projector, or GOESnet.</li>
+                                <li>The export reads the clean deck at its native frame size; browser chrome and the capture indicator stay out of the frame.</li>
+                                <li>F3 gains deck playback controls. Ctrl-plus and Ctrl-minus select decks instead of zooming the page while the game is focused.</li>
+                                <li>Includes the 3.1.0 deterministic engine, save compatibility, and renderer-safety work.</li>
+                            </ul>
+                            <p class="small-note">Full details in the <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/CHANGELOG.md" target="_blank" rel="noopener">changelog <span aria-hidden="true">↗</span></a> and <a href="https://github.com/aedmark/Noctis-IV-OM/releases/tag/v3.2.0" target="_blank" rel="noopener">release page <span aria-hidden="true">↗</span></a>.</p>
+                        </div>
+
+                        <div class="requirements">
+                            <p class="card-label">BEFORE YOU DOWNLOAD</p>
+                            <ul>
+                                <li><b>Windows:</b> 10 or 11, x86-64. The ZIP is unsigned; SmartScreen may warn.</li>
+                                <li><b>Linux:</b> x86-64, Ubuntu 24.04+ or equivalent, OpenGL, X11 or Wayland.</li>
+                                <li><b>Browser:</b> a modern browser with WebGL2. Saves are local to that browser.</li>
+                                <li><b>Not yet:</b> a native macOS build. The browser build is the current route on macOS.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="manifest-wrap">
+                        <table class="manifest">
+                            <caption class="visually-hidden">Noctis IV OM 3.2.0 downloads</caption>
+                            <thead>
+                                <tr><th scope="col">Platform</th><th scope="col">Artifact</th><th scope="col">Size</th><th scope="col">Get it</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row" data-label="Platform">Windows 10/11 <span class="tag">X86-64</span></th>
+                                    <td data-label="Artifact"><code>Noctis-IV-OM-windows-x86_64.zip</code></td>
+                                    <td data-label="Size">8.3 MB</td>
+                                    <td data-label="Get it"><a class="dl" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-windows-x86_64.zip">Download <span aria-hidden="true">↗</span></a> <a class="sum" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-windows-x86_64.zip.sha256" target="_blank" rel="noopener">SHA-256</a></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" data-label="Platform">Linux <span class="tag">X86-64</span></th>
+                                    <td data-label="Artifact"><code>Noctis-IV-OM-linux-x86_64.tar.gz</code></td>
+                                    <td data-label="Size">3.0 MB</td>
+                                    <td data-label="Get it"><a class="dl" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-linux-x86_64.tar.gz">Download <span aria-hidden="true">↗</span></a> <a class="sum" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-linux-x86_64.tar.gz.sha256" target="_blank" rel="noopener">SHA-256</a></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" data-label="Platform">Browser <span class="tag">WEBGL2</span></th>
+                                    <td data-label="Artifact"><code>play/</code> <span class="dim">· ~7.6 MB runtime</span></td>
+                                    <td data-label="Size">No install</td>
+                                    <td data-label="Get it"><a class="dl" href="play/">Launch <span aria-hidden="true">→</span></a></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" data-label="Platform">Web <span class="tag">SELF-HOST</span></th>
+                                    <td data-label="Artifact"><code>Noctis-IV-OM-web.zip</code></td>
+                                    <td data-label="Size">2.3 MB</td>
+                                    <td data-label="Get it"><a class="dl" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-web.zip">Download <span aria-hidden="true">↗</span></a> <a class="sum" href="https://github.com/aedmark/Noctis-IV-OM/releases/download/v3.2.0/Noctis-IV-OM-web.zip.sha256" target="_blank" rel="noopener">SHA-256</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="install-notes">
+                        <article>
+                            <h3>Windows</h3>
+                            <p>Extract the ZIP anywhere writable. Run <code>nivlr.exe</code>. Saves, catalogs, screenshots, and movie decks stay inside the extracted folder.</p>
+                        </article>
+                        <article>
+                            <h3>Linux</h3>
+                            <p>Extract, then run <code>./nivlr</code>. If the desktop is minimal, install the runtime libraries listed in <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/PACKAGE_README.md" target="_blank" rel="noopener">PACKAGE_README.md <span aria-hidden="true">↗</span></a>.</p>
+                        </article>
+                        <article>
+                            <h3>Browser</h3>
+                            <p>Click Launch. Progress autosaves in IndexedDB. Use the top-bar EXPORT/IMPORT STARMAP buttons to move discoveries between browsers.</p>
+                        </article>
+                    </div>
+
+                    <div class="migration-note">
+                        <p><b>Bringing an old profile forward?</b> Keep the old folder as a backup, then run <code>./nivlr --prepare-user-data --migrate-from "/path/to/old Noctis folder"</code>. The importer copies recognized saves, catalogs, screenshots, and movie decks; it never deletes the source or overwrites a destination file.</p>
+                        <p class="migration-links"><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/TROUBLESHOOTING.md" target="_blank" rel="noopener">Troubleshooting <span aria-hidden="true">↗</span></a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/KNOWN_ISSUES.md" target="_blank" rel="noopener">Known issues <span aria-hidden="true">↗</span></a> <span aria-hidden="true">·</span> <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/COMMUNITY_TESTING.md" target="_blank" rel="noopener">Compatibility testing <span aria-hidden="true">↗</span></a></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chapter" id="source" aria-labelledby="source-title">
+                <div class="chapter-cap">
+                    <span>SOURCE.TXT</span>
+                    <span>07 / BUILD &amp; READ</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">07</span>
+                        <div>
+                            <p class="kicker">SOURCE</p>
+                            <h2 id="source-title">Read it. Build it. Keep the behavior.</h2>
+                        </div>
+                        <span class="sec-ref">§ 7.0</span>
+                    </div>
+
+                    <p class="lede">The repository is the full source, tests, and porting record. The build is CMake; the dependency revisions are pinned; the first configure downloads Raylib and GLM unless they are already cached.</p>
+
+                    <div class="source-grid">
+                        <div class="source-copy">
+                            <div class="code-card">
+                                <div class="terminal-bar"><span>LINUX / QUICK START</span><span>4 COMMANDS</span></div>
+<pre id="build-command"><span class="t-prompt">$</span> cmake --preset linux-clang-debug
+<span class="t-prompt">$</span> cmake --build --preset linux-clang-debug --parallel
+<span class="t-prompt">$</span> ctest --preset linux-clang-debug --output-on-failure
+<span class="t-prompt">$</span> cd build/linux-clang-debug &amp;&amp; ./nivlr</pre>
+                                <div class="code-foot">
+                                    <button class="btn copy-btn" type="button" data-copy-target="#build-command">Copy commands</button>
+                                    <span class="copy-status" role="status" aria-live="polite"></span>
+                                </div>
+                            </div>
+                            <p class="small-note">Ubuntu packages, GCC, sanitizers, Windows/MSVC, MinGW cross-compilation, and packaging are in the <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/BUILDING.md" target="_blank" rel="noopener">build guide <span aria-hidden="true">↗</span></a>.</p>
+
+                            <p class="card-label repo-label">REPOSITORY</p>
+                            <pre class="repo-tree">src/            C++20 engine and game
+res/            immutable runtime resources
+data/           pinned starmap and guide
+docs/porting/   blueprint, roadmap, decisions
+manual/         the Stardrifter's Codex
+tests/          determinism and compatibility
+cmake/          pinned dependencies and packaging</pre>
+                            <p class="small-note">Contributions should preserve deterministic behavior and bring evidence. Start with the earliest incomplete <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/ROADMAP.md" target="_blank" rel="noopener">roadmap item <span aria-hidden="true">↗</span></a>; run at least one full native lane. See <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md <span aria-hidden="true">↗</span></a>.</p>
+                        </div>
+
+                        <aside class="docs-list" aria-label="Documentation">
+                            <p class="card-label">DOCUMENTS</p>
+                            <ul>
+                                <li><a href="manual/index.html">The Stardrifter's Codex <span class="doc-note">ship, systems, surface</span></a></li>
+                                <li><a href="manual/commands.html">Command &amp; Systems Codex <span class="doc-note">all GOESnet commands</span></a></li>
+                                <li><a href="manual/legacy_manual.html">Historical Plus manual <span class="doc-note">archive</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/BUILDING.md" target="_blank" rel="noopener">Build guide <span class="doc-note">Linux, Windows, packages</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/BLUEPRINT.md" target="_blank" rel="noopener">Architecture blueprint <span class="doc-note">boundaries and method</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/ROADMAP.md" target="_blank" rel="noopener">Roadmap <span class="doc-note">milestones and evidence</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/DECISIONS.md" target="_blank" rel="noopener">Decision log <span class="doc-note">why the port chose it</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/PROVENANCE.md" target="_blank" rel="noopener">Provenance register <span class="doc-note">licenses and credits</span></a></li>
+                                <li><a href="devlog.html">Development diary <span class="doc-note">the work in public</span></a></li>
+                                <li><a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/CHANGELOG.md" target="_blank" rel="noopener">Changelog <span class="doc-note">player-visible changes</span></a></li>
+                            </ul>
+                        </aside>
+                    </div>
+
+                    <div class="source-cta">
+                        <p><b>Source and releases:</b> the repository carries the full history, the original licenses, and the porting record.</p>
+                        <a class="btn" href="https://github.com/aedmark/Noctis-IV-OM" target="_blank" rel="noopener">Open the repository <span aria-hidden="true">↗</span></a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chapter" id="faq" aria-labelledby="faq-title">
+                <div class="chapter-cap">
+                    <span>QUESTIONS.TXT</span>
+                    <span>08 / FREQUENTLY ASKED</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">08</span>
+                        <div>
+                            <p class="kicker">QUESTIONS</p>
+                            <h2 id="faq-title">The short answers.</h2>
+                        </div>
+                        <span class="sec-ref">§ 8.0</span>
+                    </div>
+
+                    <div class="faq">
+                        <details>
+                            <summary>Is Noctis IV OM the original game?</summary>
+                            <p>It is an independent community hybrid of Noctis IV Plus and Noctis IV LR, built to faithfully recreate the original game's behavior on modern systems. Alessandro Ghignola created Noctis IV; this project preserves his full authorship and original WTOF license terms.</p>
+                        </details>
+                        <details>
+                            <summary>Do I need DOSBox or an original copy of Noctis?</summary>
+                            <p>No. The release archives are completely self-contained and run natively as modern C++20 or WebAssembly binaries. The original DOS executable serves as a behavioral verification reference during development, not a runtime dependency.</p>
+                        </details>
+                        <details>
+                            <summary>What does “OM” stand for?</summary>
+                            <p>Open Movement: the community continuation pairing Plus's rich feature set with LR's native C++ architecture, bringing the galaxy forward into the modern era.</p>
+                        </details>
+                        <details>
+                            <summary>Which platforms are supported?</summary>
+                            <p>Windows x86-64, Linux x86-64 with X11 or Wayland, and WebAssembly in a browser with WebGL2. There is no native macOS build yet; the browser build is the current route on macOS.</p>
+                        </details>
+                        <details>
+                            <summary>Can I bring my old saves forward?</summary>
+                            <p>Native builds can migrate a portable DOS/Plus profile with <code>./nivlr --prepare-user-data --migrate-from "/path/to/old Noctis folder"</code>. The importer never overwrites a destination file. Browser saves live in that browser's IndexedDB and are separate from desktop profiles.</p>
+                        </details>
+                        <details>
+                            <summary>Is it really deterministic?</summary>
+                            <p>Stars, systems, and surface seeds are pinned against the DOS reference, and the accepted per-platform results are enforced in CI. A few rasterized surface pixels can differ across compilers because of floating-point rounding; those differences are explicit, not ignored. <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/KNOWN_ISSUES.md" target="_blank" rel="noopener">Read known issues <span aria-hidden="true">↗</span></a>.</p>
+                        </details>
+                        <details>
+                            <summary>Why are the graphics so low-resolution?</summary>
+                            <p>The game renders at 320×200 internally, as the original did. It scales with crisp pixels, Scale2x edge-directed upscaling, or a CRT shader. The low resolution is the look, not a limitation of the port.</p>
+                        </details>
+                        <details>
+                            <summary>Is it open source?</summary>
+                            <p>Yes, under the original WTOF terms and the project's provenance conditions. Keep the credits and license texts with any redistribution. The <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/PROVENANCE.md" target="_blank" rel="noopener">provenance register <span aria-hidden="true">↗</span></a> records the evidence.</p>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chapter" id="credits" aria-labelledby="credits-title">
+                <div class="chapter-cap">
+                    <span>COLOPHON.TXT</span>
+                    <span>09 / CREDITS &amp; LICENSE</span>
+                    <span aria-hidden="true">[ □ ]</span>
+                </div>
+                <div class="chapter-body">
+                    <div class="sec-head">
+                        <span class="sec-num" aria-hidden="true">09</span>
+                        <div>
+                            <p class="kicker">COLOPHON</p>
+                            <h2 id="credits-title">The names behind the galaxy.</h2>
+                        </div>
+                        <span class="sec-ref">§ 9.0</span>
+                    </div>
+
+                    <div class="colophon-grid">
+                        <div>
+                            <p class="lede">Noctis IV was created by <b>Alessandro Ghignola</b> in 2000. This project preserves and honors the foundational work of Ghignola, Noctis IV Plus, Noctis IV LR, and their open-source contributors.</p>
+                            <p>Noctis IV OM is an independent community continuation stewarded by Andrew Edmark, bridging the gap between retro procedural ambition and modern systems. Full licenses, contributor histories, and original provenance records are documented throughout the repository.</p>
+                        </div>
+                        <div class="credit-links">
+                            <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/CONTRIBUTORS.md" target="_blank" rel="noopener">Contributors <span aria-hidden="true">↗</span></a>
+                            <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/LICENSE.md" target="_blank" rel="noopener">WTOF license <span aria-hidden="true">↗</span></a>
+                            <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/LICENSE" target="_blank" rel="noopener">Base license <span aria-hidden="true">↗</span></a>
+                            <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Third-party notices <span aria-hidden="true">↗</span></a>
+                            <a href="https://github.com/aedmark/Noctis-IV-OM/blob/master/docs/porting/PROVENANCE.md" target="_blank" rel="noopener">Provenance register <span aria-hidden="true">↗</span></a>
+                        </div>
+                    </div>
+
+                    <p class="colophon-note">This page is a static field manual: no trackers, no external fonts, no CDN. Every asset is served from this repository; nothing on the page calls a third party.</p>
+
+                    <div class="colophon-actions">
+                        <a class="btn primary" href="play/">Play in browser <span aria-hidden="true">→</span></a>
+                        <a class="btn" href="#download">Download 3.2.0</a>
+                        <a class="text-link" href="#top">Return to cover <span aria-hidden="true">↑</span></a>
+                    </div>
+                </div>
+            </section>
+
         </div>
-
-        <div class="control-card">
-          <span class="eyebrow">B // SHIP COMPUTER</span>
-          <h3>Guidance &amp; Drives</h3>
-          <dl>
-            <div><dt><kbd>J</kbd></dt><dd>Jump to GOESnet Waypoint Bookmarks</dd></div>
-            <div><dt><kbd>5</kbd></dt><dd>Flight-control menu page</dd></div>
-            <div><dt><kbd>R</kbd></dt><dd>Onboard devices &amp; systems</dd></div>
-            <div><dt><kbd>P</kbd></dt><dd>Pilot preferences &amp; audio</dd></div>
-            <div><dt><kbd>6–9</kbd></dt><dd>Activate corresponding menu row</dd></div>
-          </dl>
-        </div>
-
-        <div class="control-card">
-          <span class="eyebrow">C // PLANETFALL</span>
-          <h3>Surface Exploration</h3>
-          <dl>
-            <div><dt><kbd>J</kbd></dt><dd>Drop GPS surface waypoint bookmark</dd></div>
-            <div><dt><kbd>V</kbd></dt><dd>Cycle Explorer's Visor HUD &amp; Beacon</dd></div>
-            <div><dt><kbd>L</kbd></dt><dd>Toggle suit torch / headlamp</dd></div>
-            <div><dt><kbd>Space</kbd></dt><dd>Fire atmospheric jetpack</dd></div>
-            <div><dt><kbd>C</kbd></dt><dd>Release jetpack steering lock</dd></div>
-            <div><dt><kbd>Arrow keys</kbd></dt><dd>Select landing zone in atlas</dd></div>
-          </dl>
-        </div>
-
-        <div class="control-card">
-          <span class="eyebrow">D // DISPLAY &amp; AUDIO</span>
-          <h3>Display &amp; Audio</h3>
-          <dl>
-            <div><dt><kbd>F11</kbd> / <kbd>Alt+Enter</kbd></dt><dd>Toggle fullscreen mode</dd></div>
-            <div><dt><kbd>F8</kbd></dt><dd>Cycle 4:3 CRT / 16:10 / 16:9 aspect</dd></div>
-            <div><dt><kbd>F7</kbd></dt><dd>Cycle pixel / Scale2x / smooth upscale</dd></div>
-            <div><dt><kbd>F6</kbd></dt><dd>Toggle vintage CRT monitor shader</dd></div>
-            <div><dt><kbd>F9</kbd> / <kbd>Ctrl+M</kbd></dt><dd>Toggle procedural audio mute</dd></div>
-            <div><dt><kbd>F2</kbd></dt><dd>Visual effects panel</dd></div>
-            <div><dt><kbd>F3</kbd></dt><dd>Open Moviemaker suite</dd></div>
-            <div><dt><kbd>F4</kbd></dt><dd>Image archive viewer</dd></div>
-          </dl>
-        </div>
-      </div>
-
-      <div class="manual-link-bar">
-        <span>Looking for comprehensive documentation on ship systems, GOESnet, and surface exploration?</span>
-        <a href="manual/index.html">Read The Stardrifter's Codex &amp; Flight Manual →</a>
-      </div>
-    </section>
-
-    <!-- CLOSING CALLOUT -->
-    <section class="closing" aria-labelledby="closing-title">
-      <span class="eyebrow eyebrow-amber">YOUR HEADING IS YOURS TO CHOOSE</span>
-      <h2 id="closing-title">Pick a light.<br>Go and see.</h2>
-      <a class="btn btn-primary" href="#download">Download Noctis IV OM</a>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <p class="footer-copy">
-        Noctis IV was originally created by Alessandro Ghignola.
-        Noctis IV OM is an independent community hybrid of Noctis IV Plus and Noctis IV LR.
-        Preserves original WTOF Public License terms.
-      </p>
-      <div class="footer-nav">
-        <a href="https://github.com/aedmark/Noctis-IV-OM" target="_blank" rel="noopener">GitHub</a>
-        <a href="devlog.html">Dev Diary</a>
-        <a href="manual/index.html">Codex &amp; Manual</a>
-        <a href="https://github.com/aedmark/Noctis-IV-OM/releases" target="_blank" rel="noopener">Releases</a>
-      </div>
     </div>
-  </footer>
+</main>
+
+<footer class="site-foot">
+    <div class="wrap foot-inner">
+        <div>
+            <p class="foot-brand">NOCTIS IV OM <span>/ STARDDRIFTER OPERATING HANDBOOK</span></p>
+            <p class="foot-note">Original game by Alessandro Ghignola, 2000. Community continuation stewarded by Andrew Edmark. Edition 3.2.0.</p>
+        </div>
+        <nav class="foot-links" aria-label="Footer">
+            <a href="https://github.com/aedmark/Noctis-IV-OM" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+            <a href="manual/index.html">Codex</a>
+            <a href="devlog.html">Dev diary</a>
+            <a href="play/">Play</a>
+            <a href="#download">Download</a>
+        </nav>
+    </div>
+</footer>
+
 </body>
 </html>
